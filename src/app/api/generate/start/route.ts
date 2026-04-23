@@ -1,59 +1,106 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-// POST /api/generate/start — starts generation, returns imageUrl or taskId
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
+
+const NOVA_BASE = 'https://www.novartspace.art';
+const getApiKey = () => process.env.NOVA_API_KEY || '';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { prompt } = body;
+    const { prompt, userImageBase64 } = body;
 
     if (!prompt) {
-      return NextResponse.json({ error: 'Missing prompt' }, { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing prompt' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    const apiKey = process.env.NOVA_API_KEY || '';
+    const apiKey = getApiKey();
 
-    // Use sync mode with flex model (fast ~30-50s)
-    // Return URL instead of b64 to avoid large payloads
-    const resp = await fetch('https://www.novartspace.art/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'nova-image-pro-flex',
-        prompt,
-        n: 1,
-        size: '1024x1024',
-      }),
-    });
+    // Build Gemini-style request parts
+    const parts: any[] = [{ text: prompt }];
+    let hasRefImage = false;
 
-    const text = await resp.text();
+    if (userImageBase64) {
+      let imageData = userImageBase64;
+      let mimeType = 'image/jpeg';
+      if (userImageBase64.startsWith('data:')) {
+        const match = userImageBase64.match(/^data:(image\/[\w+]+);base64,(.+)$/);
+        if (match) { mimeType = match[1]; imageData = match[2]; }
+      }
+      parts.push({ inlineData: { mimeType, data: imageData } });
+      hasRefImage = true;
+    }
 
-    if (!resp.ok) {
-      console.error('Nova error:', resp.status, text.slice(0, 300));
-      return NextResponse.json(
-        { error: `Generation failed (${resp.status})` },
-        { status: 502 }
+    console.log('Starting generation, hasRefImage:', hasRefImage);
+
+    const response = await fetch(
+      `${NOVA_BASE}/v1beta/models/nova-g-image-2:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'x-goog-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts }],
+          generationConfig: {
+            responseModalities: ['TEXT', 'IMAGE'],
+            imageConfig: {
+              aspectRatio: '1:1',
+              novartResolution: '1k',
+            },
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Nova error:', response.status, errText.slice(0, 500));
+      return new Response(
+        JSON.stringify({ error: `生成失败 (${response.status})` }),
+        { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Extract URL from response
-    const urlMatch = text.match(/"url"\s*:\s*"([^"]+)"/);
-    if (urlMatch) {
-      return NextResponse.json({ imageUrl: urlMatch[1] });
+    // Stream the response directly from Nova to avoid Vercel buffer limits
+    // Nova returns JSON with base64 image - stream it through
+    const contentType = response.headers.get('content-type') || 'application/json';
+    
+    // Read the full response from Nova, extract image, return clean JSON
+    const novaText = await response.text();
+    const imgMatch = novaText.match(/"inlineData"\s*:\s*\{[^}]*"data"\s*:\s*"([A-Za-z0-9+/=]+)/);
+
+    if (!imgMatch) {
+      console.error('No image in response:', novaText.slice(0, 500));
+      return new Response(
+        JSON.stringify({ error: '生成失败，请重试' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Try b64 fallback
-    const b64Match = text.match(/"b64_json"\s*:\s*"([A-Za-z0-9+/=]+)/);
-    if (b64Match) {
-      return NextResponse.json({ images: [`data:image/png;base64,${b64Match[1]}`] });
-    }
+    const mimeMatch = novaText.match(/"inlineData"\s*:\s*\{[^}]*"mimeType"\s*:\s*"([^"]+)"/);
+    const imgMime = mimeMatch?.[1] || 'image/png';
 
-    console.error('No image in response:', text.slice(0, 300));
-    return NextResponse.json({ error: 'No image generated' }, { status: 500 });
+    return new Response(
+      JSON.stringify({ images: [`data:${imgMime};base64,${imgMatch[1]}`] }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+      }
+    );
   } catch (error: any) {
-    console.error('Start error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Generate error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }

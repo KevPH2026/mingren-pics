@@ -4,7 +4,7 @@ import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 
 export default function SelectScenario() {
-  const { selectedCelebrityId, selectScenario, setStep, setIsGenerating, setGeneratedImages } =
+  const { selectedCelebrityId, selectScenario, setStep, setIsGenerating, setGeneratedImages, userImage } =
     useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
 
@@ -15,28 +15,22 @@ export default function SelectScenario() {
     if (!selectedCelebrityId) return;
 
     const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
-    // Use subtle description to avoid content filter
-    const prompt = `A casual candid photo of two friends taking a fun selfie together ${scenario.prompt}. One is a person matching this description: ${celeb?.referencePrompt}. The other is a young Asian person from the uploaded reference. Warm natural lighting, happy smiles, authentic moment.`;
+    const prompt = `Generate a photo of two friends ${scenario.prompt}. One is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment.`;
 
     try {
       const resp = await fetch('/api/generate/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({
+          prompt,
+          userImageBase64: userImage || undefined,
+        }),
       });
 
       const data = await resp.json();
 
       if (data.images) {
         setGeneratedImages(data.images);
-      } else if (data.imageUrl) {
-        // Proxy through our server (Nova requires auth)
-        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`;
-        const imgResp = await fetch(proxyUrl);
-        const blob = await imgResp.blob();
-        const reader = new FileReader();
-        reader.onload = () => setGeneratedImages([reader.result as string]);
-        reader.readAsDataURL(blob);
       } else {
         alert(data.error || '生成失败，请重试');
         setIsGenerating(false);
