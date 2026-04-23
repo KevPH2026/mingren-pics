@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
         if (imgMatch) {
           const mimeMatch = novaText.match(/"inlineData"\s*:\s*\{[^}]*"mimeType"\s*:\s*"([^"]+)"/);
           const imgMime = mimeMatch?.[1] || 'image/png';
+          console.log('Gemini generation succeeded');
           return new Response(
             JSON.stringify({ images: [`data:${imgMime};base64,${imgMatch[1]}`] }),
             { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -87,11 +88,12 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Log Gemini failure
+      // Log Gemini failure with status code
       const geminiErr = response.ok ? 'No image in response' : `${response.status}`;
-      console.warn('Gemini failed:', geminiErr, '— falling back to flex model');
+      console.warn('Gemini failed:', geminiErr, '— falling back to nova-image-pro-flex');
 
-      // Attempt 2: Fallback — OpenAI compat endpoint, no reference image (faster, more lenient)
+      // Attempt 2: Fallback — nova-image-pro-flex (OpenAI compat), no reference image
+      // This catches: Gemini 502, content filter blocks, rate limits, and other failures
       const fallbackResp = await fetch(`${NOVA_BASE}/v1/images/generations`, {
         method: 'POST',
         headers: {
@@ -119,7 +121,7 @@ export async function POST(req: NextRequest) {
       const urlMatch = flexText.match(/"url"\s*:\s*"([^"]+)"/);
 
       if (urlMatch) {
-        // Download via proxy
+        console.log('Flex fallback succeeded (url mode)');
         return new Response(
           JSON.stringify({ imageUrl: urlMatch[1] }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -128,12 +130,14 @@ export async function POST(req: NextRequest) {
 
       const b64Match = flexText.match(/"b64_json"\s*:\s*"([A-Za-z0-9+/=]+)/);
       if (b64Match) {
+        console.log('Flex fallback succeeded (b64 mode)');
         return new Response(
           JSON.stringify({ images: [`data:image/png;base64,${b64Match[1]}`] }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
+      console.error('Flex fallback returned unexpected format:', flexText.slice(0, 300));
       return new Response(
         JSON.stringify({ error: '生成失败，请重试' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }

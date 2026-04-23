@@ -14,7 +14,6 @@ export default function SelectScenario() {
   const handleGenerate = async (scenarioId: string) => {
     if (loading) return;
     selectScenario(scenarioId);
-    setIsGenerating(true);
     setLoading(true);
     setError(null);
 
@@ -23,49 +22,79 @@ export default function SelectScenario() {
     const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
     const prompt = `Generate a photo of two friends ${scenario.prompt}. One is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment.`;
 
-    const tryGenerate = async (retryCount = 0): Promise<void> => {
-      try {
-        const resp = await fetch('/api/generate/start', {
+    // Switch to generating animation IMMEDIATELY
+    setStep('generating');
+
+    try {
+      const resp = await fetch('/api/generate/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          userImageBase64: userImage || undefined,
+        }),
+      });
+
+      const data = await resp.json();
+
+      // Queued — retry after delay
+      if (resp.status === 202 && data.queued) {
+        const waitMs = Math.min(30000, 5000);
+        await new Promise(r => setTimeout(r, waitMs));
+        // Re-request (recursive but limited)
+        const retryResp = await fetch('/api/generate/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt,
-            userImageBase64: userImage || undefined,
-          }),
+          body: JSON.stringify({ prompt, userImageBase64: userImage || undefined }),
         });
-
-        const data = await resp.json();
-
-        // Queued — retry after delay
-        if (resp.status === 202 && data.queued) {
-          const waitMs = Math.min(30000, 5000 * (retryCount + 1));
-          await new Promise(r => setTimeout(r, waitMs));
-          return tryGenerate(retryCount + 1);
-        }
-
-        if (data.images) {
-          setGeneratedImages(data.images);
-        } else if (data.imageUrl) {
-          // Proxy download (Nova URL needs auth)
-          const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`;
+        const retryData = await retryResp.json();
+        if (retryData.images) {
+          setGeneratedImages(retryData.images);
+          setStep('result');
+          return;
+        } else if (retryData.imageUrl) {
+          const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(retryData.imageUrl)}`;
           const imgResp = await fetch(proxyUrl);
           const blob = await imgResp.blob();
           const reader = new FileReader();
-          reader.onload = () => setGeneratedImages([reader.result as string]);
+          reader.onload = () => {
+            setGeneratedImages([reader.result as string]);
+            setStep('result');
+          };
           reader.readAsDataURL(blob);
+          return;
         } else {
-          setError(data.error || '生成失败，请重试');
-          setIsGenerating(false);
+          setError(retryData.error || '生成失败，请重试');
+          setStep('scenario');
+          return;
         }
-      } catch (err: any) {
-        setError('网络异常，请重试');
-        setIsGenerating(false);
-      } finally {
-        setLoading(false);
       }
-    };
 
-    await tryGenerate();
+      if (data.images) {
+        setGeneratedImages(data.images);
+        setStep('result');
+      } else if (data.imageUrl) {
+        // Proxy download (Nova URL needs auth)
+        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`;
+        const imgResp = await fetch(proxyUrl);
+        const blob = await imgResp.blob();
+        const reader = new FileReader();
+        reader.onload = () => {
+          setGeneratedImages([reader.result as string]);
+          setStep('result');
+        };
+        reader.readAsDataURL(blob);
+      } else {
+        setError(data.error || '生成失败，请重试');
+        setStep('scenario');
+      }
+    } catch (err: any) {
+      setError('网络异常，请重试');
+      setStep('scenario');
+    } finally {
+      setLoading(false);
+      setIsGenerating(false);
+    }
   };
 
   const scenarioColors = [
