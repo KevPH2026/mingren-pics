@@ -6,11 +6,12 @@ import { celebrities, categories } from '@/lib/celebrities';
 
 const categoryColors: Record<string, string> = {
   all: 'bg-[#e00] text-white',
-  cpop: 'bg-[#ff0] text-black',
   kpop: 'bg-[#ff69b4] text-white',
   hollywood: 'bg-[#0cf] text-black',
+  music: 'bg-[#e00] text-white',
   tech: 'bg-[#0f0] text-black',
   sports: 'bg-[#f90] text-black',
+  anime: 'bg-[#8b5cf6] text-white',
   business: 'bg-[#9b59b6] text-white',
 };
 
