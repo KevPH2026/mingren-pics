@@ -23,30 +23,49 @@ export default function SelectScenario() {
     const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
     const prompt = `Generate a photo of two friends ${scenario.prompt}. One is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment.`;
 
-    try {
-      const resp = await fetch('/api/generate/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          userImageBase64: userImage || undefined,
-        }),
-      });
+    const tryGenerate = async (retryCount = 0): Promise<void> => {
+      try {
+        const resp = await fetch('/api/generate/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            userImageBase64: userImage || undefined,
+          }),
+        });
 
-      const data = await resp.json();
+        const data = await resp.json();
 
-      if (data.images) {
-        setGeneratedImages(data.images);
-      } else {
-        setError(data.error || '生成失败，请重试');
+        // Queued — retry after delay
+        if (resp.status === 202 && data.queued) {
+          const waitMs = Math.min(30000, 5000 * (retryCount + 1));
+          await new Promise(r => setTimeout(r, waitMs));
+          return tryGenerate(retryCount + 1);
+        }
+
+        if (data.images) {
+          setGeneratedImages(data.images);
+        } else if (data.imageUrl) {
+          // Proxy download (Nova URL needs auth)
+          const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`;
+          const imgResp = await fetch(proxyUrl);
+          const blob = await imgResp.blob();
+          const reader = new FileReader();
+          reader.onload = () => setGeneratedImages([reader.result as string]);
+          reader.readAsDataURL(blob);
+        } else {
+          setError(data.error || '生成失败，请重试');
+          setIsGenerating(false);
+        }
+      } catch (err: any) {
+        setError('网络异常，请重试');
         setIsGenerating(false);
+      } finally {
+        setLoading(false);
       }
-    } catch (err: any) {
-      setError('网络异常，请重试');
-      setIsGenerating(false);
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    await tryGenerate();
   };
 
   const scenarioColors = [
@@ -56,7 +75,7 @@ export default function SelectScenario() {
     'hover:bg-[#0f0] hover:text-black',
     'hover:bg-[#f90] hover:text-black',
     'hover:bg-[#ff69b4] hover:text-white',
-    'hover:bg-[#9b59b6] hover:text-white',
+    'hover:bg-[#9b59b4] hover:text-white',
     'hover:bg-[#ff0] hover:text-black',
   ];
 
@@ -78,7 +97,6 @@ export default function SelectScenario() {
         </span>
       </div>
 
-      {/* Error banner */}
       {error && (
         <div className="bg-[#e00] text-white comic-border-thin px-4 py-3 text-sm font-bold flex items-center gap-2 animate-bounce-in">
           <span>⚠️</span>
