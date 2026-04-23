@@ -161,7 +161,7 @@ export default function UploadStep() {
 
       {/* Example preview tags */}
       <div className="flex gap-2 mt-2 flex-wrap justify-center">
-        {['💃 Taylor', '🚀 Musk', '⚽ Messi', '🎤 周杰伦'].map((label) => (
+        {['💃 Taylor', '🚀 Musk', '⚽ Messi', '🕷️ Spider-Man'].map((label) => (
           <span key={label} className="px-3 py-1 bg-white comic-border-thin text-xs font-bold">
             {label}
           </span>
