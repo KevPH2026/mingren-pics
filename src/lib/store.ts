@@ -21,7 +21,7 @@ interface AppState {
   isGenerating: boolean;
   history: HistoryItem[];
   showPaywall: boolean;
-  freeUsedCount: number;
+  dailyUsage: { date: string; count: number };
 
   setStep: (step: AppStep) => void;
   setUserImage: (dataUrl: string, file: File) => void;
@@ -33,17 +33,40 @@ interface AppState {
   removeFromHistory: (id: string) => void;
   clearHistory: () => void;
   setShowPaywall: (v: boolean) => void;
-  incrementFreeUsed: () => void;
+  incrementDailyUsage: () => void;
+  getRemainingToday: () => number;
   isRegistered: () => boolean;
   canGenerate: () => boolean;
   reset: () => void;
 }
 
 const STORAGE_KEY = 'mingren_history';
-const USAGE_KEY = 'mingren_free_used';
+const USAGE_KEY = 'mingren_daily_usage';   // { date: "2026-04-24", count: 1 }
 const REGISTERED_KEY = 'mingren_registered';
-const FREE_LIMIT = 1; // 非注册用户只能生成1张
-const MAX_HISTORY = 50; // 最多50条
+const FREE_LIMIT = 1;    // 非注册用户每天1次
+const REG_LIMIT = 3;     // 注册用户每天3次
+const MAX_HISTORY = 50;
+
+function getTodayStr() {
+  return new Date().toISOString().slice(0, 10); // "2026-04-24"
+}
+
+function loadDailyUsage(): { date: string; count: number } {
+  if (typeof window === 'undefined') return { date: getTodayStr(), count: 0 };
+  try {
+    const raw = localStorage.getItem(USAGE_KEY);
+    if (!raw) return { date: getTodayStr(), count: 0 };
+    const parsed = JSON.parse(raw);
+    // 如果日期不是今天，重置
+    if (parsed.date !== getTodayStr()) return { date: getTodayStr(), count: 0 };
+    return parsed;
+  } catch { return { date: getTodayStr(), count: 0 }; }
+}
+
+function saveDailyUsage(data: { date: string; count: number }) {
+  if (typeof window === 'undefined') return;
+  try { localStorage.setItem(USAGE_KEY, JSON.stringify(data)); } catch {}
+}
 
 function loadHistory(): HistoryItem[] {
   if (typeof window === 'undefined') return [];
@@ -66,13 +89,6 @@ function saveHistory(items: HistoryItem[]) {
   }
 }
 
-function loadUsage(): number {
-  if (typeof window === 'undefined') return 0;
-  try {
-    return parseInt(localStorage.getItem(USAGE_KEY) || '0', 10);
-  } catch { return 0; }
-}
-
 const initialState = {
   step: 'upload' as AppStep,
   userImage: null,
@@ -83,7 +99,7 @@ const initialState = {
   isGenerating: false,
   history: [] as HistoryItem[],
   showPaywall: false,
-  freeUsedCount: 0,
+  dailyUsage: { date: getTodayStr(), count: 0 },
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -120,10 +136,20 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setShowPaywall: (v) => set({ showPaywall: v }),
 
-  incrementFreeUsed: () => {
-    const count = get().freeUsedCount + 1;
-    set({ freeUsedCount: count });
-    try { localStorage.setItem(USAGE_KEY, String(count)); } catch {}
+  incrementDailyUsage: () => {
+    const today = getTodayStr();
+    const current = get().dailyUsage;
+    const usage = current.date === today ? { date: today, count: current.count + 1 } : { date: today, count: 1 };
+    set({ dailyUsage: usage });
+    saveDailyUsage(usage);
+  },
+
+  getRemainingToday: () => {
+    const today = getTodayStr();
+    const current = get().dailyUsage;
+    const count = current.date === today ? current.count : 0;
+    const limit = get().isRegistered() ? REG_LIMIT : FREE_LIMIT;
+    return Math.max(0, limit - count);
   },
 
   isRegistered: () => {
@@ -132,18 +158,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   canGenerate: () => {
-    if (get().isRegistered()) return true;
-    return get().freeUsedCount < FREE_LIMIT;
+    return get().getRemainingToday() > 0;
   },
 
-  reset: () => set({ ...initialState, history: get().history, freeUsedCount: get().freeUsedCount }),
+  reset: () => set({ ...initialState, history: get().history, dailyUsage: get().dailyUsage }),
 }));
 
-// 在客户端初始化时加载历史和使用次数
+// 在客户端初始化时加载历史和每日用量
 if (typeof window !== 'undefined') {
   const saved = loadHistory();
-  const used = loadUsage();
-  if (saved.length > 0 || used > 0) {
-    useAppStore.setState({ history: saved, freeUsedCount: used });
-  }
+  const usage = loadDailyUsage();
+  useAppStore.setState({ history: saved, dailyUsage: usage });
 }

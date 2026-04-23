@@ -5,11 +5,14 @@ import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 
 export default function SelectScenario() {
-  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, incrementFreeUsed, canGenerate } =
+  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, incrementDailyUsage, canGenerate, getRemainingToday, isRegistered } =
     useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const remaining = getRemainingToday();
+  const registered = isRegistered();
 
   const handleGenerate = async (scenarioId: string) => {
     if (loading) return;
@@ -23,7 +26,7 @@ export default function SelectScenario() {
     selectScenario(scenarioId);
     setLoading(true);
     setError(null);
-    incrementFreeUsed();
+    incrementDailyUsage();
 
     if (!selectedCelebrityId) return;
 
@@ -133,6 +136,14 @@ export default function SelectScenario() {
           <span>{error}</span>
         </div>
       )}
+
+      {/* 剩余次数提示 */}
+      <div className={`text-center text-xs font-bold py-1 ${remaining <= 0 ? 'text-[#e00]' : remaining === 1 ? 'text-[#f90]' : 'text-black/40'}`}>
+        {remaining > 0
+          ? `今日剩余 ${remaining} 次免费${registered ? '' : ' · 注册后每天3次'}`
+          : `${registered ? '今日次数已用完 · 明天再来' : '免费次数已用完 · 注册后每天3次'}`
+        }
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         {scenarios.map((s, i) => (

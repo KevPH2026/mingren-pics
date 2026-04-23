@@ -49,7 +49,7 @@ export default function PaywallModal() {
           <div className="bg-[#ff0]/20 border-2 border-[#ff0] rounded-lg p-3">
             <p className="text-xs font-black mb-2">🎁 注册即享：</p>
             <div className="flex flex-col gap-1 text-xs font-bold text-black/70">
-              <span>✅ 每日3次免费生成</span>
+              <span>✅ 注册后每天3次免费生成</span>
               <span>✅ 无水印高清保存</span>
               <span>✅ 20+ 国际名人库</span>
               <span>✅ 8种趣味场景</span>
