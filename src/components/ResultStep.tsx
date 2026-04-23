@@ -1,15 +1,30 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
-import { celebrities } from '@/lib/celebrities';
+import { celebrities, scenarios } from '@/lib/celebrities';
 
 export default function ResultStep() {
-  const { generatedImages, selectedCelebrityId, reset, setStep } = useAppStore();
+  const { generatedImages, selectedCelebrityId, selectedScenarioId, reset, setStep, addToHistory } = useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
+  const scenario = scenarios.find((s) => s.id === selectedScenarioId);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const savedRef = useRef(false);
 
   const currentImage = generatedImages[0];
+
+  // 自动保存到历史记录（只保存一次）
+  useEffect(() => {
+    if (currentImage && celeb && !savedRef.current) {
+      savedRef.current = true;
+      addToHistory({
+        imageUrl: currentImage,
+        celebrityId: celeb.id,
+        celebrityName: celeb.name,
+        scenarioLabel: scenario?.label || '合影',
+      });
+    }
+  }, [currentImage, celeb, scenario, addToHistory]);
 
   const handleSave = async () => {
     if (!currentImage) return;

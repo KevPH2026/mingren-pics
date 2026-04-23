@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 
 export default function SelectScenario() {
-  const { selectedCelebrityId, selectScenario, setStep, setIsGenerating, setGeneratedImages, userImage } =
+  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage } =
     useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const [loading, setLoading] = useState(false);
@@ -37,11 +37,9 @@ export default function SelectScenario() {
 
       const data = await resp.json();
 
-      // Queued — retry after delay
+      // Queued — wait and retry once
       if (resp.status === 202 && data.queued) {
-        const waitMs = Math.min(30000, 5000);
-        await new Promise(r => setTimeout(r, waitMs));
-        // Re-request (recursive but limited)
+        await new Promise(r => setTimeout(r, 10000));
         const retryResp = await fetch('/api/generate/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -50,18 +48,9 @@ export default function SelectScenario() {
         const retryData = await retryResp.json();
         if (retryData.images) {
           setGeneratedImages(retryData.images);
-          setStep('result');
           return;
         } else if (retryData.imageUrl) {
-          const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(retryData.imageUrl)}`;
-          const imgResp = await fetch(proxyUrl);
-          const blob = await imgResp.blob();
-          const reader = new FileReader();
-          reader.onload = () => {
-            setGeneratedImages([reader.result as string]);
-            setStep('result');
-          };
-          reader.readAsDataURL(blob);
+          await downloadAndSet(retryData.imageUrl);
           return;
         } else {
           setError(retryData.error || '生成失败，请重试');
@@ -70,20 +59,11 @@ export default function SelectScenario() {
         }
       }
 
+      // Direct success
       if (data.images) {
         setGeneratedImages(data.images);
-        setStep('result');
       } else if (data.imageUrl) {
-        // Proxy download (Nova URL needs auth)
-        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`;
-        const imgResp = await fetch(proxyUrl);
-        const blob = await imgResp.blob();
-        const reader = new FileReader();
-        reader.onload = () => {
-          setGeneratedImages([reader.result as string]);
-          setStep('result');
-        };
-        reader.readAsDataURL(blob);
+        await downloadAndSet(data.imageUrl);
       } else {
         setError(data.error || '生成失败，请重试');
         setStep('scenario');
@@ -93,8 +73,21 @@ export default function SelectScenario() {
       setStep('scenario');
     } finally {
       setLoading(false);
-      setIsGenerating(false);
     }
+  };
+
+  const downloadAndSet = async (imageUrl: string) => {
+    const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+    const imgResp = await fetch(proxyUrl);
+    const blob = await imgResp.blob();
+    return new Promise<void>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setGeneratedImages([reader.result as string]);
+        resolve();
+      };
+      reader.readAsDataURL(blob);
+    });
   };
 
   const scenarioColors = [
@@ -127,7 +120,7 @@ export default function SelectScenario() {
       </div>
 
       {error && (
-        <div className="bg-[#e00] text-white comic-border-thin px-4 py-3 text-sm font-bold flex items-center gap-2 animate-bounce-in">
+        <div className="bg-[#e00] text-white comic-border-thin px-4 py-3 text-sm font-bold flex items-center gap-2">
           <span>⚠️</span>
           <span>{error}</span>
         </div>
