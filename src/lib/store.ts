@@ -20,6 +20,8 @@ interface AppState {
   generatedImages: string[];
   isGenerating: boolean;
   history: HistoryItem[];
+  showPaywall: boolean;
+  freeUsedCount: number;
 
   setStep: (step: AppStep) => void;
   setUserImage: (dataUrl: string, file: File) => void;
@@ -30,10 +32,17 @@ interface AppState {
   addToHistory: (item: Omit<HistoryItem, 'id' | 'createdAt'>) => void;
   removeFromHistory: (id: string) => void;
   clearHistory: () => void;
+  setShowPaywall: (v: boolean) => void;
+  incrementFreeUsed: () => void;
+  isRegistered: () => boolean;
+  canGenerate: () => boolean;
   reset: () => void;
 }
 
 const STORAGE_KEY = 'mingren_history';
+const USAGE_KEY = 'mingren_free_used';
+const REGISTERED_KEY = 'mingren_registered';
+const FREE_LIMIT = 1; // 非注册用户只能生成1张
 const MAX_HISTORY = 50; // 最多50条
 
 function loadHistory(): HistoryItem[] {
@@ -57,6 +66,13 @@ function saveHistory(items: HistoryItem[]) {
   }
 }
 
+function loadUsage(): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    return parseInt(localStorage.getItem(USAGE_KEY) || '0', 10);
+  } catch { return 0; }
+}
+
 const initialState = {
   step: 'upload' as AppStep,
   userImage: null,
@@ -66,6 +82,8 @@ const initialState = {
   generatedImages: [],
   isGenerating: false,
   history: [] as HistoryItem[],
+  showPaywall: false,
+  freeUsedCount: 0,
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -100,13 +118,32 @@ export const useAppStore = create<AppState>((set, get) => ({
     saveHistory([]);
   },
 
-  reset: () => set({ ...initialState, history: get().history }),
+  setShowPaywall: (v) => set({ showPaywall: v }),
+
+  incrementFreeUsed: () => {
+    const count = get().freeUsedCount + 1;
+    set({ freeUsedCount: count });
+    try { localStorage.setItem(USAGE_KEY, String(count)); } catch {}
+  },
+
+  isRegistered: () => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(REGISTERED_KEY) === '1';
+  },
+
+  canGenerate: () => {
+    if (get().isRegistered()) return true;
+    return get().freeUsedCount < FREE_LIMIT;
+  },
+
+  reset: () => set({ ...initialState, history: get().history, freeUsedCount: get().freeUsedCount }),
 }));
 
-// 在客户端初始化时加载历史
+// 在客户端初始化时加载历史和使用次数
 if (typeof window !== 'undefined') {
   const saved = loadHistory();
-  if (saved.length > 0) {
-    useAppStore.setState({ history: saved });
+  const used = loadUsage();
+  if (saved.length > 0 || used > 0) {
+    useAppStore.setState({ history: saved, freeUsedCount: used });
   }
 }

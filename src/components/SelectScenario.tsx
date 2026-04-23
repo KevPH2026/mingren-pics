@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 
 export default function SelectScenario() {
-  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage } =
+  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, incrementFreeUsed, canGenerate } =
     useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const [loading, setLoading] = useState(false);
@@ -13,9 +13,17 @@ export default function SelectScenario() {
 
   const handleGenerate = async (scenarioId: string) => {
     if (loading) return;
+
+    // 检查是否还能生成
+    if (!canGenerate()) {
+      setShowPaywall(true);
+      return;
+    }
+
     selectScenario(scenarioId);
     setLoading(true);
     setError(null);
+    incrementFreeUsed();
 
     if (!selectedCelebrityId) return;
 

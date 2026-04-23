@@ -6,6 +6,7 @@ import SelectScenario from '@/components/SelectScenario';
 import GeneratingStep from '@/components/GeneratingStep';
 import ResultStep from '@/components/ResultStep';
 import HistoryStep from '@/components/HistoryStep';
+import PaywallModal from '@/components/PaywallModal';
 import { useAppStore, AppStep } from '@/lib/store';
 
 const stepComponents: Record<AppStep, React.ComponentType> = {
@@ -20,6 +21,7 @@ const stepComponents: Record<AppStep, React.ComponentType> = {
 export default function HomeContent() {
   const step = useAppStore((s) => s.step);
   const historyCount = useAppStore((s) => s.history.length);
+  const showPaywall = useAppStore((s) => s.showPaywall);
   const setStep = useAppStore((s) => s.setStep);
   const StepComponent = stepComponents[step];
 
@@ -57,6 +59,9 @@ export default function HomeContent() {
       <footer className="bg-black text-white text-center py-2 text-[10px] font-black tracking-[4px] uppercase">
         MINGREN.PICS
       </footer>
+
+      {/* Paywall Modal */}
+      {showPaywall && <PaywallModal />}
     </main>
   );
 }
