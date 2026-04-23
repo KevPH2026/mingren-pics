@@ -3,6 +3,26 @@
 import { useCallback, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 
+function compressImage(dataUrl: string, maxWidth = 800, quality = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) {
+        h = Math.round(h * maxWidth / w);
+        w = maxWidth;
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
 export default function UploadStep() {
   const setUserImage = useAppStore((s) => s.setUserImage);
   const albumInputRef = useRef<HTMLInputElement>(null);
@@ -10,6 +30,7 @@ export default function UploadStep() {
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [compressing, setCompressing] = useState(false);
 
   const processFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -28,11 +49,16 @@ export default function UploadStep() {
     reader.readAsDataURL(file);
   }, []);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!preview) return;
-    // Get file from whichever input was used
-    const file = albumInputRef.current?.files?.[0] || cameraInputRef.current?.files?.[0];
-    if (file) setUserImage(preview, file);
+    setCompressing(true);
+    try {
+      const compressed = await compressImage(preview, 800, 0.7);
+      const file = albumInputRef.current?.files?.[0] || cameraInputRef.current?.files?.[0];
+      if (file) setUserImage(compressed, file);
+    } finally {
+      setCompressing(false);
+    }
   };
 
   return (
@@ -53,7 +79,7 @@ export default function UploadStep() {
       {/* Speech bubble subtitle */}
       <div className="relative bg-white comic-border rounded-xl px-4 py-2 max-w-[280px] text-center">
         <p className="text-sm font-bold">
-          上传自拍 → 选名人 → <span className="text-[#e00]">3秒出图！</span>
+          上传自拍 → 选名人 → <span className="text-[#e00]">AI秒出！</span>
         </p>
         <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-4 border-t-4 border-black transform rotate-45" />
       </div>
@@ -107,7 +133,7 @@ export default function UploadStep() {
         </div>
       )}
 
-      {/* Action buttons - separate camera and album */}
+      {/* Action buttons */}
       <div className="flex gap-3 w-full max-w-[280px]">
         <button
           onClick={() => cameraInputRef.current?.click()}
@@ -126,9 +152,10 @@ export default function UploadStep() {
       {preview && (
         <button
           onClick={handleConfirm}
-          className="w-full max-w-[280px] py-3.5 bg-[#e00] text-white comic-border font-black text-base comic-shadow animate-wiggle hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+          disabled={compressing}
+          className="w-full max-w-[280px] py-3.5 bg-[#e00] text-white comic-border font-black text-base comic-shadow animate-wiggle hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-70"
         >
-          ✅ 用这张照片！
+          {compressing ? '⏳ 压缩中...' : '✅ 用这张照片！'}
         </button>
       )}
 

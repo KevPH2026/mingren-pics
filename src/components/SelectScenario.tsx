@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 
@@ -7,10 +8,15 @@ export default function SelectScenario() {
   const { selectedCelebrityId, selectScenario, setStep, setIsGenerating, setGeneratedImages, userImage } =
     useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async (scenarioId: string) => {
+    if (loading) return;
     selectScenario(scenarioId);
     setIsGenerating(true);
+    setLoading(true);
+    setError(null);
 
     if (!selectedCelebrityId) return;
 
@@ -32,12 +38,14 @@ export default function SelectScenario() {
       if (data.images) {
         setGeneratedImages(data.images);
       } else {
-        alert(data.error || '生成失败，请重试');
+        setError(data.error || '生成失败，请重试');
         setIsGenerating(false);
       }
     } catch (err: any) {
-      alert('请求失败: ' + err.message);
+      setError('网络异常，请重试');
       setIsGenerating(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,12 +78,21 @@ export default function SelectScenario() {
         </span>
       </div>
 
+      {/* Error banner */}
+      {error && (
+        <div className="bg-[#e00] text-white comic-border-thin px-4 py-3 text-sm font-bold flex items-center gap-2 animate-bounce-in">
+          <span>⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
         {scenarios.map((s, i) => (
           <button
             key={s.id}
             onClick={() => handleGenerate(s.id)}
-            className={`flex flex-col items-center gap-2 p-4 bg-white comic-border-thin ${scenarioColors[i]} hover:translate-y-[-3px] hover:comic-shadow-sm transition-all group`}
+            disabled={loading}
+            className={`flex flex-col items-center gap-2 p-4 bg-white comic-border-thin ${scenarioColors[i]} hover:translate-y-[-3px] hover:comic-shadow-sm transition-all group disabled:opacity-50 disabled:pointer-events-none`}
           >
             <span className="text-3xl group-hover:scale-125 transition-transform">{s.emoji}</span>
             <span className="text-sm font-black">{s.label}</span>
@@ -85,7 +102,8 @@ export default function SelectScenario() {
 
       <button
         onClick={() => setStep('select')}
-        className="text-center text-black/40 text-sm font-bold py-2 hover:text-[#e00] transition-colors"
+        disabled={loading}
+        className="text-center text-black/40 text-sm font-bold py-2 hover:text-[#e00] transition-colors disabled:opacity-30"
       >
         ← 换个名人
       </button>
