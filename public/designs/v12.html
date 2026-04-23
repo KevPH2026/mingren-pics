@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V12</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Playfair+Display:wght@700;900&display=swap');
+body{
+  background:#000;
+  color:#fff;
+  font-family:'Noto Sans SC',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+.gold{color:#d4a574}
+.gold-bg{background:linear-gradient(135deg,#d4a574,#f5d799,#d4a574)}
+.container{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+  padding:0;
+}
+.top-strip{
+  padding:1rem 1.5rem;
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid #d4a57433;
+  font-size:.7rem;letter-spacing:4px;text-transform:uppercase;
+}
+.hero{
+  flex:1;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:2rem;
+  position:relative;
+}
+.hero::before{
+  content:'SELFIE';position:absolute;
+  top:10%;right:-5%;
+  font-family:'Playfair Display',serif;
+  font-size:8rem;font-weight:900;
+  color:#d4a57408;
+  letter-spacing:1rem;
+  writing-mode:vertical-rl;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:4rem;font-weight:900;
+  line-height:.95;
+  letter-spacing:-3px;
+}
+.hero-title span{display:block}
+.hero-sub{
+  font-size:1.1rem;
+  color:#999;
+  margin:1.5rem 0;
+  max-width:280px;
+  line-height:1.6;
+}
+.hero-sub b{color:#d4a574}
+.divider{
+  width:60px;height:2px;
+  background:linear-gradient(90deg,#d4a574,transparent);
+  margin:1.5rem 0;
+}
+.celeb-row{
+  display:flex;gap:1rem;margin:1rem 0;align-items:center;
+}
+.celeb-pill{
+  padding:.5rem 1.2rem;
+  border:1px solid #d4a574;
+  color:#d4a574;
+  font-size:.75rem;
+  font-weight:700;
+  letter-spacing:1px;
+  border-radius:2rem;
+  cursor:pointer;
+  transition:all .3s;
+}
+.celeb-pill:hover{background:#d4a574;color:#000}
+.cta-row{margin-top:2rem;display:flex;gap:1rem;align-items:center}
+.cta-main{
+  padding:1rem 2.5rem;
+  background:linear-gradient(135deg,#d4a574,#f5d799);
+  color:#000;
+  font-weight:900;
+  font-size:1rem;
+  letter-spacing:2px;
+  border:none;
+  cursor:pointer;
+  text-transform:uppercase;
+}
+.cta-ghost{
+  padding:1rem 1.5rem;
+  border:1px solid #d4a57455;
+  color:#d4a574;
+  font-size:.8rem;
+  background:transparent;
+  cursor:pointer;
+  letter-spacing:1px;
+}
+.stats{
+  display:flex;gap:2rem;margin-top:1.5rem;
+}
+.stat-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:#d4a574}
+.stat-label{font-size:.65rem;color:#666;letter-spacing:2px;text-transform:uppercase;margin-top:.3rem}
+.footer{
+  padding:1.5rem;
+  border-top:1px solid #d4a57422;
+  display:flex;justify-content:space-between;
+  font-size:.65rem;color:#444;letter-spacing:3px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-strip">
+    <span class="gold">MINGREN.PICS</span>
+    <span style="color:#666">GPT-IMAGE 2.0</span>
+  </div>
+  <div class="hero">
+    <div class="hero-title">
+      <span>跟</span>
+      <span class="gold">名人</span>
+      <span>合影</span>
+    </div>
+    <div class="divider"></div>
+    <div class="hero-sub">
+      上传一张自拍，选择你想合影的名人。<br>
+      <b>AI生成，肉眼无法分辨真假。</b>
+    </div>
+    <div class="celeb-row">
+      <div class="celeb-pill">Taylor Swift</div>
+      <div class="celeb-pill">Elon Musk</div>
+      <div class="celeb-pill">Messi</div>
+      <div class="celeb-pill">周杰伦</div>
+    </div>
+    <div class="cta-row">
+      <button class="cta-main">开始生成 →</button>
+      <button class="cta-ghost">看示例</button>
+    </div>
+    <div class="stats">
+      <div><div class="stat-num">50K+</div><div class="stat-label">已生成</div></div>
+      <div><div class="stat-num">200+</div><div class="stat-label">名人库</div></div>
+      <div><div class="stat-num">3s</div><div class="stat-label">出图速度</div></div>
+    </div>
+  </div>
+  <div class="footer">
+    <span>MINGREN.PICS</span>
+    <span>© 2026</span>
+  </div>
+</div>
+</body>
+</html>

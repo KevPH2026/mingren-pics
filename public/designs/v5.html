@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mingren.pics V5 - Linear Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#09090b;color:#fafafa;min-height:100vh;-webkit-font-smoothing:antialiased}
+.container{max-width:400px;margin:0 auto;min-height:100vh;padding:1.5rem}
+.top{display:flex;justify-content:space-between;align-items:center;padding-bottom:2rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.logo{font-size:.75rem;font-weight:500;letter-spacing:.2em;color:rgba(255,255,255,.4)}
+.logo span{color:#a78bfa}
+.dot{width:4px;height:4px;border-radius:50%;background:#a78bfa;display:inline-block;margin-left:.5rem;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.content{padding-top:3rem}
+.content h1{font-size:2rem;font-weight:500;letter-spacing:-.02em;line-height:1.2;margin-bottom:1rem}
+.content h1 .purple{color:#a78bfa}
+.content p{font-size:.8rem;color:rgba(255,255,255,.3);line-height:1.6;margin-bottom:2.5rem;max-width:280px}
+.upload{border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:2rem;text-align:center;margin-bottom:2rem;cursor:pointer;transition:border-color .2s}
+.upload:hover{border-color:rgba(167,139,250,.2)}
+.upload .plus{font-size:1.5rem;color:rgba(255,255,255,.15);margin-bottom:.5rem}
+.upload span{font-size:.75rem;color:rgba(255,255,255,.2)}
+.list{margin-bottom:2rem}
+.list-title{font-size:.65rem;font-weight:500;letter-spacing:.15em;color:rgba(255,255,255,.15);margin-bottom:.75rem;text-transform:uppercase}
+.list-item{display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.03);cursor:pointer;transition:all .15s}
+.list-item:hover{padding-left:.5rem}
+.list-item:hover .item-name{color:#a78bfa}
+.item-emoji{font-size:1.1rem;width:28px;text-align:center}
+.item-name{font-size:.8rem;color:rgba(255,255,255,.5);transition:color .15s}
+.item-tag{margin-left:auto;font-size:.6rem;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:.15rem .5rem;border-radius:4px}
+.btn{width:100%;padding:.85rem;border-radius:10px;background:#a78bfa;color:#09090b;font-weight:600;font-size:.85rem;border:none;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.9}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);margin-top:.6rem}
+.btn-outline:hover{border-color:rgba(167,139,250,.2);color:#a78bfa}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top">
+    <div class="logo">MINGREN<span>.PICS</span><span class="dot"></span></div>
+  </div>
+  <div class="content">
+    <h1>跟<span class="purple">任何名人</span><br>拍一张合影</h1>
+    <p>上传自拍，选择名人，AI生成电影级合影照片。</p>
+    <div class="upload">
+      <div class="plus">+</div>
+      <span>上传你的自拍照片</span>
+    </div>
+    <div class="list">
+      <div class="list-title">热门</div>
+      <div class="list-item"><span class="item-emoji">💃</span><span class="item-name">Taylor Swift</span><span class="item-tag">歌手</span></div>
+      <div class="list-item"><span class="item-emoji">🚀</span><span class="item-name">Elon Musk</span><span class="item-tag">科技</span></div>
+      <div class="list-item"><span class="item-emoji">⚽</span><span class="item-name">Messi</span><span class="item-tag">足球</span></div>
+      <div class="list-item"><span class="item-emoji">🎤</span><span class="item-name">周杰伦</span><span class="item-tag">华语</span></div>
+      <div class="list-item"><span class="item-emoji">🎮</span><span class="item-name">黄仁勋</span><span class="item-tag">NVIDIA</span></div>
+      <div class="list-item"><span class="item-emoji">🌸</span><span class="item-name">BTS V</span><span class="item-tag">韩流</span></div>
+    </div>
+    <button class="btn">生成合影</button>
+    <button class="btn btn-outline">查看更多名人</button>
+  </div>
+</div>
+</body>
+</html>

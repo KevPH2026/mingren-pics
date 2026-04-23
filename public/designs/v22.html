@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V22</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+body{background:#000;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;color:#fff}
+.page{min-height:100vh;position:relative;display:flex;flex-direction:column;justify-content:space-between}
+.shapes{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.triangle{position:absolute;width:0;height:0;border-left:60px solid transparent;border-right:60px solid transparent;border-bottom:100px solid #ff005533}
+.tri1{top:5%;right:-20px;transform:rotate(15deg)}
+.tri2{bottom:20%;left:-30px;transform:rotate(-20deg);border-bottom-color:#00ffff22}
+.circle-shape{position:absolute;border-radius:50%;border:3px solid}
+.cs1{width:120px;height:120px;border-color:#ffff0033;top:30%;right:-40px}
+.cs2{width:80px;height:80px;border-color:#ff00ff33;bottom:30%;left:10%}
+.zigzag{position:absolute;bottom:5%;right:10%;width:60px;height:60px;background:repeating-linear-gradient(45deg,#00ffff11,#00ffff11 5px,transparent 5px,transparent 10px)}
+.content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;padding:2.5rem}
+.label{font-size:.6rem;letter-spacing:8px;color:#ff0055;text-transform:uppercase;font-weight:900;margin-bottom:1rem}
+.title{font-size:5rem;font-weight:900;line-height:.85;letter-spacing:-4px}
+.title .memphis-yellow{color:#ffff00;-webkit-text-stroke:2px #000}
+.title .memphis-pink{color:#ff0055;-webkit-text-stroke:2px #000}
+.title .memphis-cyan{color:#00ffff;-webkit-text-stroke:2px #000}
+.desc{margin:1.5rem 0;font-size:.9rem;color:#888;line-height:1.6}
+.desc b{color:#fff}
+.geometric-tags{display:flex;gap:.8rem;flex-wrap:wrap;margin:1rem 0}
+.geo-tag{padding:.6rem 1.2rem;font-weight:900;font-size:.75rem;letter-spacing:1px;cursor:pointer;border:2px solid #000;transition:transform .2s}
+.geo-tag:nth-child(1){background:#ffff00;color:#000}
+.geo-tag:nth-child(2){background:#ff0055;color:#fff}
+.geo-tag:nth-child(3){background:#00ffff;color:#000}
+.geo-tag:nth-child(4){background:#ff00ff;color:#fff}
+.geo-tag:hover{transform:rotate(-3deg) scale(1.1)}
+.cta-row{margin-top:2rem;display:flex;gap:1rem;align-items:center}
+.cta{padding:1.1rem 2.5rem;background:#ffff00;color:#000;font-weight:900;font-size:1.1rem;border:3px solid #000;letter-spacing:2px;cursor:pointer;box-shadow:5px 5px 0 #ff0055;transition:all .2s}
+.cta:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 #ff0055}
+.cta2{padding:1.1rem 1.5rem;border:2px solid #ffff0055;color:#ffff00;background:transparent;font-weight:900;font-size:.8rem;cursor:pointer;letter-spacing:1px}
+.footer{padding:1.5rem 2.5rem;display:flex;justify-content:space-between;font-size:.55rem;color:#333;letter-spacing:4px;font-weight:900;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="shapes">
+    <div class="triangle tri1"></div>
+    <div class="triangle tri2"></div>
+    <div class="circle-shape cs1"></div>
+    <div class="circle-shape cs2"></div>
+    <div class="zigzag"></div>
+  </div>
+  <div class="content">
+    <div class="label">▸ GPT-IMAGE 2.0</div>
+    <div class="title">
+      跟<span class="memphis-yellow">名人</span><br>
+      合<span class="memphis-pink">个影</span><span class="memphis-cyan">!</span>
+    </div>
+    <div class="desc">上传自拍 → 选名人 → <b>3秒出合影</b><br>不是PS，是AI。发朋友圈炸裂。</div>
+    <div class="geometric-tags">
+      <span class="geo-tag">💃 Taylor</span>
+      <span class="geo-tag">🚀 Musk</span>
+      <span class="geo-tag">⚽ Messi</span>
+      <span class="geo-tag">🎤 周杰伦</span>
+    </div>
+    <div class="cta-row">
+      <button class="cta">📸 开拍</button>
+      <button class="cta2">看示例</button>
+    </div>
+  </div>
+  <div class="footer">
+    <span>MINGREN.PICS</span>
+    <span>MEMPHIS 2026</span>
+  </div>
+</div>
+</body>
+</html>

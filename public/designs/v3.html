@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mingren.pics V3 - ElevenLabs Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#08080c;color:#fff;min-height:100vh}
+.page{position:relative;min-height:100vh;padding:1.5rem;overflow:hidden}
+.page::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 0%,rgba(139,92,246,.08) 0%,transparent 60%);pointer-events:none}
+.wave{position:absolute;bottom:0;left:0;right:0;height:120px;opacity:.06}
+.wave path{fill:none;stroke:#8b5cf6;stroke-width:1}
+nav{display:flex;justify-content:space-between;align-items:center;padding:1rem 0;margin-bottom:3rem}
+.logo{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:1rem}
+.logo-icon{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.nav-links{display:flex;gap:1.5rem;font-size:.8rem;color:rgba(255,255,255,.4)}
+.center{text-align:center;padding:2rem 0;position:relative;z-index:1}
+.center h1{font-size:3rem;font-weight:800;line-height:1;letter-spacing:-.04em;margin-bottom:.5rem}
+.center h1 span{display:block;font-size:1.6rem;font-weight:300;color:rgba(255,255,255,.5);margin-top:.3rem;letter-spacing:.05em}
+.tagline{font-size:.9rem;color:rgba(255,255,255,.3);margin-bottom:3rem}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:2.5rem}
+.card{aspect-ratio:3/4;border-radius:14px;background:rgba(255,255,255,.02);border:1px solid rgba(139,92,246,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;position:relative;overflow:hidden;transition:all .3s}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(139,92,246,.04) 0%,transparent 50%)}
+.card:hover{border-color:rgba(139,92,246,.2);transform:translateY(-2px)}
+.card .emoji{font-size:1.8rem;position:relative;z-index:1}
+.card .name{font-size:.55rem;color:rgba(255,255,255,.4);position:relative;z-index:1}
+.upload-area{width:100%;padding:2.5rem;border-radius:20px;border:1px solid rgba(139,92,246,.1);background:rgba(139,92,246,.02);text-align:center;margin-bottom:2rem;position:relative;overflow:hidden}
+.upload-area::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(139,92,246,.3),transparent)}
+.upload-area .icon{font-size:2.5rem;margin-bottom:.5rem;display:block}
+.upload-area p{font-size:.85rem;color:rgba(255,255,255,.3)}
+.upload-area p em{font-style:normal;color:rgba(139,92,246,.6)}
+.tag-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem}
+.tag{padding:.4rem .8rem;border-radius:999px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.1);font-size:.7rem;color:rgba(255,255,255,.4)}
+.btn-gen{width:100%;padding:1rem;border-radius:14px;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:none;color:#fff;font-weight:600;font-size:1rem;cursor:pointer;box-shadow:0 0 30px rgba(139,92,246,.15)}
+.footer-note{text-align:center;margin-top:2rem;font-size:.6rem;color:rgba(255,255,255,.12);letter-spacing:.2em}
+</style>
+</head>
+<body>
+<div class="page">
+  <svg class="wave" viewBox="0 0 400 120"><path d="M0,80 C50,40 100,100 200,60 C300,20 350,90 400,50 L400,120 L0,120Z"/></svg>
+  <nav>
+    <div class="logo"><div class="logo-icon">📸</div>mingren.pics</div>
+    <div class="nav-links"><span>名人</span><span>场景</span><span>关于</span></div>
+  </nav>
+  <div class="center">
+    <h1>名人合影<span>CELEBRITY AI PHOTO</span></h1>
+    <p class="tagline">跟任何名人拍一张以假乱真的合影</p>
+  </div>
+  <div class="cards">
+    <div class="card"><span class="emoji">💃</span><span class="name">Taylor</span></div>
+    <div class="card"><span class="emoji">🚀</span><span class="name">Musk</span></div>
+    <div class="card"><span class="emoji">⚽</span><span class="name">Messi</span></div>
+    <div class="card"><span class="emoji">🎤</span><span class="name">周杰伦</span></div>
+    <div class="card"><span class="emoji">🌸</span><span class="name">BTS V</span></div>
+    <div class="card"><span class="emoji">💎</span><span class="name">Rihanna</span></div>
+    <div class="card"><span class="emoji">🎮</span><span class="name">黄仁勋</span></div>
+    <div class="card"><span class="emoji">🏆</span><span class="name">C罗</span></div>
+    <div class="card"><span class="emoji">✨</span><span class="name">热巴</span></div>
+  </div>
+  <div class="upload-area">
+    <span class="icon">🖼</span>
+    <p>拖拽或<em>点击上传</em>你的自拍</p>
+  </div>
+  <div class="tag-row">
+    <span class="tag">🏆 走红毯</span>
+    <span class="tag">🤳 自拍</span>
+    <span class="tag">☕ 咖啡</span>
+    <span class="tag">🎤 同台</span>
+    <span class="tag">✈️ 旅行</span>
+  </div>
+  <button class="btn-gen">✨ 立即生成合影</button>
+  <div class="footer-note">MINGREN.PICS · AI GENERATED · FOR ENTERTAINMENT ONLY</div>
+</div>
+</body>
+</html>

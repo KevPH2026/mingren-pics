@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mingren.pics V10 - xAI Style</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'JetBrains Mono',monospace;background:#000;color:#fff;min-height:100vh}
+.container{max-width:400px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+nav{padding:1.5rem;display:flex;justify-content:space-between;align-items:center}
+nav .brand{font-size:.7rem;letter-spacing:.3em;color:rgba(255,255,255,.4)}
+nav .brand span{color:#fff}
+nav .version{font-size:.6rem;color:rgba(255,255,255,.12);letter-spacing:.1em}
+.main{flex:1;padding:0 1.5rem;display:flex;flex-direction:column;justify-content:center}
+.title-block{margin-bottom:4rem}
+.title-block .num{font-size:.6rem;color:rgba(255,255,255,.15);letter-spacing:.2em;margin-bottom:.75rem}
+.title-block h1{font-size:2.8rem;font-weight:300;letter-spacing:-.02em;line-height:1.15}
+.title-block h1 .w{display:block}
+.title-block h1 .thin{font-weight:300;color:rgba(255,255,255,.4)}
+.divider{height:1px;background:rgba(255,255,255,.06);margin-bottom:3rem}
+.celeb-list{margin-bottom:3rem}
+.celeb-item{display:flex;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:1px solid rgba(255,255,255,.03);cursor:pointer;transition:all .1s}
+.celeb-item:hover{padding-left:.5rem}
+.celeb-item:hover .celeb-name{color:#fff}
+.celeb-idx{font-size:.6rem;color:rgba(255,255,255,.1);width:1.5rem;text-align:right}
+.celeb-emoji{font-size:1.1rem;width:24px;text-align:center}
+.celeb-name{font-size:.8rem;color:rgba(255,255,255,.35);transition:color .1s;flex:1}
+.celeb-cat{font-size:.55rem;color:rgba(255,255,255,.1);letter-spacing:.1em}
+.upload-zone{border:1px solid rgba(255,255,255,.05);padding:2rem;text-align:center;margin-bottom:2rem;cursor:pointer;transition:border-color .2s}
+.upload-zone:hover{border-color:rgba(255,255,255,.12)}
+.upload-zone p{font-size:.7rem;color:rgba(255,255,255,.2);letter-spacing:.05em}
+.gen-btn{width:100%;padding:.85rem;border:1px solid #fff;background:transparent;color:#fff;font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.2em;cursor:pointer;transition:all .15s}
+.gen-btn:hover{background:#fff;color:#000}
+.bottom{padding:1.5rem;text-align:center;font-size:.5rem;color:rgba(255,255,255,.06);letter-spacing:.3em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav>
+    <div class="brand"><span>MINGREN</span>.PICS</div>
+    <div class="version">V0.1</div>
+  </nav>
+  <div class="main">
+    <div class="title-block">
+      <div class="num">001</div>
+      <h1>
+        <span class="w"><span class="thin">CELEBRITY</span></span>
+        <span class="w">PHOTO</span>
+        <span class="w"><span class="thin">GENERATOR</span></span>
+      </h1>
+    </div>
+    <div class="divider"></div>
+    <div class="celeb-list">
+      <div class="celeb-item"><span class="celeb-idx">01</span><span class="celeb-emoji">💃</span><span class="celeb-name">Taylor Swift</span><span class="celeb-cat">MUSIC</span></div>
+      <div class="celeb-item"><span class="celeb-idx">02</span><span class="celeb-emoji">🚀</span><span class="celeb-name">Elon Musk</span><span class="celeb-cat">TECH</span></div>
+      <div class="celeb-item"><span class="celeb-idx">03</span><span class="celeb-emoji">⚽</span><span class="celeb-name">Lionel Messi</span><span class="celeb-cat">SPORT</span></div>
+      <div class="celeb-item"><span class="celeb-idx">04</span><span class="celeb-emoji">🎤</span><span class="celeb-name">周杰伦</span><span class="celeb-cat">CPOP</span></div>
+      <div class="celeb-item"><span class="celeb-idx">05</span><span class="celeb-emoji">🎮</span><span class="celeb-name">Jensen Huang</span><span class="celeb-cat">TECH</span></div>
+      <div class="celeb-item"><span class="celeb-idx">06</span><span class="celeb-emoji">🌸</span><span class="celeb-name">BTS V</span><span class="celeb-cat">KPOP</span></div>
+    </div>
+    <div class="upload-zone">
+      <p>[ 点击上传自拍照片 ]</p>
+    </div>
+    <button class="gen-btn">GENERATE →</button>
+  </div>
+  <div class="bottom">AI GENERATED · FOR ENTERTAINMENT ONLY</div>
+</div>
+</body>
+</html>

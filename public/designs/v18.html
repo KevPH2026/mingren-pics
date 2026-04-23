@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V18</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+body{background:#c41230;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;color:#fff}
+.page{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:2rem;position:relative}
+.pattern{position:absolute;top:0;left:0;width:100%;height:100%;opacity:.06;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23fff' stroke-width='1' fill='none'/%3E%3C/svg%3E") repeat;pointer-events:none}
+.seal{position:absolute;top:1.5rem;right:1.5rem;width:60px;height:60px;border:3px solid #ffd700;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.5rem;color:#ffd700;font-weight:900;letter-spacing:1px;text-align:center;line-height:1.2}
+.content{position:relative;z-index:1}
+.top-bar{font-size:.65rem;letter-spacing:6px;color:#ffd700;text-transform:uppercase;font-weight:900;margin-bottom:2rem;opacity:.8}
+.title{font-size:4.5rem;font-weight:900;line-height:.9;letter-spacing:-2px}
+.title .gold{color:#ffd700}
+.divider{width:100%;height:2px;background:linear-gradient(90deg,#ffd700,transparent);margin:1.5rem 0}
+.desc{font-size:1rem;color:#ffcccc;line-height:1.7;max-width:280px;margin-bottom:1.5rem}
+.desc b{color:#fff;font-size:1.2rem}
+.tags{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0}
+.tag{padding:.5rem 1rem;background:#0003;border:1px solid #ffd700;color:#ffd700;font-size:.75rem;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.tag:hover{background:#ffd700;color:#c41230}
+.cta-row{display:flex;gap:1rem;margin-top:2rem;align-items:center}
+.cta{padding:1rem 2.5rem;background:#ffd700;color:#c41230;font-weight:900;font-size:1.1rem;border:none;letter-spacing:2px;cursor:pointer}
+.cta2{padding:1rem 1.5rem;border:1px solid #ffd70055;color:#ffd700;background:transparent;font-size:.8rem;font-weight:700;letter-spacing:1px;cursor:pointer}
+.bottom{margin-top:auto;padding-top:3rem;display:flex;justify-content:space-between;font-size:.55rem;color:#ffd70066;letter-spacing:4px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="pattern"></div>
+  <div class="seal">国潮<br>A I</div>
+  <div class="content">
+    <div class="top-bar">▸ GPT-IMAGE 2.0</div>
+    <div class="title">跟<span class="gold">名人</span><br>合个影</div>
+    <div class="divider"></div>
+    <div class="desc">
+      上传自拍 · 选你崇拜的人<br>
+      <b>AI秒合，国潮新玩法</b>
+    </div>
+    <div class="tags">
+      <span class="tag">💃 Taylor</span>
+      <span class="tag">🚀 Musk</span>
+      <span class="tag">⚽ Messi</span>
+      <span class="tag">🎤 周杰伦</span>
+      <span class="tag">🌸 BTS</span>
+    </div>
+    <div class="cta-row">
+      <button class="cta">📸 立即开拍</button>
+      <button class="cta2">看示例</button>
+    </div>
+  </div>
+  <div class="bottom">
+    <span>MINGREN.PICS</span>
+    <span>不是P的 · 是AI</span>
+  </div>
+</div>
+</body>
+</html>

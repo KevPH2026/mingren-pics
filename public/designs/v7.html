@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mingren.pics V7 - Apple Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#fbfbfd;color:#1d1d1f;min-height:100vh;-webkit-font-smoothing:antialiased}
+nav{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;background:rgba(251,251,253,.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+nav .logo{font-weight:600;font-size:.9rem;letter-spacing:-.01em}
+nav .logo span{color:#6e6e73}
+nav .cta{font-size:.8rem;color:#0071e3;font-weight:500}
+.hero{padding:5rem 2rem 3rem;text-align:center}
+.hero .overline{font-size:.7rem;font-weight:600;letter-spacing:.1em;color:#6e6e73;text-transform:uppercase;margin-bottom:1rem}
+.hero h1{font-size:3rem;font-weight:700;letter-spacing:-.04em;line-height:1.1;margin-bottom:1rem}
+.hero h1 .highlight{background:linear-gradient(90deg,#6e6e73,#1d1d1f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .desc{font-size:1.05rem;color:#6e6e73;line-height:1.5;max-width:320px;margin:0 auto 2.5rem}
+.hero .btns{display:flex;gap:.75rem;justify-content:center}
+.btn-primary{padding:.75rem 1.75rem;border-radius:980px;background:#0071e3;color:#fff;font-weight:500;font-size:.9rem;border:none;cursor:pointer;transition:background .2s}
+.btn-primary:hover{background:#0077ed}
+.btn-secondary{padding:.75rem 1.75rem;border-radius:980px;background:transparent;color:#0071e3;font-weight:500;font-size:.9rem;border:none;cursor:pointer}
+.showcase{padding:2rem 1.5rem}
+.showcase-title{font-size:1.5rem;font-weight:700;text-align:center;margin-bottom:2rem;letter-spacing:-.02em}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:2rem}
+.photo-item{aspect-ratio:1;border-radius:20px;background:#f5f5f7;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;overflow:hidden;cursor:pointer;transition:transform .2s}
+.photo-item:hover{transform:scale(1.02)}
+.photo-item .label{position:absolute;bottom:.75rem;left:.75rem;font-size:.65rem;font-weight:600;color:#1d1d1f;background:rgba(255,255,255,.8);padding:.25rem .5rem;border-radius:6px;backdrop-filter:blur(10px)}
+.upload-section{padding:3rem 2rem;text-align:center}
+.upload-circle{width:120px;height:120px;border-radius:50%;background:#f5f5f7;margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;font-size:2.5rem;cursor:pointer;transition:all .3s;border:2px dashed #d2d2d7}
+.upload-circle:hover{border-color:#0071e3;background:#e8f0fe}
+.upload-section h3{font-size:1.2rem;font-weight:600;margin-bottom:.5rem}
+.upload-section p{font-size:.85rem;color:#6e6e73}
+.features{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;padding:2rem 1.5rem;margin-top:2rem}
+.feature{text-align:center}
+.feature .icon{font-size:1.5rem;margin-bottom:.3rem;display:block}
+.feature span{font-size:.7rem;color:#6e6e73}
+footer{text-align:center;padding:2rem;font-size:.7rem;color:#86868b}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">mingren<span>.pics</span></div>
+  <span class="cta">开始使用 →</span>
+</nav>
+<div class="hero">
+  <p class="overline">全新 AI 图片引擎</p>
+  <h1>跟名人合影，<br><span class="highlight">前所未有</span></h1>
+  <p class="desc">上传你的自拍，选择任何名人，AI 生成一张以假乱真的合影照片。</p>
+  <div class="btns">
+    <button class="btn-primary">立即体验</button>
+    <button class="btn-secondary">了解更多</button>
+  </div>
+</div>
+<div class="showcase">
+  <h2 class="showcase-title">跟谁合影？</h2>
+  <div class="photo-grid">
+    <div class="photo-item">💃<span class="label">Taylor Swift</span></div>
+    <div class="photo-item">🚀<span class="label">Elon Musk</span></div>
+    <div class="photo-item">⚽<span class="label">Messi</span></div>
+    <div class="photo-item">🎤<span class="label">周杰伦</span></div>
+    <div class="photo-item">🌸<span class="label">BTS V</span></div>
+    <div class="photo-item">🎮<span class="label">黄仁勋</span></div>
+  </div>
+</div>
+<div class="upload-section">
+  <div class="upload-circle">📸</div>
+  <h3>上传你的照片</h3>
+  <p>选择一张清晰的自拍开始</p>
+</div>
+<div class="features">
+  <div class="feature"><span class="icon">⚡</span><span>3秒出图</span></div>
+  <div class="feature"><span class="icon">🎯</span><span>电影画质</span></div>
+  <div class="feature"><span class="icon">🔒</span><span>隐私安全</span></div>
+</div>
+<footer>© 2026 mingren.pics · 仅限娱乐</footer>
+</body>
+</html>

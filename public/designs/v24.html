@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V24</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+body{background:#0a0000;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;color:#fff}
+.page{min-height:100vh;position:relative}
+.fire-bg{position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 50% 100%,#ff440066 0%,#ff220033 30%,transparent 60%),radial-gradient(ellipse at 30% 80%,#ff660044 0%,transparent 40%),radial-gradient(ellipse at 70% 90%,#ff000033 0%,transparent 40%);pointer-events:none}
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none}
+.ember{position:absolute;width:4px;height:4px;background:#ff6600;border-radius:50%;animation:rise linear infinite;opacity:0}
+.ember:nth-child(1){left:10%;animation-duration:3s;animation-delay:0s}
+.ember:nth-child(2){left:25%;animation-duration:4s;animation-delay:.5s}
+.ember:nth-child(3){left:40%;animation-duration:3.5s;animation-delay:1s}
+.ember:nth-child(4){left:55%;animation-duration:4.5s;animation-delay:.3s}
+.ember:nth-child(5){left:70%;animation-duration:3.2s;animation-delay:.8s}
+.ember:nth-child(6){left:85%;animation-duration:3.8s;animation-delay:1.2s}
+@keyframes rise{0%{bottom:-10px;opacity:0;transform:translateX(0)}10%{opacity:1}80%{opacity:.5}100%{bottom:100%;opacity:0;transform:translateX(30px)}}
+.content{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:2rem}
+.label{font-size:.6rem;letter-spacing:6px;color:#ff6600;text-transform:uppercase;font-weight:900;margin-bottom:1.5rem}
+.title{font-size:5rem;font-weight:900;line-height:.85;letter-spacing:-4px;text-shadow:0 0 60px #ff440044,0 0 120px #ff220022}
+.title .burn{color:#ff4400;text-shadow:0 0 30px #ff4400,0 0 60px #ff2200}
+.desc{margin:1.5rem 0;font-size:.95rem;color:#aa6644;line-height:1.6;max-width:300px}
+.desc b{color:#ff6600;font-size:1.2rem}
+.tags{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0}
+.tag{padding:.5rem 1rem;border:1px solid #ff440033;color:#ff6600;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s;background:#ff220011}
+.tag:hover{background:#ff440033;border-color:#ff6600}
+.cta{margin-top:2rem;padding:1.2rem 2.5rem;background:linear-gradient(90deg,#ff2200,#ff6600);color:#fff;font-weight:900;font-size:1.2rem;border:none;letter-spacing:3px;cursor:pointer;text-transform:uppercase;box-shadow:0 4px 40px #ff440033;transition:transform .2s;position:relative;overflow:hidden}
+.cta::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,#ffffff22,transparent);animation:shimmer 2s infinite}
+@keyframes shimmer{to{left:200%}}
+.cta:hover{transform:scale(1.03)}
+.footer{margin-top:3rem;font-size:.5rem;color:#331100;letter-spacing:4px;font-weight:900}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="fire-bg"></div>
+  <div class="particles">
+    <div class="ember"></div><div class="ember"></div><div class="ember"></div>
+    <div class="ember"></div><div class="ember"></div><div class="ember"></div>
+  </div>
+  <div class="content">
+    <div class="label">▸ GPT-IMAGE 2.0 POWERED</div>
+    <div class="title">跟<span class="burn">名人</span><br>合个影</div>
+    <div class="desc">上传自拍 · 选名人<br><b>🔥 3秒出图，燃爆朋友圈</b></div>
+    <div class="tags">
+      <span class="tag">💃 Taylor</span>
+      <span class="tag">🚀 Musk</span>
+      <span class="tag">⚽ Messi</span>
+      <span class="tag">🎤 周杰伦</span>
+      <span class="tag">🌸 BTS</span>
+    </div>
+    <button class="cta">📸 立即开拍</button>
+    <div class="footer">MINGREN.PICS — BURN WITH AI</div>
+  </div>
+</div>
+</body>
+</html>

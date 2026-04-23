@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mingren.pics V4 - Cursor Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#0e0e12;color:#e4e4e7;min-height:100vh}
+.app{max-width:420px;margin:0 auto;min-height:100vh;position:relative;overflow:hidden}
+.app::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 30%,rgba(99,102,241,.06),transparent 40%),radial-gradient(circle at 70% 70%,rgba(236,72,153,.04),transparent 40%);pointer-events:none}
+.glass{background:rgba(255,255,255,.03);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.06);border-radius:20px}
+header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem}
+.brand{font-size:.85rem;font-weight:600;letter-spacing:.05em;color:rgba(255,255,255,.7)}
+.brand b{color:#818cf8}
+.hdr-actions{display:flex;gap:.5rem}
+.hdr-btn{width:32px;height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:.75rem}
+main{padding:0 1.5rem 2rem}
+.hero{padding:2rem 0;text-align:center}
+.hero h1{font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:.75rem;color:#fff}
+.hero h1 .grad{background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:.85rem;color:rgba(255,255,255,.35);line-height:1.5}
+.upload-card{padding:2rem;text-align:center;margin:1.5rem 0}
+.upload-card .cam{font-size:2.5rem;display:block;margin-bottom:.75rem}
+.upload-card p{font-size:.8rem;color:rgba(255,255,255,.25)}
+.upload-card p strong{color:rgba(129,140,248,.5)}
+.section-title{font-size:.7rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:.75rem}
+.celeb-scroll{display:flex;gap:.6rem;overflow-x:auto;padding-bottom:.75rem;margin-bottom:1.5rem}
+.chip{display:flex;align-items:center;gap:.4rem;padding:.5rem .8rem;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05);white-space:nowrap;transition:all .2s;cursor:pointer}
+.chip:hover{border-color:rgba(129,140,248,.2);background:rgba(129,140,248,.06)}
+.chip .emoji{font-size:1rem}.chip .txt{font-size:.75rem;color:rgba(255,255,255,.5)}
+.scene-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1.5rem}
+.scene{aspect-ratio:1;border-radius:14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;transition:all .2s;cursor:pointer}
+.scene:hover{border-color:rgba(129,140,248,.15);background:rgba(129,140,248,.04)}
+.scene .icon{font-size:1.2rem}.scene .txt{font-size:.55rem;color:rgba(255,255,255,.25)}
+.gen-btn{width:100%;padding:1rem;border-radius:16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:600;font-size:.95rem;border:none;cursor:pointer;position:relative;overflow:hidden}
+.gen-btn::before{content:'';position:absolute;top:0;left:-100%;width:200%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);animation:shimmer 2s infinite}
+@keyframes shimmer{to{left:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="glass">
+    <div class="brand"><b>mingren</b>.pics</div>
+    <div class="hdr-actions">
+      <div class="hdr-btn">?</div>
+      <div class="hdr-btn">≡</div>
+    </div>
+  </header>
+  <main>
+    <div class="hero">
+      <h1>跟<span class="grad">任何名人</span><br>拍一张合影</h1>
+      <p>AI生成，电影级画质，3秒出图</p>
+    </div>
+    <div class="upload-card glass">
+      <span class="cam">📸</span>
+      <p><strong>点击上传</strong> 或拖拽你的自拍</p>
+    </div>
+    <div class="section-title">热门名人</div>
+    <div class="celeb-scroll">
+      <div class="chip"><span class="emoji">💃</span><span class="txt">Taylor</span></div>
+      <div class="chip"><span class="emoji">🚀</span><span class="txt">Musk</span></div>
+      <div class="chip"><span class="emoji">⚽</span><span class="txt">Messi</span></div>
+      <div class="chip"><span class="emoji">🎤</span><span class="txt">周杰伦</span></div>
+      <div class="chip"><span class="emoji">🎮</span><span class="txt">黄仁勋</span></div>
+      <div class="chip"><span class="emoji">🌸</span><span class="txt">BTS V</span></div>
+    </div>
+    <div class="section-title">选择场景</div>
+    <div class="scene-row">
+      <div class="scene"><span class="icon">🏆</span><span class="txt">红毯</span></div>
+      <div class="scene"><span class="icon">🤳</span><span class="txt">自拍</span></div>
+      <div class="scene"><span class="icon">☕</span><span class="txt">咖啡</span></div>
+      <div class="scene"><span class="icon">🎤</span><span class="txt">同台</span></div>
+    </div>
+    <button class="gen-btn">✨ 生成合影</button>
+  </main>
+</div>
+</body>
+</html>

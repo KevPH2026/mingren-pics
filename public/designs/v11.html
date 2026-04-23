@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V11</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+body{
+  background:#0a0a0a;
+  color:#fff;
+  font-family:'Noto Sans SC',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+.glitch{
+  position:relative;
+  font-size:3.5rem;
+  font-weight:900;
+  letter-spacing:-2px;
+  text-transform:uppercase;
+  animation:glitch 2s infinite;
+}
+@keyframes glitch{
+  0%{text-shadow:3px 0 #ff00de,-3px 0 #00fff7}
+  25%{text-shadow:-3px 0 #ff00de,3px 0 #00fff7}
+  50%{text-shadow:3px -2px #ff00de,-3px 2px #00fff7}
+  75%{text-shadow:-2px 3px #ff00de,2px -3px #00fff7}
+  100%{text-shadow:3px 0 #ff00de,-3px 0 #00fff7}
+}
+.neon-box{
+  border:2px solid #ff00de;
+  box-shadow:0 0 20px #ff00de,0 0 40px #ff00de55,inset 0 0 20px #ff00de22;
+  padding:3rem 2rem;
+  margin:2rem;
+  position:relative;
+  background:linear-gradient(135deg,#0a0a0aee,#1a0033ee);
+}
+.neon-box::before{
+  content:'';position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;
+  background:linear-gradient(45deg,#ff00de,#00fff7,#ff6600,#ff00de);
+  background-size:400%;
+  z-index:-1;animation:borderGlow 3s linear infinite;
+  filter:blur(8px);opacity:.6;
+}
+@keyframes borderGlow{0%{background-position:0 0}50%{background-position:400% 0}100%{background-position:0 0}}
+.scanline{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,247,.03) 2px,rgba(0,255,247,.03) 4px);
+  pointer-events:none;z-index:100;
+}
+.tag{
+  display:inline-block;
+  padding:.4rem 1rem;
+  margin:.3rem;
+  border:1px solid #00fff7;
+  color:#00fff7;
+  font-size:.75rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:all .2s;
+}
+.tag:hover{background:#00fff7;color:#000}
+.cta{
+  display:block;
+  margin:2rem auto;
+  padding:1.2rem 3rem;
+  background:linear-gradient(90deg,#ff00de,#ff6600);
+  color:#fff;
+  font-size:1.3rem;
+  font-weight:900;
+  border:none;
+  text-transform:uppercase;
+  letter-spacing:3px;
+  cursor:pointer;
+  clip-path:polygon(4% 0%,100% 0%,96% 100%,0% 100%);
+  transition:transform .2s;
+}
+.cta:hover{transform:scale(1.05)}
+.sub{color:#ff00de;font-size:.85rem;letter-spacing:4px;text-transform:uppercase;margin-bottom:1rem}
+.desc{color:#aaa;font-size:1rem;line-height:1.6;margin:1rem 0 2rem}
+.faces{display:flex;gap:.8rem;margin:1.5rem 0;flex-wrap:wrap;justify-content:center}
+.face{
+  width:48px;height:48px;border-radius:50%;
+  border:2px solid #ff00de;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;
+  box-shadow:0 0 10px #ff00de55;
+}
+.bottom-bar{
+  margin-top:2rem;
+  padding:1.5rem;
+  background:linear-gradient(90deg,#ff00de22,#00fff722);
+  text-align:center;
+  font-size:.8rem;
+  color:#666;
+  letter-spacing:2px;
+}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="neon-box">
+  <div class="sub">▸ GPT-IMAGE 2.0 POWERED</div>
+  <div class="glitch">跟名人<br>合影</div>
+  <div class="desc">上传自拍 → 选名人 → AI合成<br><span style="color:#00fff7">不是P的。比真的还真。</span></div>
+  <div class="faces">
+    <div class="face">🚀</div><div class="face">💃</div><div class="face">⚽</div>
+    <div class="face">🎤</div><div class="face">🌸</div><div class="face">🏀</div>
+    <div class="face">🎬</div><div class="face">👑</div>
+  </div>
+  <button class="cta">⚡ 立即生成</button>
+  <div style="text-align:center;margin-top:1rem">
+    <span class="tag">走红毯</span><span class="tag">自拍合影</span><span class="tag">喝咖啡</span>
+    <span class="tag">旅行打卡</span><span class="tag">演唱会</span>
+  </div>
+</div>
+<div class="bottom-bar">MINGREN.PICS — AI合成 · 无限可能</div>
+</body>
+</html>

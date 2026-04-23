@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V19</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+body{background:#0a0a0a;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;color:#fff}
+.page{min-height:100vh;display:flex;flex-direction:column;position:relative}
+.liquid{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);animation:float 8s ease-in-out infinite}
+.blob1{width:300px;height:300px;background:linear-gradient(135deg,#ff006e,#8338ec);top:-10%;right:-20%;animation-delay:0s}
+.blob2{width:250px;height:250px;background:linear-gradient(135deg,#00b4d8,#0077b6);bottom:10%;left:-15%;animation-delay:-3s}
+.blob3{width:200px;height:200px;background:linear-gradient(135deg,#fb5607,#ff006e);top:40%;right:10%;animation-delay:-5s}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-30px) scale(1.1)}66%{transform:translate(-20px,20px) scale(.9)}}
+.content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;padding:2rem}
+.label{font-size:.6rem;letter-spacing:8px;color:#8338ec;text-transform:uppercase;font-weight:700;margin-bottom:1.5rem}
+.title{font-size:5rem;font-weight:900;line-height:.85;letter-spacing:-4px}
+.title .liquid-text{background:linear-gradient(90deg,#ff006e,#8338ec,#00b4d8,#ff006e);background-size:300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:liquidShift 4s ease infinite}
+@keyframes liquidShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.sub{font-size:1.2rem;color:#666;margin:1.5rem 0;line-height:1.6;font-weight:400}
+.sub b{background:linear-gradient(90deg,#ff006e,#8338ec);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900;font-size:1.4rem}
+.pills{display:flex;gap:.8rem;flex-wrap:wrap;margin:1rem 0}
+.pill{padding:.6rem 1.2rem;background:#ffffff0a;backdrop-filter:blur(10px);border:1px solid #ffffff15;border-radius:2rem;color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .3s}
+.pill:hover{background:#ffffff22;border-color:#8338ec}
+.cta-wrap{margin-top:2rem;display:flex;gap:1rem;align-items:center}
+.cta{padding:1.1rem 2.5rem;background:linear-gradient(135deg,#ff006e,#8338ec);color:#fff;font-weight:900;font-size:1rem;border:none;border-radius:3rem;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 30px #8338ec44;transition:transform .2s}
+.cta:hover{transform:scale(1.05)}
+.ghost{padding:1.1rem 1.5rem;background:transparent;border:1px solid #ffffff22;color:#888;font-size:.8rem;border-radius:3rem;cursor:pointer;font-weight:700}
+.stats{display:flex;gap:2.5rem;margin-top:2.5rem}
+.stat-n{font-size:1.8rem;font-weight:900;background:linear-gradient(90deg,#ff006e,#00b4d8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-l{font-size:.55rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:.2rem}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="liquid">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+  </div>
+  <div class="content">
+    <div class="label">GPT-IMAGE 2.0</div>
+    <div class="title">跟<span class="liquid-text">名人</span><br>合个影</div>
+    <div class="sub">上传自拍 · 选名人<br><b>AI秒出合影</b></div>
+    <div class="pills">
+      <span class="pill">💃 Taylor</span>
+      <span class="pill">🚀 Musk</span>
+      <span class="pill">⚽ Messi</span>
+      <span class="pill">🎤 周杰伦</span>
+      <span class="pill">🌸 BTS</span>
+    </div>
+    <div class="cta-wrap">
+      <button class="cta">📸 立即生成</button>
+      <button class="ghost">看示例</button>
+    </div>
+    <div class="stats">
+      <div><div class="stat-n">50K+</div><div class="stat-l">已生成</div></div>
+      <div><div class="stat-n">200+</div><div class="stat-l">名人库</div></div>
+      <div><div class="stat-n">3s</div><div class="stat-l">出图</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

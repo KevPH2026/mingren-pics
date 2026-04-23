@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V25</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+body{background:#e8e4df;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+.page{min-height:100vh;display:flex;flex-direction:column}
+.nav{padding:1.5rem;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:.7rem;font-weight:900;letter-spacing:4px;text-transform:uppercase;color:#000}
+.logo-dot{display:inline-block;width:8px;height:8px;background:#2d5bf6;border-radius:50%;margin-left:2px}
+.lang{font-size:.6rem;color:#999;letter-spacing:2px;font-weight:700}
+.hero{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 2rem}
+.label-line{display:flex;align-items:center;gap:.8rem;margin-bottom:1rem}
+.label-dot{width:10px;height:10px;background:#2d5bf6;border-radius:50%}
+.label-text{font-size:.65rem;font-weight:900;letter-spacing:4px;text-transform:uppercase;color:#999}
+.title{font-size:4.5rem;font-weight:900;line-height:.85;letter-spacing:-4px;color:#000}
+.title .blue{color:#2d5bf6}
+.desc{margin:1.5rem 0;font-size:.9rem;color:#666;line-height:1.7;max-width:300px}
+.desc b{color:#000;font-size:1rem}
+.features{display:flex;flex-direction:column;gap:.8rem;margin:1.5rem 0}
+.feat{display:flex;align-items:center;gap:.8rem;font-size:.8rem;color:#333;font-weight:700}
+.feat-icon{width:36px;height:36px;background:#2d5bf611;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.feat b{color:#2d5bf6}
+.cta-area{padding:2rem;padding-top:0;display:flex;gap:.8rem}
+.cta{flex:1;padding:1.1rem;background:#000;color:#fff;font-weight:900;font-size:1rem;border:none;letter-spacing:1px;cursor:pointer;transition:background .2s}
+.cta:hover{background:#2d5bf6}
+.cta-outline{padding:1.1rem 1.5rem;border:2px solid #000;color:#000;font-weight:900;font-size:.8rem;background:transparent;cursor:pointer;letter-spacing:1px}
+.bottom{padding:1.5rem 2rem;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:.5rem;color:#bbb;letter-spacing:3px;font-weight:700;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="nav">
+    <div class="logo">mingren<span class="logo-dot"></span>pics</div>
+    <div class="lang">ZH / EN</div>
+  </div>
+  <div class="hero">
+    <div class="label-line">
+      <div class="label-dot"></div>
+      <div class="label-text">GPT-Image 2.0</div>
+    </div>
+    <div class="title">跟<span class="blue">名人</span><br>合个影</div>
+    <div class="desc">
+      上传自拍，选你想合影的名人<br>
+      <b>3秒AI生成，逼真到不可思议</b>
+    </div>
+    <div class="features">
+      <div class="feat"><div class="feat-icon">📸</div>上传自拍 · <b>一键生成</b></div>
+      <div class="feat"><div class="feat-icon">⭐</div><b>200+</b> 全球名人库</div>
+      <div class="feat"><div class="feat-icon">🔗</div>生成即分享 · <b>水印裂变</b></div>
+    </div>
+  </div>
+  <div class="cta-area">
+    <button class="cta">📸 立即开拍</button>
+    <button class="cta-outline">看示例</button>
+  </div>
+  <div class="bottom">
+    <span>mingren.pics</span>
+    <span>不是PS · 是AI</span>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V13</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+body{
+  background:#ff69b4;
+  font-family:'Noto Sans SC',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+.main{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 20% 20%, #ff0 15%, transparent 16%),
+    radial-gradient(circle at 80% 80%, #0ff 15%, transparent 16%),
+    radial-gradient(circle at 50% 50%, #f0f 20%, transparent 40%),
+    linear-gradient(135deg, #ff69b4, #87ceeb, #ff69b4);
+  padding:1.5rem;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+}
+.sticker{
+  background:#fff;
+  border:4px solid #000;
+  border-radius:20px;
+  padding:2.5rem 2rem;
+  text-align:center;
+  max-width:360px;
+  width:100%;
+  box-shadow:8px 8px 0 #000;
+  transform:rotate(-2deg);
+  position:relative;
+}
+.sticker::before{
+  content:'★';position:absolute;top:-20px;right:-15px;
+  font-size:3rem;color:#ff0;
+  filter:drop-shadow(2px 2px 0 #000);
+}
+.sticker::after{
+  content:'♡';position:absolute;bottom:-15px;left:-10px;
+  font-size:2.5rem;color:#ff1493;
+  filter:drop-shadow(2px 2px 0 #000);
+}
+.title{
+  font-size:3rem;font-weight:900;
+  color:#000;
+  -webkit-text-stroke:2px #f0f;
+  line-height:1;
+  margin-bottom:.5rem;
+}
+.subtitle{
+  font-size:1.5rem;font-weight:900;
+  color:#f0f;
+  margin-bottom:1rem;
+}
+.desc{
+  font-size:.9rem;
+  color:#333;
+  margin:1rem 0;
+  line-height:1.6;
+}
+.desc b{color:#f0f;font-size:1.1rem}
+.btn-row{display:flex;gap:.8rem;justify-content:center;margin:1.5rem 0;flex-wrap:wrap}
+.pill{
+  padding:.5rem 1rem;
+  border-radius:999px;
+  font-weight:700;
+  font-size:.75rem;
+  border:2px solid #000;
+  cursor:pointer;
+  transition:transform .2s;
+}
+.pill:hover{transform:scale(1.1)}
+.pill-pink{background:#ff69b4;color:#fff}
+.pill-blue{background:#0ff;color:#000}
+.pill-yellow{background:#ff0;color:#000}
+.pill-purple{background:#9b59b6;color:#fff}
+.cta{
+  margin-top:1rem;
+  padding:1rem 3rem;
+  background:#000;
+  color:#0ff;
+  font-size:1.2rem;
+  font-weight:900;
+  border:3px solid #0ff;
+  border-radius:999px;
+  cursor:pointer;
+  letter-spacing:2px;
+  transition:all .2s;
+}
+.cta:hover{background:#0ff;color:#000}
+.marquee{
+  margin-top:2rem;
+  background:#000;
+  color:#ff0;
+  padding:.6rem;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:3px;
+  overflow:hidden;
+  white-space:nowrap;
+  animation:scroll 8s linear infinite;
+}
+@keyframes scroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+.sparkles{font-size:1.5rem;margin:.5rem 0}
+</style>
+</head>
+<body>
+<div class="main">
+  <div class="sticker">
+    <div class="sparkles">✨📷✨</div>
+    <div class="title">跟名人</div>
+    <div class="subtitle">合 影 ！</div>
+    <div class="desc">
+      拍一张自拍 → 选你的爱豆<br>
+      <b>3秒出合影，朋友圈炸裂🔥</b>
+    </div>
+    <div class="btn-row">
+      <span class="pill pill-pink">🚀 Musk</span>
+      <span class="pill pill-blue">💃 Taylor</span>
+      <span class="pill pill-yellow">⚽ Messi</span>
+      <span class="pill pill-purple">🎤 周杰伦</span>
+    </div>
+    <button class="cta">📸 立即开拍</button>
+  </div>
+  <div class="marquee">
+    ★ MINGREN.PICS ★ AI合成 · 无限可能 ★ 200+名人等你来合 ★ GPT-IMAGE 2.0 ★ 
+  </div>
+</div>
+</body>
+</html>

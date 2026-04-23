@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mingren.pics V9 - VoltAgent Style</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--green:#10b981;--green-dim:rgba(16,185,129,.1);--green-glow:rgba(16,185,129,.3)}
+body{font-family:'Inter',system-ui,sans-serif;background:#050505;color:#e5e5e5;min-height:100vh}
+.page{max-width:420px;margin:0 auto;min-height:100vh;position:relative}
+.page::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green-dim),transparent)}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:1.25rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.brand{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:500;color:rgba(255,255,255,.5)}
+.brand span{color:var(--green)}
+.status{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.2);display:flex;align-items:center;gap:.4rem}
+.status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.terminal{margin:1.5rem;padding:1.25rem;border-radius:12px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);font-family:'JetBrains Mono',monospace}
+.terminal .line{font-size:.7rem;color:rgba(255,255,255,.3);line-height:2}
+.terminal .line .cmd{color:var(--green)}
+.terminal .line .val{color:rgba(255,255,255,.6)}
+.terminal .line .comment{color:rgba(255,255,255,.15)}
+.hero-block{padding:2rem 1.5rem}
+.hero-block h1{font-size:2.5rem;font-weight:600;letter-spacing:-.03em;line-height:1.1;margin-bottom:1rem}
+.hero-block h1 .em{color:var(--green)}
+.hero-block p{font-size:.8rem;color:rgba(255,255,255,.25);line-height:1.7;max-width:300px;font-family:'JetBrains Mono',monospace}
+.upload-term{margin:0 1.5rem 1.5rem;padding:1rem 1.25rem;border-radius:10px;border:1px dashed rgba(16,185,129,.15);background:rgba(16,185,129,.02);font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.25);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.5rem}
+.upload-term:hover{border-color:rgba(16,185,129,.3);color:var(--green)}
+.upload-term .arrow{color:var(--green)}
+.celeb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:0 1.5rem;background:rgba(255,255,255,.04);border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
+.celeb-cell{background:#050505;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;cursor:pointer;transition:background .15s}
+.celeb-cell:hover{background:rgba(16,185,129,.04)}
+.celeb-cell .emoji{font-size:1.5rem}.celeb-cell .name{font-family:'JetBrains Mono',monospace;font-size:.55rem;color:rgba(255,255,255,.25)}
+.gen-bar{margin:0 1.5rem;padding:1rem;border-radius:10px;background:var(--green);color:#050505;font-weight:600;font-size:.85rem;text-align:center;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;box-shadow:0 0 30px var(--green-glow)}
+.footer{padding:2rem 1.5rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.55rem;color:rgba(255,255,255,.08);letter-spacing:.1em}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-bar">
+    <div class="brand"><span>$</span> mingren.pics</div>
+    <div class="status">online</div>
+  </div>
+  <div class="terminal">
+    <div class="line"><span class="comment"># 名人合影生成器</span></div>
+    <div class="line"><span class="cmd">$</span> model: <span class="val">gpt-image-2</span></div>
+    <div class="line"><span class="cmd">$</span> quality: <span class="val">photorealistic</span></div>
+    <div class="line"><span class="cmd">$</span> latency: <span class="val">~3s</span></div>
+  </div>
+  <div class="hero-block">
+    <h1>跟任何名人<br><span class="em">合影</span></h1>
+    <p>上传自拍 → 选名人 → 3秒出图<br>AI生成的照片，真假难辨。</p>
+  </div>
+  <div class="upload-term"><span class="arrow">→</span> 上传自拍 [click or drag]</div>
+  <div class="celeb-grid">
+    <div class="celeb-cell"><span class="emoji">💃</span><span class="name">Taylor</span></div>
+    <div class="celeb-cell"><span class="emoji">🚀</span><span class="name">Musk</span></div>
+    <div class="celeb-cell"><span class="emoji">⚽</span><span class="name">Messi</span></div>
+    <div class="celeb-cell"><span class="emoji">🎤</span><span class="name">周杰伦</span></div>
+    <div class="celeb-cell"><span class="emoji">🎮</span><span class="name">黄仁勋</span></div>
+    <div class="celeb-cell"><span class="emoji">🌸</span><span class="name">BTS V</span></div>
+  </div>
+  <button class="gen-bar">→ generate</button>
+  <div class="footer">MINGREN.PICS // V0.1.0 // AI GENERATED</div>
+</div>
+</body>
+</html>

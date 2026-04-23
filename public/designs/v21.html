@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mingren.pics V21</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+body{background:#f5f0e8;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+.page{min-height:100vh;display:flex;flex-direction:column;position:relative}
+.newspaper{flex:1;display:flex;flex-direction:column;padding:0}
+.header{border-bottom:4px double #000;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center}
+.masthead{font-size:.6rem;letter-spacing:6px;font-weight:900;text-transform:uppercase}
+.date{font-size:.55rem;color:#999;letter-spacing:2px}
+.headline-area{padding:2rem 1.5rem;text-align:center;border-bottom:2px solid #000}
+.headline{font-size:3.5rem;font-weight:900;line-height:.9;letter-spacing:-2px;color:#000}
+.headline .red{color:#d00}
+.subhead{font-size:.85rem;color:#666;margin-top:.8rem;font-weight:400;line-height:1.5}
+.columns{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid #000}
+.col{padding:1.2rem;border-right:1px solid #ccc}
+.col:last-child{border-right:none}
+.col-title{font-size:.65rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#d00;margin-bottom:.5rem;border-bottom:1px solid #000;padding-bottom:.3rem}
+.col-text{font-size:.7rem;color:#333;line-height:1.5}
+.col-text b{color:#000}
+.ad-box{margin:1.5rem;padding:1.5rem;border:3px solid #000;text-align:center}
+.ad-label{font-size:.5rem;color:#999;letter-spacing:3px;text-transform:uppercase;margin-bottom:.5rem}
+.ad-text{font-size:1.1rem;font-weight:900;line-height:1.3}
+.ad-text .big{font-size:1.8rem;color:#d00}
+.cta{display:block;margin-top:1rem;padding:.8rem;background:#000;color:#fff;font-weight:900;font-size:.9rem;border:none;letter-spacing:2px;cursor:pointer;text-transform:uppercase}
+.footer-strip{padding:.8rem 1.5rem;background:#000;color:#fff;font-size:.5rem;letter-spacing:4px;text-transform:uppercase;display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="newspaper">
+    <div class="header">
+      <span class="masthead">mingren.pics</span>
+      <span class="date">GPT-IMAGE 2.0 · 2026</span>
+    </div>
+    <div class="headline-area">
+      <div class="headline">跟<span class="red">名人</span>合影<br>只要3秒</div>
+      <div class="subhead">上传自拍 → 选名人 → AI合成 · 比PS还真 · 朋友圈炸裂</div>
+    </div>
+    <div class="columns">
+      <div class="col">
+        <div class="col-title">📰 如何使用</div>
+        <div class="col-text">拍一张自拍上传，选择你想合影的名人，<b>AI 3秒生成逼真合影。</b>不需要PS技巧。</div>
+      </div>
+      <div class="col">
+        <div class="col-title">⭐ 支持名人</div>
+        <div class="col-text">💃 Taylor Swift<br>🚀 Elon Musk<br>⚽ Lionel Messi<br>🎤 周杰伦<br><b>200+名人库持续更新</b></div>
+      </div>
+    </div>
+    <div class="ad-box">
+      <div class="ad-label">— advertisement —</div>
+      <div class="ad-text">
+        现在就试<br><span class="big">免费体验</span>
+      </div>
+      <button class="cta">📸 立即开拍 →</button>
+    </div>
+    <div class="footer-strip">
+      <span>mingren.pics</span>
+      <span>不是PS · 是AI</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

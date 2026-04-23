@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mingren.pics V2 - RunwayML Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh}
+.page{min-height:100vh;background:linear-gradient(180deg,#0a0a0a 0%,#0f0f14 50%,#0a0a0a 100%);padding:2rem 1.5rem}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:4rem}
+.logo{font-size:.9rem;font-weight:600;letter-spacing:.15em;color:rgba(255,255,255,.6)}
+.logo span{color:#e879f9}
+.menu-btn{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:.8rem}
+.hero-text{margin-bottom:3rem}
+.hero-text h1{font-size:2.8rem;font-weight:700;line-height:1.05;letter-spacing:-.03em;margin-bottom:1rem}
+.hero-text h1 em{font-style:normal;background:linear-gradient(90deg,#e879f9,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-text p{font-size:.95rem;color:rgba(255,255,255,.35);line-height:1.6;max-width:300px}
+.film-strip{display:flex;gap:.5rem;margin-bottom:2rem;overflow-x:auto;padding-bottom:.5rem}
+.film-frame{min-width:120px;aspect-ratio:3/4;border-radius:8px;background:linear-gradient(180deg,rgba(232,121,249,.08),rgba(167,139,250,.04));border:1px solid rgba(232,121,249,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;position:relative;overflow:hidden}
+.film-frame::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#e879f9,#a78bfa)}
+.film-frame .emoji{font-size:2.2rem}.film-frame .name{font-size:.65rem;color:rgba(255,255,255,.4)}
+.upload-zone{width:100%;aspect-ratio:16/9;border-radius:16px;border:1px dashed rgba(232,121,249,.2);background:rgba(232,121,249,.02);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;margin-bottom:2rem;cursor:pointer;transition:all .3s}
+.upload-zone:hover{border-color:rgba(232,121,249,.4);background:rgba(232,121,249,.05)}
+.upload-icon{width:48px;height:48px;border-radius:50%;background:rgba(232,121,249,.1);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.upload-zone p{font-size:.85rem;color:rgba(255,255,255,.3)}
+.upload-zone p strong{color:rgba(232,121,249,.6)}
+.scene-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:2rem}
+.scene-btn{aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;transition:all .3s}
+.scene-btn:hover{background:rgba(232,121,249,.06);border-color:rgba(232,121,249,.15)}
+.scene-btn .icon{font-size:1.3rem}.scene-btn .label{font-size:.55rem;color:rgba(255,255,255,.3)}
+.generate-btn{width:100%;padding:1rem;border-radius:14px;background:linear-gradient(135deg,#e879f9,#a78bfa);color:#fff;font-weight:600;font-size:1rem;border:none;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 30px rgba(232,121,249,.2)}
+.footer-text{text-align:center;margin-top:2rem;font-size:.65rem;color:rgba(255,255,255,.15);letter-spacing:.15em}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-bar">
+    <div class="logo">MING<span>REN</span>.PICS</div>
+    <div class="menu-btn">☰</div>
+  </div>
+  <div class="hero-text">
+    <h1>跟你的<br><em>偶像</em>合影</h1>
+    <p>AI驱动的名人合影生成器，电影级画质，真假难辨。</p>
+  </div>
+  <div class="film-strip">
+    <div class="film-frame"><span class="emoji">💃</span><span class="name">Taylor Swift</span></div>
+    <div class="film-frame"><span class="emoji">🚀</span><span class="name">Elon Musk</span></div>
+    <div class="film-frame"><span class="emoji">🎮</span><span class="name">黄仁勋</span></div>
+    <div class="film-frame"><span class="emoji">🎤</span><span class="name">周杰伦</span></div>
+    <div class="film-frame"><span class="emoji">⚽</span><span class="name">Messi</span></div>
+    <div class="film-frame"><span class="emoji">🖤</span><span class="name">Billie</span></div>
+  </div>
+  <div class="upload-zone">
+    <div class="upload-icon">📸</div>
+    <p><strong>点击上传</strong>你的照片</p>
+  </div>
+  <div class="scene-grid">
+    <div class="scene-btn"><span class="icon">🏆</span><span class="label">红毯</span></div>
+    <div class="scene-btn"><span class="icon">🤳</span><span class="label">自拍</span></div>
+    <div class="scene-btn"><span class="icon">☕</span><span class="label">咖啡</span></div>
+    <div class="scene-btn"><span class="icon">🎤</span><span class="label">同台</span></div>
+    <div class="scene-btn"><span class="icon">✈️</span><span class="label">旅行</span></div>
+    <div class="scene-btn"><span class="icon">🤝</span><span class="label">商务</span></div>
+    <div class="scene-btn"><span class="icon">💪</span><span class="label">运动</span></div>
+    <div class="scene-btn"><span class="icon">🍽️</span><span class="label">晚餐</span></div>
+  </div>
+  <button class="generate-btn">✨ 生成合影</button>
+  <div class="footer-text">POWERED BY GPT-IMAGE 2.0</div>
+</div>
+</body>
+</html>

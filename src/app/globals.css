@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --comic-red: #e00;
+  --comic-yellow: #ff0;
+  --comic-cyan: #0cf;
+  --comic-green: #0f0;
+  --comic-black: #000;
+  --comic-bg: #f5e6d3;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Comic halftone dots background */
+.halftone {
+  background-image: radial-gradient(circle, #111 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+/* Pop Art shadow utility */
+.comic-shadow {
+  box-shadow: 6px 6px 0 #000;
+}
+
+.comic-shadow-sm {
+  box-shadow: 4px 4px 0 #000;
+}
+
+/* Comic border */
+.comic-border {
+  border: 4px solid #000;
+}
+
+.comic-border-thin {
+  border: 2px solid #000;
+}
+
+/* Burst background for generating step */
+@keyframes burst {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.05) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.animate-burst {
+  animation: burst 1.5s ease-in-out infinite;
+}
+
+/* Wiggle for CTA */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 2s ease-in-out infinite;
+}
+
+/* Bounce in */
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.5s ease-out;
+}
+
+/* Speech bubble tail */
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: #000;
+}
+
+/* Speed lines */
+.speed-lines {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 4px,
+    rgba(0,0,0,0.03) 4px,
+    rgba(0,0,0,0.03) 5px
+  );
 }
