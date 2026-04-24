@@ -9,6 +9,27 @@ import HistoryStep from '@/components/HistoryStep';
 import PaywallModal from '@/components/PaywallModal';
 import { useAppStore, AppStep } from '@/lib/store';
 
+function AuthButton() {
+  const { isRegistered, setShowPaywall } = useAppStore();
+  const email = typeof window !== 'undefined' ? localStorage.getItem('mingren_email') || '' : '';
+
+  if (isRegistered()) {
+    return (
+      <span className="text-[10px] font-bold opacity-80 bg-white/15 px-2 py-0.5 rounded">
+        ✅ {email ? email.replace(/(.{2}).*(@.*)/, '$1***$2') : '已登录'}
+      </span>
+    );
+  }
+  return (
+    <button
+      onClick={() => setShowPaywall(true)}
+      className="px-2 py-0.5 bg-[#ff0] text-black text-[10px] font-black rounded hover:bg-[#ff3] transition-colors"
+    >
+      🔑 登录
+    </button>
+  );
+}
+
 const stepComponents: Record<AppStep, React.ComponentType> = {
   upload: UploadStep,
   select: SelectCelebrity,
@@ -35,7 +56,8 @@ export default function HomeContent() {
         >
           mingren.pics
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <AuthButton />
           <span className="text-[10px] font-bold opacity-70 tracking-wider">⚡ GPT-IMAGE 2.0</span>
           {historyCount > 0 && step !== 'history' && (
             <button
