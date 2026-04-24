@@ -15,6 +15,7 @@ export default function PaywallModal() {
   const [success, setSuccess] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const [childCodes, setChildCodes] = useState<string[]>([]);
+  const [signature, setSignature] = useState('');
 
   // 获取 pending ref
   const pendingRef = typeof window !== 'undefined' ? localStorage.getItem('mingren_pending_ref') : null;
@@ -39,6 +40,11 @@ export default function PaywallModal() {
       if (!resp.ok) {
         setError(data.error || '发送失败');
         return;
+      }
+
+      // 保存 signature 用于 verify
+      if (data.signature) {
+        setSignature(data.signature);
       }
 
       setSent(true);
@@ -72,6 +78,7 @@ export default function PaywallModal() {
         body: JSON.stringify({
           email,
           code,
+          signature,
           referralCode: pendingRef || undefined,
         }),
       });

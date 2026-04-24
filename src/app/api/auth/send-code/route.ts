@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHmac } from 'crypto';
 
 const SECRET = process.env.AUTH_SECRET || 'mingren-pics-dev-secret-2026';
 
@@ -22,17 +22,9 @@ export async function POST(req: NextRequest) {
 
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      // 无API key时，开发模式直接返回验证码（不验证）
+      // 无API key时，开发模式直接返回验证码
       console.log(`[DEV] 验证码 for ${email}: ${code}`);
-      const res = NextResponse.json({ ok: true, dev: true });
-      res.cookies.set('verify_token', JSON.stringify({ email: email.toLowerCase(), code, signature }), {
-        httpOnly: true,
-        secure: true,
-        maxAge: 600, // 10分钟有效
-        path: '/',
-        sameSite: 'lax',
-      });
-      return res;
+      return NextResponse.json({ ok: true, dev: true, code, signature });
     }
 
     const resend = new Resend(apiKey);
@@ -58,15 +50,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '邮件发送失败，请重试' }, { status: 500 });
     }
 
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set('verify_token', JSON.stringify({ email: email.toLowerCase(), code, signature }), {
-      httpOnly: true,
-      secure: true,
-      maxAge: 600,
-      path: '/',
-      sameSite: 'lax',
-    });
-    return res;
+    // 返回 signature 给前端，前端 verify 时传回来
+    // code 不返回（通过邮件发送），但 dev 模式返回
+    return NextResponse.json({ ok: true, signature });
   } catch (e: any) {
     console.error('Send code error:', e);
     return NextResponse.json({ error: '发送失败' }, { status: 500 });
