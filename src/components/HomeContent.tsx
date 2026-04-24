@@ -10,8 +10,8 @@ import PaywallModal from '@/components/PaywallModal';
 import { useAppStore, AppStep } from '@/lib/store';
 
 function AuthButton() {
-  const { isRegistered, setShowPaywall } = useAppStore();
-  const email = typeof window !== 'undefined' ? localStorage.getItem('mingren_email') || '' : '';
+  const { isRegistered, setShowPaywall, serverQuota } = useAppStore();
+  const email = serverQuota?.email || (typeof window !== 'undefined' ? localStorage.getItem('mingren_email') || '' : '');
 
   if (isRegistered()) {
     return (

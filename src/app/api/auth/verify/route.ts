@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax',
     });
     res.cookies.set('mingren_email', parsed.email, {
-      httpOnly: true,
+      httpOnly: false,
       secure: true,
       maxAge: 365 * 24 * 3600,
       path: '/',

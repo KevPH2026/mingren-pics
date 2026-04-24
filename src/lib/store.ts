@@ -23,7 +23,7 @@ interface AppState {
   showPaywall: boolean;
   dailyUsage: { date: string; count: number };
   // 服务端数据
-  serverQuota: { registered: boolean; dailyLimit: number; bonusQuota: number; inviteCount: number; referralCode: string; childCodes: string[] } | null;
+  serverQuota: { registered: boolean; dailyLimit: number; bonusQuota: number; inviteCount: number; referralCode: string; childCodes: string[]; email?: string } | null;
   referralCode: string | null;
   inviteCount: number;
   childCodes: string[];
@@ -180,9 +180,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   isRegistered: () => {
     if (typeof window === 'undefined') return false;
-    // Cookie 有 mingren_uid 说明已注册
-    const uid = document.cookie.includes('mingren_uid=');
-    if (uid) return true;
+    // 优先看 serverQuota（服务端通过 httpOnly cookie 判断）
+    if (get().serverQuota?.registered) return true;
+    // fallback: localStorage
     return localStorage.getItem(REGISTERED_KEY) === '1';
   },
 
