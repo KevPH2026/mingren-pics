@@ -6,7 +6,7 @@ import { celebrities, scenarios } from '@/lib/celebrities';
 import QRCode from 'qrcode';
 
 export default function ResultStep() {
-  const { generatedImages, selectedCelebrityId, selectedScenarioId, reset, setStep, addToHistory, isRegistered, setShowPaywall, setGeneratedImages, userImage } = useAppStore();
+  const { generatedImages, selectedCelebrityId, selectedScenarioId, reset, setStep, addToHistory, isRegistered, setShowPaywall, setGeneratedImages, userImage, history } = useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const scenario = scenarios.find((s) => s.id === selectedScenarioId);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -60,6 +60,129 @@ export default function ResultStep() {
     }
   }, [currentImage, celeb, scenario, addToHistory]);
 
+  const getViralCopy = () => {
+    const copies = [
+      '你也来一张？',
+      '快来跟名人合影！',
+      '一键生成你的名人合影',
+      '合影名人就在这里 👇',
+    ];
+    const count = history.length;
+    if (count >= 3) {
+      copies.push(`我已生成${count}张啦！`);
+    }
+    if (count >= 10) {
+      copies.push(`已合影${count}次！超上瘾`);
+    }
+    return copies[Math.floor(Math.random() * copies.length)];
+  };
+
+  const triggerDownload = (canvas: HTMLCanvasElement) => {
+    const link = document.createElement('a');
+    link.download = `mingren-${celeb?.nameEn || 'photo'}-${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    setSaving(false);
+    setTimeout(() => setShowWatermark(false), 500);
+  };
+
+  const drawBottomBar = (ctx: CanvasRenderingContext2D, w: number, h: number, baseFontSize: number, qrImg: HTMLImageElement | null, qrSize: number) => {
+    const invite = getInviteCode();
+    const barH = Math.max(120, Math.floor(h * 0.18));
+
+    // 底部半透明渐变遮罩
+    const grad = ctx.createLinearGradient(0, h - barH - 20, 0, h);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(0.3, 'rgba(0,0,0,0.55)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, h - barH - 20, w, barH + 20);
+
+    const y = h - 16;
+    const fs = baseFontSize;
+    const fsSmall = Math.max(14, Math.floor(fs * 0.6));
+    const fsLarge = Math.max(20, Math.floor(fs * 0.8));
+    const fsCode = Math.max(24, Math.floor(fs * 1.0));
+
+    // === 左下角：mingren.pics（像素风粗体） ===
+    ctx.font = `900 ${fsLarge}px "Courier New", monospace`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    // 描边
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = fsLarge / 4;
+    ctx.lineJoin = 'round';
+    ctx.strokeText('mingren.pics', 16, y - 20);
+    // 填充黄色
+    ctx.fillStyle = '#FFE600';
+    ctx.fillText('mingren.pics', 16, y - 20);
+
+    // === 中间：趣味裂变文案 ===
+    const viralText = getViralCopy();
+    ctx.font = `900 ${fs}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = fs / 4;
+    ctx.strokeText(viralText, w / 2, y - 10);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(viralText, w / 2, y - 10);
+
+    // === 右下角：二维码 + 邀请码 ===
+    if (qrImg) {
+      const qrPadding = 8;
+      const qrX = w - qrSize - qrPadding * 2 - 16;
+      const qrY = y - qrSize - qrPadding * 2 - 44;
+
+      // 二维码白色圆角背景
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.beginPath();
+      ctx.roundRect(qrX, qrY, qrSize + qrPadding * 2, qrSize + qrPadding * 2, 10);
+      ctx.fill();
+
+      // 画二维码
+      ctx.drawImage(qrImg, qrX + qrPadding, qrY + qrPadding, qrSize, qrSize);
+
+      // 二维码下方文字 "扫码合影名人"
+      ctx.font = `900 ${fsSmall}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = fsSmall / 4;
+      ctx.strokeText('扫码合影名人', qrX + (qrSize + qrPadding * 2) / 2, qrY + qrSize + qrPadding * 2 + 4);
+      ctx.fillText('扫码合影名人', qrX + (qrSize + qrPadding * 2) / 2, qrY + qrSize + qrPadding * 2 + 4);
+
+      // 如果有邀请码，在二维码左侧显示
+      if (invite.display) {
+        const codeX = qrX - 16;
+        const codeY = qrY + qrSize / 2;
+
+        // 邀请码背景标签
+        ctx.font = `900 ${fsSmall}px "PingFang SC", sans-serif`;
+        const codeLabel = '邀请码';
+        const codeLabelW = ctx.measureText(codeLabel).width + 12;
+        ctx.fillStyle = '#8b5cf6';
+        ctx.beginPath();
+        ctx.roundRect(codeX - codeLabelW, codeY - fsCode / 2 - 4, codeLabelW, fsSmall + 6, 4);
+        ctx.fill();
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(codeLabel, codeX - 2, codeY - fsCode / 2 - 1);
+
+        // 邀请码数字（大字体醒目）
+        ctx.font = `900 ${fsCode}px "Courier New", monospace`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = fsCode / 4;
+        ctx.strokeText(invite.display, codeX, codeY + fsCode);
+        ctx.fillStyle = '#FFE600';
+        ctx.fillText(invite.display, codeX, codeY + fsCode);
+      }
+    }
+  };
+
   const handleSave = async () => {
     if (!currentImage || saving) return;
 
@@ -80,11 +203,10 @@ export default function ResultStep() {
       const ctx = canvas.getContext('2d');
       if (!ctx) { setSaving(false); return; }
 
-      ctx.drawImage(img, 0, 0);
+      // 图片主体占满 canvas
+      ctx.drawImage(img, 0, 0, img.width, img.height);
 
-      const fontSize = Math.max(18, Math.floor(img.width / 28));
-
-      // === 右下角二维码区域 ===
+      const baseFontSize = Math.max(20, Math.floor(img.width / 22));
       const invite = getInviteCode();
       const qrUrl = invite.token ? `https://mingren.pics/?ref=${encodeURIComponent(invite.token)}` : 'https://mingren.pics';
       const qrSize = Math.max(80, Math.floor(img.width / 5));
@@ -99,71 +221,14 @@ export default function ResultStep() {
 
         const qrImg = new Image();
         qrImg.onload = () => {
-          const padding = 12;
-          const totalQrW = qrSize + padding * 2;
-          const totalQrH = qrSize + padding * 2 + fontSize + 8;
-
-          // 二维码背景白底
-          const qrX = img.width - totalQrW - 10;
-          const qrY = img.height - totalQrH - 10;
-
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-          ctx.beginPath();
-          ctx.roundRect(qrX, qrY, totalQrW, totalQrH, 8);
-          ctx.fill();
-
-          // 像素风格边框
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([6, 3]);
-          ctx.beginPath();
-          ctx.roundRect(qrX, qrY, totalQrW, totalQrH, 8);
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          // 画二维码
-          ctx.drawImage(qrImg, qrX + padding, qrY + padding, qrSize, qrSize);
-
-          // 二维码下方文字
-          ctx.font = `900 ${Math.max(10, fontSize * 0.55)}px sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.fillStyle = '#8b5cf6';
-          ctx.fillText('扫码生成你的合影 →', qrX + totalQrW / 2, qrY + qrSize + padding + fontSize * 0.6);
-
-          // === 底部网址水印（像素风） ===
-          ctx.font = `900 ${fontSize}px "Courier New", monospace`;
-          ctx.textAlign = 'center';
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = fontSize / 5;
-          ctx.strokeText('⚡ mingren.pics ⚡', img.width / 2, img.height - 12);
-          ctx.fillStyle = '#ff0';
-          ctx.fillText('⚡ mingren.pics ⚡', img.width / 2, img.height - 12);
-
-          // 触发下载
-          const link = document.createElement('a');
-          link.download = `mingren-${celeb?.nameEn || 'photo'}-${Date.now()}.png`;
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-          setSaving(false);
-          setTimeout(() => setShowWatermark(false), 500);
+          drawBottomBar(ctx, img.width, img.height, baseFontSize, qrImg, qrSize);
+          triggerDownload(canvas);
         };
         qrImg.src = qrDataUrl;
       } catch {
-        // QR 生成失败，仅加文字水印
-        ctx.font = `900 ${fontSize}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = fontSize / 5;
-        ctx.strokeText('⚡ mingren.pics ⚡', img.width / 2, img.height - 12);
-        ctx.fillStyle = '#ff0';
-        ctx.fillText('⚡ mingren.pics ⚡', img.width / 2, img.height - 12);
-
-        const link = document.createElement('a');
-        link.download = `mingren-${celeb?.nameEn || 'photo'}-${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        setSaving(false);
-        setTimeout(() => setShowWatermark(false), 500);
+        // QR 生成失败，只画底部栏（无二维码）
+        drawBottomBar(ctx, img.width, img.height, baseFontSize, null, 0);
+        triggerDownload(canvas);
       }
     };
     img.src = currentImage;
@@ -278,7 +343,7 @@ export default function ResultStep() {
               className="w-full object-cover comic-border-thin"
             />
 
-            {/* 像素化动态水印覆盖层 */}
+            {/* 动态水印覆盖层（保存动画预览） */}
             {showWatermark && (
               <div className="absolute inset-0 flex flex-col items-center justify-end p-3 bg-gradient-to-t from-black/80 via-black/20 to-transparent animate-pixel-reveal">
                 <div className="flex items-center gap-2 mb-2">
@@ -287,23 +352,20 @@ export default function ResultStep() {
                   </div>
                   {invite.display && (
                     <div className="px-2 py-1 bg-[#8b5cf6] border-2 border-white font-black text-[10px] text-white">
-                      码: {invite.display}
+                      邀请码: {invite.display}
                     </div>
                   )}
                 </div>
                 <div className="px-3 py-1.5 bg-white/90 rounded border-2 border-[#8b5cf6]">
-                  <p className="text-[10px] font-black text-[#8b5cf6]">📸 扫码生成你的合影</p>
+                  <p className="text-[10px] font-black text-[#8b5cf6]">📸 扫码合影名人</p>
                 </div>
               </div>
             )}
 
             {/* 常驻底部水印条 */}
             {!showWatermark && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent py-2 px-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-[#ff0]">mingren.pics</span>
-                  <span className="text-[10px] font-bold text-white/50">AI生成 · 仅供娱乐</span>
-                </div>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent py-1.5 px-3 flex items-center justify-center">
+                <span className="text-xs font-black text-[#ff0] tracking-wider">mingren.pics</span>
               </div>
             )}
           </div>
@@ -407,7 +469,7 @@ export default function ResultStep() {
             saving ? 'opacity-60' : 'comic-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none'
           }`}
         >
-          {saving ? '⏳ 水印渲染中...' : '💾 保存带码图'}
+          {saving ? '⏳ 分享图渲染中...' : '💾 一键保存分享图'}
         </button>
         <button
           onClick={handleShare}

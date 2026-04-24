@@ -6,18 +6,22 @@ import SelectScenario from '@/components/SelectScenario';
 import GeneratingStep from '@/components/GeneratingStep';
 import ResultStep from '@/components/ResultStep';
 import HistoryStep from '@/components/HistoryStep';
+import ProfilePage from '@/components/ProfilePage';
 import PaywallModal from '@/components/PaywallModal';
 import { useAppStore, AppStep } from '@/lib/store';
 
 function AuthButton() {
-  const { isRegistered, setShowPaywall, serverQuota } = useAppStore();
+  const { isRegistered, setShowPaywall, serverQuota, setStep } = useAppStore();
   const email = serverQuota?.email || (typeof window !== 'undefined' ? localStorage.getItem('mingren_email') || '' : '');
 
   if (isRegistered()) {
     return (
-      <span className="text-[10px] font-bold opacity-80 bg-white/15 px-2 py-0.5 rounded">
+      <button
+        onClick={() => setStep('profile')}
+        className="text-[10px] font-bold opacity-80 bg-white/15 px-2 py-0.5 rounded hover:bg-white/25 transition-colors cursor-pointer"
+      >
         ✅ {email ? email.replace(/(.{2}).*(@.*)/, '$1***$2') : '已登录'}
-      </span>
+      </button>
     );
   }
   return (
@@ -37,6 +41,7 @@ const stepComponents: Record<AppStep, React.ComponentType> = {
   generating: GeneratingStep,
   result: ResultStep,
   history: HistoryStep,
+  profile: ProfilePage,
 };
 
 export default function HomeContent() {

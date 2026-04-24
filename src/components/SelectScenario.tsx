@@ -225,7 +225,7 @@ export default function SelectScenario() {
           className={`flex flex-col items-center gap-2 p-4 bg-white comic-border-thin hover:bg-[#8b5cf6] hover:text-white hover:translate-y-[-3px] hover:comic-shadow-sm transition-all group disabled:opacity-50 disabled:pointer-events-none col-span-2`}
         >
           <span className="text-3xl group-hover:scale-125 transition-transform">✏️</span>
-          <span className="text-sm font-black">自定义场景 {registered ? '' : '🔒 付费'}</span>
+          <span className="text-sm font-black">自定义场景 {registered ? '✅' : '🔒 注册'}</span>
         </button>
       </div>
 

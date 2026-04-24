@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
-import { createUser, hashEmail, getDisplayCodes } from '@/lib/kv';
+import { hashEmail } from '@/lib/kv';
+import { getUserRecord, setTempToken } from '@/lib/user-store';
 
-const SECRET = process.env.AUTH_SECRET || 'mingren-pics-dev-secret-2026';
+const SECRET = process.env.SECRET || 'mingren-pics-dev-secret-2026';
 
 function signCode(email: string, code: string): string {
   return createHmac('sha256', SECRET).update(`${email}:${code}`).digest('hex');
 }
 
-function signToken(userId: string): string {
-  return createHmac('sha256', SECRET).update(`token:${userId}:${Date.now().toString().slice(0, -5)}`).digest('hex').slice(0, 32);
-}
-
 export async function POST(req: NextRequest) {
   try {
-    const { email, code, signature, referralCode: inviteCode } = await req.json();
+    const { email, code, signature } = await req.json();
 
     if (!email || !code) {
       return NextResponse.json({ error: '参数缺失' }, { status: 400 });
@@ -29,41 +26,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '验证失败' }, { status: 400 });
     }
 
-    // Create user (stateless — no KV needed)
-    const { referralCode: myReferralCode, childCodes, childCodeDisplays, bonusQuota } =
-      await createUser(email.toLowerCase(), inviteCode);
+    const normalizedEmail = email.toLowerCase();
+    const existingUser = getUserRecord(normalizedEmail);
 
-    // Set login cookies
-    const userId = hashEmail(email.toLowerCase());
-    const sig = signToken(userId);
-    const res = NextResponse.json({
+    if (existingUser) {
+      // Returning user — already has password
+      return NextResponse.json({
+        ok: true,
+        isNewUser: false,
+        email: normalizedEmail,
+      });
+    }
+
+    // New user — issue a temp token so they can set a password
+    const tempToken = setTempToken(normalizedEmail);
+
+    return NextResponse.json({
       ok: true,
-      email: email.toLowerCase(),
-      referralCode: myReferralCode,
-      childCodes,
-      childCodeDisplays,
-      bonusQuota,
+      isNewUser: true,
+      email: normalizedEmail,
+      tempToken,
     });
-
-    res.cookies.set('mingren_uid', userId, {
-      httpOnly: true, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-    });
-    res.cookies.set('mingren_sig', sig, {
-      httpOnly: true, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-    });
-    res.cookies.set('mingren_email', email.toLowerCase(), {
-      httpOnly: false, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-    });
-    res.cookies.set('mingren_ref', myReferralCode, {
-      httpOnly: false, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-    });
-
-    // Store child invite codes in a non-httpOnly cookie so frontend can display them
-    res.cookies.set('mingren_invite_codes', JSON.stringify(childCodes), {
-      httpOnly: false, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-    });
-
-    return res;
   } catch (e: any) {
     console.error('Verify error:', e);
     return NextResponse.json({ error: '验证失败' }, { status: 500 });

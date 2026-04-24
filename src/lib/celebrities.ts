@@ -34,7 +34,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'blackpink-lisa',
-    name: 'Lisa (BLACKPINK)',
+    name: 'Lisa (莉莎·BLACKPINK)',
     nameEn: 'Lisa (BLACKPINK)',
     category: 'kpop',
     tags: ['BLACKPINK', '韩流'],
@@ -64,7 +64,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'jisoo',
-    name: 'Jisoo (BLACKPINK)',
+    name: 'Jisoo (智秀·BLACKPINK)',
     nameEn: 'Jisoo (BLACKPINK)',
     category: 'kpop',
     tags: ['BLACKPINK', '韩流'],
@@ -74,7 +74,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'sana',
-    name: 'Sana (TWICE)',
+    name: 'Sana (凑崎纱夏·TWICE)',
     nameEn: 'Sana (TWICE)',
     category: 'kpop',
     tags: ['TWICE', '韩流'],
@@ -86,7 +86,7 @@ export const celebrities: Celebrity[] = [
   // ========== 好莱坞 ==========
   {
     id: 'taylor-swift',
-    name: 'Taylor Swift',
+    name: 'Taylor Swift (泰勒·斯威夫特)',
     nameEn: 'Taylor Swift',
     category: 'hollywood',
     tags: ['歌手', '欧美'],
@@ -96,7 +96,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'brad-pitt',
-    name: 'Brad Pitt',
+    name: 'Brad Pitt (布拉德·皮特)',
     nameEn: 'Brad Pitt',
     category: 'hollywood',
     tags: ['演员', '好莱坞'],
@@ -106,7 +106,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'rihanna',
-    name: 'Rihanna',
+    name: 'Rihanna (蕾哈娜)',
     nameEn: 'Rihanna',
     category: 'hollywood',
     tags: ['歌手', '欧美'],
@@ -116,7 +116,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'billie-eilish',
-    name: 'Billie Eilish',
+    name: 'Billie Eilish (比莉·艾利什)',
     nameEn: 'Billie Eilish',
     category: 'hollywood',
     tags: ['歌手', '欧美'],
@@ -126,7 +126,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'tom-cruise',
-    name: 'Tom Cruise',
+    name: 'Tom Cruise (汤姆·克鲁斯)',
     nameEn: 'Tom Cruise',
     category: 'hollywood',
     tags: ['演员', '好莱坞'],
@@ -136,7 +136,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'ryan-gosling',
-    name: 'Ryan Gosling',
+    name: 'Ryan Gosling (瑞恩·高斯林)',
     nameEn: 'Ryan Gosling',
     category: 'hollywood',
     tags: ['演员', '好莱坞'],
@@ -146,7 +146,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'zendaya',
-    name: 'Zendaya',
+    name: 'Zendaya (赞达亚)',
     nameEn: 'Zendaya',
     category: 'hollywood',
     tags: ['演员', '好莱坞'],
@@ -156,7 +156,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'margot-robbie',
-    name: 'Margot Robbie',
+    name: 'Margot Robbie (玛格特·罗比)',
     nameEn: 'Margot Robbie',
     category: 'hollywood',
     tags: ['演员', '好莱坞'],
@@ -168,7 +168,7 @@ export const celebrities: Celebrity[] = [
   // ========== 音乐巨星 ==========
   {
     id: 'beyonce',
-    name: 'Beyoncé',
+    name: 'Beyoncé (碧昂丝)',
     nameEn: 'Beyoncé',
     category: 'music',
     tags: ['歌手', '欧美'],
@@ -178,7 +178,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'drake',
-    name: 'Drake',
+    name: 'Drake (德雷克)',
     nameEn: 'Drake',
     category: 'music',
     tags: ['说唱', '欧美'],
@@ -188,7 +188,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'eminem',
-    name: 'Eminem',
+    name: 'Eminem (埃米纳姆)',
     nameEn: 'Eminem',
     category: 'music',
     tags: ['说唱', '欧美'],
@@ -198,7 +198,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'dua-lipa',
-    name: 'Dua Lipa',
+    name: 'Dua Lipa (杜阿·利帕)',
     nameEn: 'Dua Lipa',
     category: 'music',
     tags: ['歌手', '欧美'],
@@ -210,7 +210,7 @@ export const celebrities: Celebrity[] = [
   // ========== 科技大佬 ==========
   {
     id: 'elon-musk',
-    name: 'Elon Musk',
+    name: 'Elon Musk (埃隆·马斯克)',
     nameEn: 'Elon Musk',
     category: 'tech',
     tags: ['科技', 'CEO'],
@@ -240,7 +240,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'sam-altman',
-    name: 'Sam Altman',
+    name: 'Sam Altman (山姆·奥特曼)',
     nameEn: 'Sam Altman',
     category: 'tech',
     tags: ['科技', 'OpenAI'],
@@ -252,7 +252,7 @@ export const celebrities: Celebrity[] = [
   // ========== 体育巨星 ==========
   {
     id: 'leo-messi',
-    name: 'Messi',
+    name: 'Messi (梅西)',
     nameEn: 'Lionel Messi',
     category: 'sports',
     tags: ['足球', '阿根廷'],
@@ -282,7 +282,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'lebron-james',
-    name: 'LeBron James',
+    name: 'LeBron James (勒布朗·詹姆斯)',
     nameEn: 'LeBron James',
     category: 'sports',
     tags: ['篮球', 'NBA'],
@@ -292,7 +292,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'michael-jordan',
-    name: 'Michael Jordan',
+    name: 'Michael Jordan (迈克尔·乔丹)',
     nameEn: 'Michael Jordan',
     category: 'sports',
     tags: ['篮球', 'NBA'],
@@ -304,7 +304,7 @@ export const celebrities: Celebrity[] = [
   // ========== 动漫/虚拟角色 ==========
   {
     id: 'spider-man',
-    name: 'Spider-Man',
+    name: 'Spider-Man (蜘蛛侠)',
     nameEn: 'Spider-Man',
     category: 'anime',
     tags: ['漫威', '超级英雄'],
@@ -314,7 +314,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'iron-man',
-    name: 'Iron Man',
+    name: 'Iron Man (钢铁侠)',
     nameEn: 'Iron Man',
     category: 'anime',
     tags: ['漫威', '超级英雄'],
@@ -324,7 +324,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'batman',
-    name: 'Batman',
+    name: 'Batman (蝙蝠侠)',
     nameEn: 'Batman',
     category: 'anime',
     tags: ['DC', '超级英雄'],
@@ -354,7 +354,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'superman',
-    name: 'Superman',
+    name: 'Superman (超人)',
     nameEn: 'Superman',
     category: 'anime',
     tags: ['DC', '超级英雄'],
@@ -364,7 +364,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'pikachu',
-    name: 'Pikachu',
+    name: 'Pikachu (皮卡丘)',
     nameEn: 'Pikachu (Pokémon)',
     category: 'anime',
     tags: ['动漫', '宝可梦'],
@@ -374,7 +374,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'deadpool',
-    name: 'Deadpool',
+    name: 'Deadpool (死侍)',
     nameEn: 'Deadpool',
     category: 'anime',
     tags: ['漫威', '反英雄'],
@@ -386,7 +386,7 @@ export const celebrities: Celebrity[] = [
   // ========== 政商领袖 ==========
   {
     id: 'trump',
-    name: 'Trump',
+    name: 'Trump (特朗普)',
     nameEn: 'Donald Trump',
     category: 'business',
     tags: ['政治', '美国'],
@@ -396,7 +396,7 @@ export const celebrities: Celebrity[] = [
   },
   {
     id: 'obama',
-    name: 'Obama',
+    name: 'Obama (奥巴马)',
     nameEn: 'Barack Obama',
     category: 'business',
     tags: ['政治', '美国'],

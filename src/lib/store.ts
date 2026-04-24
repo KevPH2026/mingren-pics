@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type AppStep = 'upload' | 'select' | 'scenario' | 'generating' | 'result' | 'history';
+export type AppStep = 'upload' | 'select' | 'scenario' | 'generating' | 'result' | 'history' | 'profile';
 
 export interface HistoryItem {
   id: string;
