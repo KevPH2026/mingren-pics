@@ -27,7 +27,11 @@ export default function SelectScenario() {
     if (loading) return;
 
     if (!canGenerate()) {
-      setShowPaywall(true);
+      if (registered) {
+        alert('今日生成次数已用完，明天再来或邀请好友获取更多次数！');
+      } else {
+        setShowPaywall(true);
+      }
       return;
     }
 
@@ -41,10 +45,10 @@ export default function SelectScenario() {
     let prompt: string;
 
     if (customText && customText.trim()) {
-      prompt = `Generate a photorealistic image: ${customText.trim()}. One person in the photo is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment, high quality.`;
+      prompt = `Create a photorealistic photograph: ${customText.trim()}. The photo features two real people standing together. Person A is a famous celebrity who looks exactly like this: ${celeb?.referencePrompt}. Generate their face with highly recognizable celebrity features — make it look like a real photo of this famous person, not a generic lookalike. Person B is from the reference image — preserve their exact face, identity and appearance. Both people should look equally real and natural. Natural lighting, authentic candid moment, high quality DSLR photo.`;
     } else {
       const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
-      prompt = `Generate a photo of two friends ${scenario.prompt}. One is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment.`;
+      prompt = `Create a photorealistic photograph of two real people ${scenario.prompt}. Person A is a famous celebrity who looks exactly like this: ${celeb?.referencePrompt}. Generate their face with highly recognizable celebrity features — make it look like a real photo of this famous person, not a generic lookalike. Person B is from the reference image — preserve their exact face, identity and appearance. Both people should look equally real and natural. Natural lighting, authentic candid moment, DSLR quality.`;
     }
 
     setStep('generating');

@@ -29,17 +29,17 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.toLowerCase();
     const existingUser = getUserRecord(normalizedEmail);
 
+    // 无论新老用户，都发 tempToken（新用户注册用，老用户修改密码用）
+    const tempToken = setTempToken(normalizedEmail);
+
     if (existingUser) {
-      // Returning user — already has password
       return NextResponse.json({
         ok: true,
         isNewUser: false,
         email: normalizedEmail,
+        tempToken,
       });
     }
-
-    // New user — issue a temp token so they can set a password
-    const tempToken = setTempToken(normalizedEmail);
 
     return NextResponse.json({
       ok: true,

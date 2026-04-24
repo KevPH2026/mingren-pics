@@ -52,9 +52,82 @@ export default function HomeContent() {
   const StepComponent = stepComponents[step];
 
   return (
-    <main className="min-h-dvh flex flex-col halftone">
+    <main className="min-h-dvh flex flex-col halftone relative overflow-hidden">
+      {/* ===== 左侧滚动案例 ===== */}
+      <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-[180px] overflow-hidden pointer-events-none z-0">
+        <div className="flex flex-col gap-4 animate-scroll-up" style={{ animationDuration: '40s' }}>
+          {/* 重复两遍实现无缝滚动 */}
+          {[
+            { celeb: 'Taylor Swift', emoji: '💃', bg: '#ff6b9d' },
+            { celeb: 'Elon Musk', emoji: '🚀', bg: '#4ecdc4' },
+            { celeb: 'Messi', emoji: '⚽', bg: '#ffe66d' },
+            { celeb: 'Blackpink', emoji: '🌟', bg: '#a29bfe' },
+            { celeb: '周杰伦', emoji: '🎹', bg: '#fd79a8' },
+            { celeb: 'Spider-Man', emoji: '🕷️', bg: '#e17055' },
+            { celeb: 'Lisa', emoji: '💃', bg: '#6c5ce7' },
+            { celeb: 'LeBron', emoji: '🏀', bg: '#00b894' },
+          ].concat([
+            { celeb: 'Taylor Swift', emoji: '💃', bg: '#ff6b9d' },
+            { celeb: 'Elon Musk', emoji: '🚀', bg: '#4ecdc4' },
+            { celeb: 'Messi', emoji: '⚽', bg: '#ffe66d' },
+            { celeb: 'Blackpink', emoji: '🌟', bg: '#a29bfe' },
+            { celeb: '周杰伦', emoji: '🎹', bg: '#fd79a8' },
+            { celeb: 'Spider-Man', emoji: '🕷️', bg: '#e17055' },
+            { celeb: 'Lisa', emoji: '💃', bg: '#6c5ce7' },
+            { celeb: 'LeBron', emoji: '🏀', bg: '#00b894' },
+          ]).map((item, i) => (
+            <div key={i} className="flex-shrink-0 w-[150px] rounded-lg comic-border-thin overflow-hidden mx-auto">
+              <div className="w-full aspect-[3/4] flex flex-col items-center justify-center gap-2 relative" style={{ backgroundColor: item.bg }}>
+                <span className="text-5xl">{item.emoji}</span>
+                <span className="text-xs font-black text-white px-2 py-0.5 bg-black/30 rounded">跟 {item.celeb} 合影</span>
+                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute bottom-2 left-0 right-0 text-center">
+                  <span className="text-[9px] font-bold text-white/70">mingren.pics</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== 右侧滚动案例 ===== */}
+      <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-[180px] overflow-hidden pointer-events-none z-0">
+        <div className="flex flex-col gap-4 animate-scroll-down" style={{ animationDuration: '45s' }}>
+          {[
+            { celeb: 'Lady Gaga', emoji: '🎤', bg: '#e84393' },
+            { celeb: 'C罗', emoji: '⚽', bg: '#0984e3' },
+            { celeb: 'BTS', emoji: '🎵', bg: '#fdcb6e' },
+            { celeb: 'Lisa', emoji: '💃', bg: '#6c5ce7' },
+            { celeb: '成龍', emoji: '🥋', bg: '#e17055' },
+            { celeb: 'Zendaya', emoji: '✨', bg: '#00cec9' },
+            { celeb: 'Mbappe', emoji: '⚡', bg: '#fab1a0' },
+            { celeb: 'IU', emoji: '🎀', bg: '#a29bfe' },
+          ].concat([
+            { celeb: 'Lady Gaga', emoji: '🎤', bg: '#e84393' },
+            { celeb: 'C罗', emoji: '⚽', bg: '#0984e3' },
+            { celeb: 'BTS', emoji: '🎵', bg: '#fdcb6e' },
+            { celeb: 'Lisa', emoji: '💃', bg: '#6c5ce7' },
+            { celeb: '成龍', emoji: '🥋', bg: '#e17055' },
+            { celeb: 'Zendaya', emoji: '✨', bg: '#00cec9' },
+            { celeb: 'Mbappe', emoji: '⚡', bg: '#fab1a0' },
+            { celeb: 'IU', emoji: '🎀', bg: '#a29bfe' },
+          ]).map((item, i) => (
+            <div key={i} className="flex-shrink-0 w-[150px] rounded-lg comic-border-thin overflow-hidden mx-auto">
+              <div className="w-full aspect-[3/4] flex flex-col items-center justify-center gap-2 relative" style={{ backgroundColor: item.bg }}>
+                <span className="text-5xl">{item.emoji}</span>
+                <span className="text-xs font-black text-white px-2 py-0.5 bg-black/30 rounded">跟 {item.celeb} 合影</span>
+                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute bottom-2 left-0 right-0 text-center">
+                  <span className="text-[9px] font-bold text-white/70">mingren.pics</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Comic header bar */}
-      <header className="bg-[#e00] text-white comic-border-thin border-t-0 border-x-0 px-4 py-2 flex items-center justify-between">
+      <header className="bg-[#e00] text-white comic-border-thin border-t-0 border-x-0 px-4 py-2 flex items-center justify-between relative z-10">
         <button
           onClick={() => setStep('upload')}
           className="font-black text-xs tracking-[3px] uppercase"
@@ -78,7 +151,7 @@ export default function HomeContent() {
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-start pb-8">
+      <div className="flex-1 flex flex-col items-center justify-start pb-8 relative z-10">
         <StepComponent />
       </div>
 

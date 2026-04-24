@@ -187,3 +187,22 @@ body {
 .animate-pulse-glow {
   animation: pulseGlow 2s ease-in-out infinite;
 }
+
+/* Side scroll animations for case images */
+@keyframes scrollUp {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes scrollDown {
+  0% { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+
+.animate-scroll-up {
+  animation: scrollUp 40s linear infinite;
+}
+
+.animate-scroll-down {
+  animation: scrollDown 45s linear infinite;
+}
