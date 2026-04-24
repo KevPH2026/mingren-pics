@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
+
+const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
 export default function SelectScenario() {
   const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, incrementDailyUsage, canGenerate, getRemainingToday, isRegistered } =
@@ -12,6 +14,11 @@ export default function SelectScenario() {
   const [error, setError] = useState<string | null>(null);
   const [showCustom, setShowCustom] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
+
+  // 骰子状态
+  const [rolling, setRolling] = useState(false);
+  const [diceValue, setDiceValue] = useState(0);
+  const [diceResult, setDiceResult] = useState<string | null>(null);
 
   const remaining = getRemainingToday();
   const registered = isRegistered();
@@ -34,7 +41,6 @@ export default function SelectScenario() {
     let prompt: string;
 
     if (customText && customText.trim()) {
-      // 自定义场景
       prompt = `Generate a photorealistic image: ${customText.trim()}. One person in the photo is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment, high quality.`;
     } else {
       const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
@@ -111,6 +117,29 @@ export default function SelectScenario() {
     handleGenerate('custom', customPrompt);
   };
 
+  // 骰子随机场景
+  const handleDiceRoll = useCallback(() => {
+    if (rolling || loading) return;
+    setRolling(true);
+    setDiceResult(null);
+
+    let count = 0;
+    const totalFrames = 15;
+    const interval = setInterval(() => {
+      setDiceValue(Math.floor(Math.random() * 6));
+      count++;
+      if (count >= totalFrames) {
+        clearInterval(interval);
+        const finalIndex = Math.floor(Math.random() * scenarios.length);
+        setDiceValue(finalIndex % 6);
+        setDiceResult(scenarios[finalIndex].label);
+        setRolling(false);
+        // 自动触发生成
+        setTimeout(() => handleGenerate(scenarios[finalIndex].id), 600);
+      }
+    }, 80);
+  }, [rolling, loading]);
+
   const scenarioColors = [
     'hover:bg-[#e00] hover:text-white',
     'hover:bg-[#ff0] hover:text-black',
@@ -138,6 +167,27 @@ export default function SelectScenario() {
         <span className="text-2xl font-black text-[#e00]" style={{ WebkitTextStroke: '1px #000' }}>
           选个场景！💥
         </span>
+      </div>
+
+      {/* 🎲 骰子区域 */}
+      <div className="flex flex-col items-center gap-2">
+        <button
+          onClick={handleDiceRoll}
+          disabled={rolling || loading}
+          className={`group flex items-center gap-2 px-5 py-2.5 bg-[#ff0] comic-border font-black text-sm transition-all disabled:opacity-50 ${
+            rolling ? '' : 'hover:translate-y-[-3px] hover:comic-shadow-sm hover:bg-[#0cf]'
+          }`}
+        >
+          <span className={`text-2xl transition-transform ${rolling ? 'animate-dice-spin' : 'group-hover:scale-125 group-hover:rotate-12'}`}>
+            {DICE_FACES[diceValue] || '🎲'}
+          </span>
+          <span>{rolling ? '🎲 掷骰中...' : '🎲 随机场景'}</span>
+        </button>
+        {diceResult && !rolling && (
+          <div className="text-xs font-black text-[#e00] animate-bounce-in">
+            ✨ 命中：{diceResult}！
+          </div>
+        )}
       </div>
 
       {error && (
@@ -194,7 +244,7 @@ export default function SelectScenario() {
               <textarea
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="描述你想要的场景，比如：&#10;我和Taylor Swift在月球上喝咖啡&#10;我跟Messi一起在马拉卡纳球场踢球&#10;我和Spider-Man在纽约街头吃热狗"
+                placeholder={"描述你想要的场景，比如：\n我和Taylor Swift在月球上喝咖啡\n我跟Messi一起在马拉卡纳球场踢球\n我和Spider-Man在纽约街头吃热狗"}
                 rows={3}
                 maxLength={200}
                 className="w-full p-3 border-2 border-black text-sm font-bold focus:outline-none focus:border-[#8b5cf6] resize-none"

@@ -14,6 +14,7 @@ export default function PaywallModal() {
   const [countdown, setCountdown] = useState(0);
   const [success, setSuccess] = useState(false);
   const [referralCode, setReferralCode] = useState('');
+  const [childCodes, setChildCodes] = useState<string[]>([]);
 
   // 获取 pending ref
   const pendingRef = typeof window !== 'undefined' ? localStorage.getItem('mingren_pending_ref') : null;
@@ -90,6 +91,9 @@ export default function PaywallModal() {
         localStorage.setItem('mingren_referral_code', data.referralCode);
         setReferralCode(data.referralCode);
       }
+      if (data.childCodes) {
+        setChildCodes(data.childCodes);
+      }
       setSuccess(true);
 
       // 刷新配额
@@ -101,21 +105,45 @@ export default function PaywallModal() {
     }
   };
 
-  // 注册成功 — 显示邀请链接
+  // 注册成功 — 显示邀请链接和子码
   if (success) {
     const link = referralCode ? `https://mingren.pics/?ref=${referralCode}` : '';
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPaywall(false)} />
-        <div className="relative w-full max-w-sm bg-white comic-border animate-bounce-in">
+        <div className="relative w-full max-w-sm bg-white comic-border animate-bounce-in max-h-[90vh] overflow-y-auto">
           <div className="bg-green-500 text-white text-center py-4 border-b-4 border-black">
             <p className="text-2xl font-black">🎉 注册成功！</p>
             <p className="text-xs font-bold mt-1 opacity-80">每天3次免费生成已解锁</p>
           </div>
           <div className="p-5 flex flex-col gap-4">
+            {/* 子邀请码区域 */}
+            {childCodes.length > 0 && (
+              <div className="bg-[#8b5cf6]/10 border-2 border-[#8b5cf6] rounded-lg p-3">
+                <p className="text-xs font-black mb-2 text-[#8b5cf6]">🎫 你的3个专属邀请码</p>
+                <p className="text-[10px] text-black/40 mb-2">每个码可邀请3人，被邀请人注册后再获3个码！</p>
+                <div className="flex flex-col gap-2">
+                  {childCodes.map((code, i) => (
+                    <div key={code} className="flex items-center gap-2 bg-white rounded border-2 border-[#8b5cf6]/30 p-2">
+                      <span className="text-xs font-black text-black/30">#{i + 1}</span>
+                      <code className="flex-1 text-sm font-black tracking-wider text-black">{code}</code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`https://mingren.pics/?ref=${code}`);
+                        }}
+                        className="px-2 py-1 bg-[#8b5cf6] text-white text-[10px] font-black rounded hover:bg-[#7c3aed]"
+                      >
+                        复制
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {link && (
               <div className="bg-[#ff0]/20 border-2 border-[#ff0] rounded-lg p-3">
-                <p className="text-xs font-black mb-2">🎁 邀请好友，每邀请1人+3次！</p>
+                <p className="text-xs font-black mb-2">🎁 分享你的专属链接</p>
                 <div className="flex gap-2">
                   <input
                     readOnly

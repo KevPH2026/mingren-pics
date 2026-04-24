@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getQuota, getReferralInfo, getUser } from '@/lib/kv';
+import { getQuota, getUser } from '@/lib/kv';
 
 // GET /api/quota — 查询用户剩余次数
 export async function GET(req: NextRequest) {
@@ -18,8 +18,9 @@ export async function GET(req: NextRequest) {
       bonusQuota: quota.bonusQuota,
       inviteCount: user?.inviteCount || 0,
       referralCode: user?.referralCode || '',
+      childCodes: user?.childCodes || [],
     });
   } catch {
-    return NextResponse.json({ registered: true, dailyLimit: 3, bonusQuota: 0, inviteCount: 0 });
+    return NextResponse.json({ registered: true, dailyLimit: 3, bonusQuota: 0, inviteCount: 0, childCodes: [] });
   }
 }

@@ -95,3 +95,95 @@ body {
     rgba(0,0,0,0.03) 5px
   );
 }
+
+/* Dice spin */
+@keyframes diceSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.2); }
+  50% { transform: rotate(180deg) scale(1); }
+  75% { transform: rotate(270deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.animate-dice-spin {
+  animation: diceSpin 0.3s linear infinite;
+}
+
+/* Pixel reveal for watermark */
+@keyframes pixelReveal {
+  0% { 
+    filter: blur(12px) contrast(2);
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+  }
+  30% {
+    filter: blur(8px) contrast(1.5);
+    opacity: 0.5;
+    clip-path: inset(60% 0 0 0);
+  }
+  60% {
+    filter: blur(4px) contrast(1.2);
+    opacity: 0.8;
+    clip-path: inset(20% 0 0 0);
+  }
+  100% { 
+    filter: blur(0) contrast(1);
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.animate-pixel-reveal {
+  animation: pixelReveal 0.8s ease-out forwards;
+}
+
+/* Glitch effect */
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+.animate-glitch:hover {
+  animation: glitch 0.3s ease-in-out;
+}
+
+/* Float animation for fun elements */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Shake for dice */
+@keyframes shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  10% { transform: translateX(-4px) rotate(-5deg); }
+  20% { transform: translateX(4px) rotate(5deg); }
+  30% { transform: translateX(-4px) rotate(-3deg); }
+  40% { transform: translateX(4px) rotate(3deg); }
+  50% { transform: translateX(-2px) rotate(-2deg); }
+  60% { transform: translateX(2px) rotate(2deg); }
+  70% { transform: translateX(-1px) rotate(-1deg); }
+  80% { transform: translateX(1px) rotate(1deg); }
+  90% { transform: translateX(0) rotate(0deg); }
+}
+
+.animate-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+/* Pulse glow for CTA */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.2); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}

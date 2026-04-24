@@ -23,9 +23,10 @@ interface AppState {
   showPaywall: boolean;
   dailyUsage: { date: string; count: number };
   // 服务端数据
-  serverQuota: { registered: boolean; dailyLimit: number; bonusQuota: number; inviteCount: number; referralCode: string } | null;
+  serverQuota: { registered: boolean; dailyLimit: number; bonusQuota: number; inviteCount: number; referralCode: string; childCodes: string[] } | null;
   referralCode: string | null;
   inviteCount: number;
+  childCodes: string[];
 
   setStep: (step: AppStep) => void;
   setUserImage: (dataUrl: string, file: File) => void;
@@ -109,6 +110,7 @@ const initialState = {
   serverQuota: null as AppState['serverQuota'],
   referralCode: null as string | null,
   inviteCount: 0,
+  childCodes: [] as string[],
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -204,7 +206,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           localStorage.setItem(REFERRAL_CODE_KEY, data.referralCode);
           set({ referralCode: data.referralCode });
         }
-        set({ inviteCount: data.inviteCount || 0 });
+        set({ inviteCount: data.inviteCount || 0, childCodes: data.childCodes || [] });
       }
     } catch {
       // 静默失败，用 localStorage

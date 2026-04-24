@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { createUser, hashEmail } from '@/lib/kv';
 
-const SECRET = process.env.AUTH_SECRET || 'mingren-pics-dev-secret-2026';
+const SECRET = process.env.JWT_SECRET || 'mingren-pics-dev-secret-2026';
 
 function signCode(email: string, code: string): string {
   return createHmac('sha256', SECRET).update(`${email}:${code}`).digest('hex');
@@ -14,11 +14,15 @@ function signToken(userId: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, code, referralCode } = await req.json();
+    const { email, code, referralCode: inviteCode } = await req.json();
 
     if (!email || !code) {
       return NextResponse.json({ error: '参数缺失' }, { status: 400 });
     }
+
+    // 邀请码验证（如果提供了的话）
+    // 注意：有邀请码才能注册，或者开放注册（取决于你的策略）
+    // 这里暂时允许无码注册（免费用户），有码注册获赠更多
 
     const token = req.cookies.get('verify_token')?.value;
     if (!token) {
@@ -47,17 +51,18 @@ export async function POST(req: NextRequest) {
 
     // 创建/获取用户
     const userId = hashEmail(parsed.email);
-    const { referralCode: myReferralCode } = await createUser(parsed.email, referralCode);
+    const { referralCode: myReferralCode, childCodes, bonusQuota } = await createUser(parsed.email, inviteCode);
 
-    // 设置登录 cookie: userId + 签名防伪造
+    // 设置登录 cookie
     const sig = signToken(userId);
     const res = NextResponse.json({
       ok: true,
       email: parsed.email,
       referralCode: myReferralCode,
+      childCodes,     // 返回3个子邀请码
+      bonusQuota,
     });
 
-    // 存 userId 和签名到两个 cookie
     res.cookies.set('mingren_uid', userId, {
       httpOnly: true,
       secure: true,
@@ -80,7 +85,7 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax',
     });
     res.cookies.set('mingren_ref', myReferralCode, {
-      httpOnly: false, // 前端需要读取
+      httpOnly: false,
       secure: true,
       maxAge: 365 * 24 * 3600,
       path: '/',
