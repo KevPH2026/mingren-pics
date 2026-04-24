@@ -10,14 +10,15 @@ export default function SelectScenario() {
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCustom, setShowCustom] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
 
   const remaining = getRemainingToday();
   const registered = isRegistered();
 
-  const handleGenerate = async (scenarioId: string) => {
+  const handleGenerate = async (scenarioId: string, customText?: string) => {
     if (loading) return;
 
-    // 检查是否还能生成
     if (!canGenerate()) {
       setShowPaywall(true);
       return;
@@ -30,10 +31,16 @@ export default function SelectScenario() {
 
     if (!selectedCelebrityId) return;
 
-    const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
-    const prompt = `Generate a photo of two friends ${scenario.prompt}. One is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment.`;
+    let prompt: string;
 
-    // Switch to generating animation IMMEDIATELY
+    if (customText && customText.trim()) {
+      // 自定义场景
+      prompt = `Generate a photorealistic image: ${customText.trim()}. One person in the photo is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment, high quality.`;
+    } else {
+      const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
+      prompt = `Generate a photo of two friends ${scenario.prompt}. One is a person matching this description: ${celeb?.referencePrompt}. The other person is from the reference image — preserve their face and appearance. Natural lighting, authentic candid moment.`;
+    }
+
     setStep('generating');
 
     try {
@@ -48,7 +55,6 @@ export default function SelectScenario() {
 
       const data = await resp.json();
 
-      // Queued — wait and retry once
       if (resp.status === 202 && data.queued) {
         await new Promise(r => setTimeout(r, 10000));
         const retryResp = await fetch('/api/generate/start', {
@@ -70,7 +76,6 @@ export default function SelectScenario() {
         }
       }
 
-      // Direct success
       if (data.images) {
         setGeneratedImages(data.images);
       } else if (data.imageUrl) {
@@ -99,6 +104,11 @@ export default function SelectScenario() {
       };
       reader.readAsDataURL(blob);
     });
+  };
+
+  const handleCustomGenerate = () => {
+    if (!customPrompt.trim()) return;
+    handleGenerate('custom', customPrompt);
   };
 
   const scenarioColors = [
@@ -141,7 +151,7 @@ export default function SelectScenario() {
       <div className={`text-center text-xs font-bold py-1 ${remaining <= 0 ? 'text-[#e00]' : remaining === 1 ? 'text-[#f90]' : 'text-black/40'}`}>
         {remaining > 0
           ? `今日剩余 ${remaining} 次免费${registered ? '' : ' · 注册后每天3次'}`
-          : `${registered ? '今日次数已用完 · 明天再来' : '免费次数已用完 · 注册后每天3次'}`
+          : `${registered ? '今日次数已用完 · 邀请好友+3次' : '免费次数已用完 · 注册后每天3次'}`
         }
       </div>
 
@@ -157,7 +167,52 @@ export default function SelectScenario() {
             <span className="text-sm font-black">{s.label}</span>
           </button>
         ))}
+
+        {/* 自定义场景按钮 */}
+        <button
+          onClick={() => setShowCustom(!showCustom)}
+          disabled={loading}
+          className={`flex flex-col items-center gap-2 p-4 bg-white comic-border-thin hover:bg-[#8b5cf6] hover:text-white hover:translate-y-[-3px] hover:comic-shadow-sm transition-all group disabled:opacity-50 disabled:pointer-events-none col-span-2`}
+        >
+          <span className="text-3xl group-hover:scale-125 transition-transform">✏️</span>
+          <span className="text-sm font-black">自定义场景 {registered ? '' : '🔒 付费'}</span>
+        </button>
       </div>
+
+      {/* 自定义场景输入框 */}
+      {showCustom && (
+        <div className="flex flex-col gap-2 animate-bounce-in">
+          {!registered ? (
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="text-center text-xs font-bold text-[#8b5cf6] py-2 hover:underline"
+            >
+              🔓 注册后可使用自定义场景 →
+            </button>
+          ) : (
+            <>
+              <textarea
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="描述你想要的场景，比如：&#10;我和Taylor Swift在月球上喝咖啡&#10;我跟Messi一起在马拉卡纳球场踢球&#10;我和Spider-Man在纽约街头吃热狗"
+                rows={3}
+                maxLength={200}
+                className="w-full p-3 border-2 border-black text-sm font-bold focus:outline-none focus:border-[#8b5cf6] resize-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCustomGenerate}
+                  disabled={loading || !customPrompt.trim()}
+                  className="flex-1 py-3 bg-[#8b5cf6] text-white border-2 border-black font-black text-sm comic-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-40"
+                >
+                  {loading ? '⏳ 生成中...' : '🎨 生成自定义合影'}
+                </button>
+              </div>
+              <p className="text-[10px] text-black/30 text-center">支持中英文描述 · 越具体效果越好</p>
+            </>
+          )}
+        </div>
+      )}
 
       <button
         onClick={() => setStep('select')}

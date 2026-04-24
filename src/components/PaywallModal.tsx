@@ -12,6 +12,11 @@ export default function PaywallModal() {
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [success, setSuccess] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+
+  // 获取 pending ref
+  const pendingRef = typeof window !== 'undefined' ? localStorage.getItem('mingren_pending_ref') : null;
 
   const handleSendCode = async () => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -37,13 +42,6 @@ export default function PaywallModal() {
 
       setSent(true);
 
-      // 开发模式提示
-      if (data.dev) {
-        setError('');
-        // 不显示验证码，只显示已发送
-      }
-
-      // 60秒倒计时
       setCountdown(60);
       const timer = setInterval(() => {
         setCountdown((prev) => {
@@ -70,7 +68,11 @@ export default function PaywallModal() {
       const resp = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({
+          email,
+          code,
+          referralCode: pendingRef || undefined,
+        }),
       });
       const data = await resp.json();
 
@@ -83,21 +85,73 @@ export default function PaywallModal() {
       // 注册成功
       localStorage.setItem('mingren_registered', '1');
       localStorage.setItem('mingren_email', email);
-      setShowPaywall(false);
+      if (pendingRef) localStorage.removeItem('mingren_pending_ref');
+      if (data.referralCode) {
+        localStorage.setItem('mingren_referral_code', data.referralCode);
+        setReferralCode(data.referralCode);
+      }
+      setSuccess(true);
+
+      // 刷新配额
+      const { fetchServerQuota } = useAppStore.getState();
+      await fetchServerQuota();
     } catch {
       setError('网络异常');
       setVerifying(false);
     }
   };
 
+  // 注册成功 — 显示邀请链接
+  if (success) {
+    const link = referralCode ? `https://mingren.pics/?ref=${referralCode}` : '';
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPaywall(false)} />
+        <div className="relative w-full max-w-sm bg-white comic-border animate-bounce-in">
+          <div className="bg-green-500 text-white text-center py-4 border-b-4 border-black">
+            <p className="text-2xl font-black">🎉 注册成功！</p>
+            <p className="text-xs font-bold mt-1 opacity-80">每天3次免费生成已解锁</p>
+          </div>
+          <div className="p-5 flex flex-col gap-4">
+            {link && (
+              <div className="bg-[#ff0]/20 border-2 border-[#ff0] rounded-lg p-3">
+                <p className="text-xs font-black mb-2">🎁 邀请好友，每邀请1人+3次！</p>
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={link}
+                    className="flex-1 py-2 px-2 border-2 border-black text-xs font-bold bg-gray-50"
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(link);
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="px-3 py-2 bg-[#ff0] border-2 border-black font-black text-xs"
+                  >
+                    复制
+                  </button>
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() => setShowPaywall(false)}
+              className="w-full py-3 bg-green-500 text-white border-2 border-black font-black text-base comic-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+            >
+              🚀 开始生成
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPaywall(false)} />
 
-      {/* Modal */}
       <div className="relative w-full max-w-sm bg-white comic-border animate-bounce-in">
-        {/* Header */}
         <div className="bg-[#8b5cf6] text-white text-center py-4 border-b-4 border-black">
           <p className="text-2xl font-black" style={{ WebkitTextStroke: '1px #000' }}>
             🎉 解锁完整功能
@@ -105,27 +159,24 @@ export default function PaywallModal() {
           <p className="text-xs font-bold mt-1 opacity-80">邮箱注册 · 免费使用 · 无需手机号</p>
         </div>
 
-        {/* Body */}
         <div className="p-5 flex flex-col gap-4">
-          {/* Benefits */}
           <div className="bg-[#8b5cf6]/10 border-2 border-[#8b5cf6] rounded-lg p-3">
             <p className="text-xs font-black mb-2">🎁 注册即享：</p>
             <div className="flex flex-col gap-1 text-xs font-bold text-black/70">
               <span>✅ 每天3次免费生成</span>
               <span>✅ AI修改指令（换装/换背景等）</span>
-              <span>✅ 高清无水印保存</span>
+              <span>✅ 自定义场景描述</span>
               <span>✅ 30+ 国际名人库</span>
+              <span>✅ 邀请好友每+3次</span>
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="text-center text-xs font-bold text-[#e00] bg-[#e00]/10 py-2 rounded">
               {error}
             </div>
           )}
 
-          {/* Email input */}
           <div className="flex gap-2">
             <input
               type="email"
@@ -144,7 +195,6 @@ export default function PaywallModal() {
             </button>
           </div>
 
-          {/* Code input */}
           {sent && (
             <input
               type="text"
@@ -156,7 +206,6 @@ export default function PaywallModal() {
             />
           )}
 
-          {/* Submit */}
           {sent && (
             <button
               onClick={handleVerify}
@@ -167,7 +216,6 @@ export default function PaywallModal() {
             </button>
           )}
 
-          {/* Close */}
           <button
             onClick={() => setShowPaywall(false)}
             className="text-center text-black/30 text-xs font-bold py-1 hover:text-[#e00] transition-colors"

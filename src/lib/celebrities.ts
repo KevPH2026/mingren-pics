@@ -404,6 +404,16 @@ export const celebrities: Celebrity[] = [
     avatarUrl: '🇺🇸',
     hotness: 87,
   },
+  {
+    id: 'kim-jong-un',
+    name: '金正恩',
+    nameEn: 'Kim Jong-un',
+    category: 'business',
+    tags: ['政治', '朝鲜'],
+    referencePrompt: 'A heavyset East Asian man with distinctive flat-top short black hair, clean-shaven round face, wearing a dark Mao-style button-up suit, stern but sometimes smiling expression',
+    avatarUrl: '🇰🇵',
+    hotness: 86,
+  },
 ];
 
 export const scenarios = [
