@@ -3,8 +3,6 @@ export interface UserRecord {
   salt: string;
   email: string;
   referralCode: string;
-  childCodes: string[];
-  childCodeDisplays: string[];
   inviteCount: number;
   createdAt: string;
 }
@@ -23,16 +21,12 @@ export function createUserRecord(
   hash: string,
   salt: string,
   referralCode: string,
-  childCodes: string[],
-  childCodeDisplays: string[],
 ): UserRecord {
   const record: UserRecord = {
     hash,
     salt,
     email,
     referralCode,
-    childCodes,
-    childCodeDisplays,
     inviteCount: 0,
     createdAt: new Date().toISOString(),
   };

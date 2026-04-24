@@ -58,22 +58,8 @@ export default function ProfilePage() {
   const referralCode = serverQuota?.referralCode || (typeof window !== 'undefined' ? localStorage.getItem('mingren_referral_code') || '' : '');
   const inviteCount = serverQuota?.inviteCount ?? 0;
 
-  // Child codes from store + localStorage
-  const storeChildCodes = serverQuota?.childCodes || useAppStore.getState().childCodes || [];
-  const [childCodes, setChildCodes] = useState<{ display: string; token: string }[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
-
-  useEffect(() => {
-    // Load child codes from localStorage
-    try {
-      const displays: string[] = JSON.parse(localStorage.getItem('mingren_child_displays') || '[]');
-      const tokens: string[] = JSON.parse(localStorage.getItem('mingren_child_codes') || '[]');
-      if (displays.length > 0) {
-        setChildCodes(displays.map((d, i) => ({ display: d, token: tokens[i] || d })));
-      }
-    } catch {}
-  }, []);
 
   const remaining = getRemainingToday();
 
@@ -87,12 +73,9 @@ export default function ProfilePage() {
     document.cookie = 'mingren_sig=; path=/; max-age=0';
     document.cookie = 'mingren_email=; path=/; max-age=0';
     document.cookie = 'mingren_ref=; path=/; max-age=0';
-    document.cookie = 'mingren_invite_codes=; path=/; max-age=0';
     localStorage.removeItem('mingren_registered');
     localStorage.removeItem('mingren_referral_code');
     localStorage.removeItem('mingren_email');
-    localStorage.removeItem('mingren_child_displays');
-    localStorage.removeItem('mingren_child_codes');
     window.location.reload();
   };
 
@@ -130,6 +113,9 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      {/* ===== Change Password Section ===== */}
+      <ChangePasswordSection email={email} />
+
       {/* ===== My Invite Codes Section ===== */}
       <section className="bg-[#ff0] comic-border comic-shadow-sm p-4">
         <h2
@@ -142,33 +128,13 @@ export default function ProfilePage() {
         {/* Own referral code */}
         {referralCode && (
           <div className="bg-white comic-border-thin p-3 mb-3">
-            <p className="text-[10px] font-black text-black/40 mb-1">我的推荐码</p>
+            <p className="text-[10px] font-black text-black/40 mb-1">我的邀请码</p>
             <div className="flex items-center justify-between">
               <span className="font-black text-base tracking-widest">{referralCode}</span>
               <CopyButton text={`https://mingren.pics/?ref=${referralCode}`} label="🔗 复制链接" />
             </div>
           </div>
         )}
-
-        {/* Child invite codes */}
-        {childCodes.length > 0 && (
-          <div className="flex flex-col gap-2 mb-3">
-            <p className="text-[10px] font-black text-black/40">子邀请码（分享给好友）</p>
-            {childCodes.map((code, idx) => (
-              <div key={idx} className="bg-white comic-border-thin p-2 flex items-center justify-between">
-                <span className="font-black text-sm tracking-widest">{code.display}</span>
-                <CopyButton text={`https://mingren.pics/?ref=${code.token}`} label="📋 复制" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Fission explanation */}
-        <div className="bg-[#8b5cf6]/10 comic-border-thin p-2 text-center">
-          <p className="text-xs font-black text-[#8b5cf6]">
-            🚀 每个码可邀请3人，被邀请人注册后再获3个码！无限裂变！
-          </p>
-        </div>
 
         {/* Invite stats */}
         {inviteCount > 0 && (
@@ -270,5 +236,197 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
+  );
+}
+
+// ==============================
+// Change Password Section
+// ==============================
+type PwStep = 'idle' | 'input' | 'verify' | 'success';
+
+function ChangePasswordSection({ email }: { email: string }) {
+  const [step, setStep] = useState<PwStep>('idle');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [code, setCode] = useState('');
+  const [sending, setSending] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [error, setError] = useState('');
+  const [tempToken, setTempToken] = useState('');
+  const [signature, setSignature] = useState('');
+
+  const startCountdown = () => {
+    setCountdown(60);
+    const t = setInterval(() => {
+      setCountdown((p) => {
+        if (p <= 1) { clearInterval(t); return 0; }
+        return p - 1;
+      });
+    }, 1000);
+  };
+
+  // Step 1: 用户输入新密码，点确认后发验证码
+  const handleStartChange = async () => {
+    if (newPassword.length < 6) { setError('密码至少6位'); return; }
+    if (newPassword !== confirmPassword) { setError('两次密码不一致'); return; }
+    setError('');
+    setSending(true);
+    try {
+      const resp = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) { setError(data.error || '发送失败'); setSending(false); return; }
+      setSignature(data.signature || '');
+      setStep('verify');
+      startCountdown();
+    } catch { setError('网络异常'); }
+    setSending(false);
+  };
+
+  // Step 2: 输入验证码，验证身份后设新密码
+  const handleSubmitCode = async () => {
+    if (code.length < 6) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      // 1. verify code
+      const verifyResp = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, signature }),
+      });
+      const verifyData = await verifyResp.json();
+      if (!verifyResp.ok) { setError(verifyData.error || '验证失败'); setSubmitting(false); return; }
+
+      // 2. set new password
+      const setResp = await fetch('/api/auth/set-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: newPassword, tempToken: verifyData.tempToken }),
+      });
+      const setData = await setResp.json();
+      if (!setResp.ok) { setError(setData.error || '设置密码失败'); setSubmitting(false); return; }
+
+      setStep('success');
+      setNewPassword('');
+      setConfirmPassword('');
+      setCode('');
+    } catch { setError('网络异常'); }
+    setSubmitting(false);
+  };
+
+  if (step === 'success') {
+    return (
+      <section className="bg-[#0f0]/20 comic-border comic-shadow-sm p-4 text-center">
+        <p className="font-black text-base text-green-700">✅ 密码修改成功！</p>
+        <button
+          onClick={() => setStep('idle')}
+          className="mt-2 px-4 py-1.5 bg-[#0f0] text-black text-xs font-black comic-border-thin hover:bg-[#0c0] transition-colors"
+        >
+          关闭
+        </button>
+      </section>
+    );
+  }
+
+  if (step === 'verify') {
+    return (
+      <section className="bg-[#8b5cf6]/10 comic-border comic-shadow-sm p-4">
+        <h2 className="text-base font-black mb-2" style={{ WebkitTextStroke: '1px #000' }}>
+          🔒 验证身份
+        </h2>
+        <p className="text-xs font-bold text-black/50 mb-3">验证码已发送至 {email.replace(/(.{2}).*(@.*)/, '$1***$2')}</p>
+        {error && <div className="text-center text-xs font-bold text-[#e00] bg-[#e00]/10 py-1.5 rounded mb-2">{error}</div>}
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => { setCode(e.target.value.replace(/\D/g, '')); setError(''); }}
+          placeholder="输入6位验证码"
+          maxLength={6}
+          className="w-full py-2.5 px-3 border-2 border-black text-sm font-bold text-center tracking-[6px] focus:outline-none focus:border-[#8b5cf6] mb-3"
+        />
+        <button
+          onClick={handleSubmitCode}
+          disabled={code.length < 6 || submitting}
+          className="w-full py-2.5 bg-[#8b5cf6] text-white border-2 border-black font-black text-sm comic-shadow-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all disabled:opacity-40"
+        >
+          {submitting ? '⏳ 验证中...' : '✅ 确认修改密码'}
+        </button>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <span className="text-xs text-black/40">没收到？</span>
+          {countdown > 0 ? (
+            <span className="text-xs font-bold text-black/30">{countdown}s</span>
+          ) : (
+            <button onClick={handleStartChange} disabled={sending} className="text-xs font-bold text-[#8b5cf6] hover:underline disabled:opacity-40">重新发送</button>
+          )}
+        </div>
+        <button
+          onClick={() => { setStep('input'); setCode(''); setError(''); }}
+          className="w-full text-center text-black/30 text-xs font-bold py-1 mt-1 hover:text-[#e00] transition-colors"
+        >
+          ← 返回
+        </button>
+      </section>
+    );
+  }
+
+  if (step === 'input') {
+    return (
+      <section className="bg-[#8b5cf6]/10 comic-border comic-shadow-sm p-4">
+        <h2 className="text-base font-black mb-3" style={{ WebkitTextStroke: '1px #000' }}>
+          🔒 修改密码
+        </h2>
+        {error && <div className="text-center text-xs font-bold text-[#e00] bg-[#e00]/10 py-1.5 rounded mb-2">{error}</div>}
+        <input
+          type="password"
+          value={newPassword}
+          onChange={(e) => { setNewPassword(e.target.value); setError(''); }}
+          placeholder="🔑 新密码（6位以上）"
+          className="w-full py-2.5 px-3 border-2 border-black text-sm font-bold focus:outline-none focus:border-[#8b5cf6] mb-2"
+        />
+        <input
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
+          placeholder="🔑 再次输入新密码"
+          className="w-full py-2.5 px-3 border-2 border-black text-sm font-bold focus:outline-none focus:border-[#8b5cf6] mb-3"
+        />
+        <div className="flex flex-col gap-1 text-xs font-bold mb-3">
+          <span className={newPassword.length >= 6 ? 'text-green-500' : 'text-black/30'}>
+            {newPassword.length >= 6 ? '✅' : '⬜'} 密码至少6位
+          </span>
+          <span className={newPassword === confirmPassword && confirmPassword.length > 0 ? 'text-green-500' : 'text-black/30'}>
+            {newPassword === confirmPassword && confirmPassword.length > 0 ? '✅' : '⬜'} 两次密码一致
+          </span>
+        </div>
+        <button
+          onClick={handleStartChange}
+          disabled={newPassword.length < 6 || newPassword !== confirmPassword || sending}
+          className="w-full py-2.5 bg-[#8b5cf6] text-white border-2 border-black font-black text-sm comic-shadow-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all disabled:opacity-40"
+        >
+          {sending ? '⏳ 发送验证码...' : '📧 发送验证码'}
+        </button>
+        <button
+          onClick={() => { setStep('idle'); setNewPassword(''); setConfirmPassword(''); setError(''); }}
+          className="w-full text-center text-black/30 text-xs font-bold py-1 mt-1 hover:text-[#e00] transition-colors"
+        >
+          取消
+        </button>
+      </section>
+    );
+  }
+
+  // idle — show button
+  return (
+    <button
+      onClick={() => setStep('input')}
+      className="w-full py-3 bg-[#f0f0f0] text-black comic-border comic-shadow-sm font-black text-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+    >
+      🔑 修改密码
+    </button>
   );
 }

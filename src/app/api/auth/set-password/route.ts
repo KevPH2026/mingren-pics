@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { hashPassword } from '@/lib/password';
 import { createUserRecord, getUserRecord, setTempToken, verifyTempToken, clearTempToken } from '@/lib/user-store';
-import { hashEmail, createUser, getDisplayCodes } from '@/lib/kv';
+import { hashEmail, createUser } from '@/lib/kv';
 
-const SECRET = process.env.SECRET || 'mingren-pics-dev-secret-2026';
+const SECRET=process.env.NEXTAUTH_SECRET || 'mingren-pics-dev-secret-2026';
 
 function signToken(userId: string): string {
   return createHmac('sha256', SECRET).update(`token:${userId}:${Date.now().toString().slice(0, -5)}`).digest('hex').slice(0, 32);
 }
 
-function setLoginCookies(res: NextResponse, email: string, referralCode: string, childCodes: string[]) {
+function setLoginCookies(res: NextResponse, email: string, referralCode: string) {
   const userId = hashEmail(email.toLowerCase());
   const sig = signToken(userId);
 
@@ -24,9 +24,6 @@ function setLoginCookies(res: NextResponse, email: string, referralCode: string,
     httpOnly: false, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
   });
   res.cookies.set('mingren_ref', referralCode, {
-    httpOnly: false, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-  });
-  res.cookies.set('mingren_invite_codes', JSON.stringify(childCodes), {
     httpOnly: false, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
   });
 }
@@ -61,31 +58,27 @@ export async function POST(req: NextRequest) {
         ok: true,
         email: normalizedEmail,
         referralCode: existing.referralCode,
-        childCodes: existing.childCodes,
-        childCodeDisplays: existing.childCodeDisplays,
       });
 
-      setLoginCookies(res, normalizedEmail, existing.referralCode, existing.childCodes);
+      setLoginCookies(res, normalizedEmail, existing.referralCode);
       clearTempToken(tempToken);
       return res;
     }
 
     // 4. Create new user with invite code logic (from kv.ts createUser)
-    const { referralCode, childCodes, childCodeDisplays } = await createUser(normalizedEmail);
+    const { referralCode } = await createUser(normalizedEmail);
 
     // 5. Store user record in memory
-    createUserRecord(normalizedEmail, hash, salt, referralCode, childCodes, childCodeDisplays);
+    createUserRecord(normalizedEmail, hash, salt, referralCode);
 
     // 6. Set login cookies and respond
     const res = NextResponse.json({
       ok: true,
       email: normalizedEmail,
       referralCode,
-      childCodes,
-      childCodeDisplays,
     });
 
-    setLoginCookies(res, normalizedEmail, referralCode, childCodes);
+    setLoginCookies(res, normalizedEmail, referralCode);
 
     // 7. Clear tempToken
     clearTempToken(tempToken);

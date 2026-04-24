@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 
-type Step = 'email' | 'code' | 'set-password' | 'login-password' | 'success';
+type Step = 'email' | 'code' | 'set-password' | 'login-password' | 'reset-password' | 'success';
 
 export default function PaywallModal() {
   const { setShowPaywall } = useAppStore();
@@ -27,10 +27,15 @@ export default function PaywallModal() {
   const [settingPassword, setSettingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetCode, setResetCode] = useState('');
+  const [resetCodeSending, setResetCodeSending] = useState(false);
+  const [resetCodeSubmitting, setResetCodeSubmitting] = useState(false);
+  const [resetCountdown, setResetCountdown] = useState(0);
+  const [resetError, setResetError] = useState('');
 
   // --- success state ---
   const [referralCode, setReferralCode] = useState('');
-  const [childCodes, setChildCodes] = useState<string[]>([]);
 
   // 获取 pending ref
   const pendingRef = typeof window !== 'undefined' ? localStorage.getItem('mingren_pending_ref') : null;
@@ -65,8 +70,6 @@ export default function PaywallModal() {
   const handleLoginSuccess = async (data: {
     email: string;
     referralCode?: string;
-    childCodes?: string[];
-    childCodeDisplays?: string[];
   }) => {
     localStorage.setItem('mingren_registered', '1');
     localStorage.setItem('mingren_email', data.email);
@@ -74,11 +77,6 @@ export default function PaywallModal() {
     if (data.referralCode) {
       localStorage.setItem('mingren_referral_code', data.referralCode);
       setReferralCode(data.referralCode);
-    }
-    if (data.childCodes && data.childCodeDisplays) {
-      setChildCodes(data.childCodeDisplays);
-      localStorage.setItem('mingren_child_codes', JSON.stringify(data.childCodes));
-      localStorage.setItem('mingren_child_displays', JSON.stringify(data.childCodeDisplays));
     }
     const { fetchServerQuota } = useAppStore.getState();
     await fetchServerQuota();
@@ -253,38 +251,6 @@ export default function PaywallModal() {
             <p className="text-xs font-bold mt-1 opacity-80">每天3次免费生成已解锁</p>
           </div>
           <div className="p-5 flex flex-col gap-4">
-            {/* 子邀请码区域 */}
-            {childCodes.length > 0 && (
-              <div className="bg-[#8b5cf6]/10 border-2 border-[#8b5cf6] rounded-lg p-3">
-                <p className="text-xs font-black mb-2 text-[#8b5cf6]">🎫 你的3个专属邀请码</p>
-                <p className="text-[10px] text-black/40 mb-2">每个码可邀请3人，被邀请人注册后再获3个码！</p>
-                <div className="flex flex-col gap-2">
-                  {(() => {
-                    const storedTokens = typeof window !== 'undefined'
-                      ? JSON.parse(localStorage.getItem('mingren_child_codes') || '[]')
-                      : [];
-                    return childCodes.map((displayCode, i) => {
-                      const fullToken = storedTokens[i] || displayCode;
-                      return (
-                        <div key={displayCode} className="flex items-center gap-2 bg-white rounded border-2 border-[#8b5cf6]/30 p-2">
-                          <span className="text-xs font-black text-black/30">#{i + 1}</span>
-                          <code className="flex-1 text-sm font-black tracking-wider text-black">{displayCode}</code>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(`https://mingren.pics/?ref=${encodeURIComponent(fullToken)}`);
-                            }}
-                            className="px-2 py-1 bg-[#8b5cf6] text-white text-[10px] font-black rounded hover:bg-[#7c3aed]"
-                          >
-                            复制
-                          </button>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-            )}
-
             {link && (
               <div className="bg-[#ff0]/20 border-2 border-[#ff0] rounded-lg p-3">
                 <p className="text-xs font-black mb-2">🎁 分享你的专属链接</p>
@@ -382,6 +348,114 @@ export default function PaywallModal() {
   }
 
   // ============================
+  // Render: reset-password (forgot password flow)
+  // ============================
+  if (step === 'reset-password') {
+    const handleResetSubmit = async () => {
+      if (resetCode.length < 6) return;
+      setResetCodeSubmitting(true);
+      setResetError('');
+      try {
+        const verifyResp = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code: resetCode, signature }),
+        });
+        const verifyData = await verifyResp.json();
+        if (!verifyResp.ok) { setResetError(verifyData.error || '验证失败'); setResetCodeSubmitting(false); return; }
+
+        const setResp = await fetch('/api/auth/set-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, tempToken: verifyData.tempToken }),
+        });
+        const setData = await setResp.json();
+        if (!setResp.ok) { setResetError(setData.error || '设置密码失败'); setResetCodeSubmitting(false); return; }
+
+        await handleLoginSuccess(setData);
+        setResetMode(false);
+        setStep('success');
+      } catch { setResetError('网络异常'); }
+      setResetCodeSubmitting(false);
+    };
+
+    const handleResendResetCode = async () => {
+      setResetCodeSending(true);
+      try {
+        const resp = await fetch('/api/auth/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) { setResetError(data.error || '发送失败'); setResetCodeSending(false); return; }
+        setSignature(data.signature || '');
+        setResetCountdown(60);
+        const t = setInterval(() => {
+          setResetCountdown((p) => {
+            if (p <= 1) { clearInterval(t); return 0; }
+            return p - 1;
+          });
+        }, 1000);
+      } catch { setResetError('网络异常'); }
+      setResetCodeSending(false);
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPaywall(false)} />
+        <div className="relative w-full max-w-sm bg-white comic-border animate-bounce-in">
+          <div className="bg-[#e00] text-white text-center py-4 border-b-4 border-black">
+            <p className="text-2xl font-black">🔑 重设密码</p>
+            <p className="text-xs font-bold mt-1 opacity-80">输入新密码 + 验证码完成重设</p>
+          </div>
+          <div className="p-5 flex flex-col gap-4">
+            {resetError && (
+              <div className="text-center text-xs font-bold text-[#e00] bg-[#e00]/10 py-2 rounded">{resetError}</div>
+            )}
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setResetError(''); }}
+              placeholder="🔑 新密码（6位以上）"
+              className="w-full py-3 px-3 border-2 border-black text-sm font-bold focus:outline-none focus:border-[#8b5cf6]"
+            />
+            <input
+              type="text"
+              value={resetCode}
+              onChange={(e) => { setResetCode(e.target.value.replace(/\D/g, '')); setResetError(''); }}
+              placeholder="🔢 输入6位验证码"
+              maxLength={6}
+              className="w-full py-3 px-3 border-2 border-black text-sm font-bold text-center tracking-[6px] focus:outline-none focus:border-[#8b5cf6]"
+            />
+            <button
+              onClick={handleResetSubmit}
+              disabled={password.length < 6 || resetCode.length < 6 || resetCodeSubmitting}
+              className="w-full py-3.5 bg-[#e00] text-white border-2 border-black font-black text-base comic-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-40"
+            >
+              {resetCodeSubmitting ? '⏳ 验证中...' : '🚀 重设密码'}
+            </button>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-xs text-black/40">没收到？</span>
+              {resetCountdown > 0 ? (
+                <span className="text-xs font-bold text-black/30">{resetCountdown}s</span>
+              ) : (
+                <button onClick={handleResendResetCode} disabled={resetCodeSending} className="text-xs font-bold text-[#8b5cf6] hover:underline disabled:opacity-40">重新发送</button>
+              )}
+            </div>
+            <button
+              onClick={() => { setStep('login-password'); setResetMode(false); setResetCode(''); setResetError(''); }}
+              className="text-center text-black/30 text-xs font-bold py-1 hover:text-[#8b5cf6] transition-colors"
+            >
+              ← 返回登录
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================
   // Render: login-password (existing user / quick login)
   // ============================
   if (step === 'login-password') {
@@ -425,6 +499,32 @@ export default function PaywallModal() {
               className="text-center text-black/40 text-xs font-bold py-1 hover:text-[#8b5cf6] transition-colors"
             >
               ← 用验证码登录
+            </button>
+
+            {/* 忘记密码 → 重发验证码 → 走 set-password 流程 */}
+            <button
+              onClick={async () => {
+                setPasswordError('');
+                setLoggingIn(true);
+                try {
+                  const resp = await fetch('/api/auth/send-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                  });
+                  const data = await resp.json();
+                  if (!resp.ok) { setPasswordError(data.error || '发送失败'); setLoggingIn(false); return; }
+                  setSignature(data.signature || '');
+                  setIsNewUser(false);
+                  setResetMode(true);
+                  setStep('reset-password');
+                } catch { setPasswordError('网络异常'); }
+                setLoggingIn(false);
+              }}
+              disabled={loggingIn}
+              className="text-center text-[#e00] text-xs font-bold py-1 hover:underline disabled:opacity-40"
+            >
+              🔑 忘记密码？用验证码重设
             </button>
           </div>
         </div>

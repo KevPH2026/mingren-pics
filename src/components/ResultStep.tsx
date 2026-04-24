@@ -26,14 +26,10 @@ export default function ResultStep() {
   // 获取邀请码
   const getInviteCode = () => {
     if (typeof window === 'undefined') return { display: '', token: '' };
-    const displays = JSON.parse(localStorage.getItem('mingren_child_displays') || '[]');
-    const tokens = JSON.parse(localStorage.getItem('mingren_child_codes') || '[]');
-    const referralCode = localStorage.getItem('mingren_referral_code') || '';
+    const referralCode = localStorage.getItem('mingren_referral_code') || useAppStore.getState().serverQuota?.referralCode || '';
     return {
       display: referralCode,
-      token: tokens[0] || referralCode,
-      allDisplays: displays,
-      allTokens: tokens,
+      token: referralCode,
     };
   };
 

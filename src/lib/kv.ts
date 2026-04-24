@@ -5,7 +5,6 @@ const SECRET = process.env.AUTH_SECRET || 'mingren-pics-dev-secret-2026';
 export interface UserData {
   email: string;
   referralCode: string;
-  childCodes: string[];
   bonusQuota: number;
   inviteCount: number;
   createdAt: string;
@@ -63,27 +62,9 @@ export function createRootInviteCodes(count: number = 10): string[] {
     const payload: InvitePayload = {
       code,
       ownerEmail: 'root',
-      usesLeft: 99,
-      maxUses: 99,
+      usesLeft: 999,
+      maxUses: 999,
       level: 0,
-      ts: Date.now(),
-    };
-    codes.push(signPayload(payload));
-  }
-  return codes;
-}
-
-// Generate 3 child codes for a new user
-function createChildCodes(ownerEmail: string, level: number): string[] {
-  const codes: string[] = [];
-  for (let i = 0; i < 3; i++) {
-    const code = generateCode();
-    const payload: InvitePayload = {
-      code,
-      ownerEmail,
-      usesLeft: 3,
-      maxUses: 3,
-      level,
       ts: Date.now(),
     };
     codes.push(signPayload(payload));
@@ -106,43 +87,28 @@ export function verifyInviteCode(token: string): InvitePayload | null {
   return { ...payload, usesLeft: payload.usesLeft - 1 };
 }
 
-// Get the 6-char codes from signed tokens (for display)
-export function getDisplayCodes(tokens: string[]): string[] {
-  return tokens.map(extractDisplayCode);
-}
-
-// Create user (no KV needed — returns user data + child invite codes)
+// Create user (no KV needed — returns user data)
 export async function createUser(email: string, inviteCodeToken?: string): Promise<{
   userId: string;
   referralCode: string;
-  childCodes: string[];
-  childCodeDisplays: string[];
   bonusQuota: number;
   inviteReward: number;
 }> {
   const userId = hashEmail(email);
   const referralCode = generateCode();
-  let parentLevel = 0;
   let inviteReward = 0;
 
   // Verify invite code
   if (inviteCodeToken) {
     const payload = verifyInviteCode(inviteCodeToken);
     if (payload) {
-      parentLevel = payload.level + 1;
       inviteReward = 3; // inviter gets 3 bonus quota (tracked client-side / in future DB)
     }
   }
 
-  // Generate 3 child codes
-  const childCodes = createChildCodes(email.toLowerCase(), parentLevel || 1);
-  const childCodeDisplays = childCodes.map(extractDisplayCode);
-
   return {
     userId,
     referralCode,
-    childCodes,
-    childCodeDisplays,
     bonusQuota: 3,
     inviteReward,
   };

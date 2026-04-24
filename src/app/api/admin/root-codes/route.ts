@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRootInviteCodes, getDisplayCodes } from '@/lib/kv';
+import { createRootInviteCodes, extractDisplayCode } from '@/lib/kv';
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'mingren-admin-2026';
 
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     const tokens = createRootInviteCodes(count);
-    const displays = getDisplayCodes(tokens);
+    const displays = tokens.map(extractDisplayCode);
 
     return NextResponse.json({ ok: true, tokens, displays, count: tokens.length });
   } catch (e: any) {
