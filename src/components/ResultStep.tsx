@@ -25,8 +25,16 @@ export default function ResultStep() {
 
   // 获取邀请码
   const getInviteCode = () => {
-    if (typeof window === 'undefined') return '';
-    return localStorage.getItem('mingren_referral_code') || '';
+    if (typeof window === 'undefined') return { display: '', token: '' };
+    const displays = JSON.parse(localStorage.getItem('mingren_child_displays') || '[]');
+    const tokens = JSON.parse(localStorage.getItem('mingren_child_codes') || '[]');
+    const referralCode = localStorage.getItem('mingren_referral_code') || '';
+    return {
+      display: referralCode,
+      token: tokens[0] || referralCode,
+      allDisplays: displays,
+      allTokens: tokens,
+    };
   };
 
   // 快捷指令
@@ -77,8 +85,8 @@ export default function ResultStep() {
       const fontSize = Math.max(18, Math.floor(img.width / 28));
 
       // === 右下角二维码区域 ===
-      const inviteCode = getInviteCode();
-      const qrUrl = inviteCode ? `https://mingren.pics/?ref=${inviteCode}` : 'https://mingren.pics';
+      const invite = getInviteCode();
+      const qrUrl = invite.token ? `https://mingren.pics/?ref=${encodeURIComponent(invite.token)}` : 'https://mingren.pics';
       const qrSize = Math.max(80, Math.floor(img.width / 5));
 
       try {
@@ -164,8 +172,8 @@ export default function ResultStep() {
   const handleShare = async () => {
     if (!currentImage) return;
 
-    const inviteCode = getInviteCode();
-    const shareLink = inviteCode ? `https://mingren.pics/?ref=${inviteCode}` : 'https://mingren.pics';
+    const invite = getInviteCode();
+    const shareLink = invite.token ? `https://mingren.pics/?ref=${encodeURIComponent(invite.token)}` : 'https://mingren.pics';
 
     if (navigator.share) {
       try {
@@ -173,7 +181,7 @@ export default function ResultStep() {
         const file = new File([blob], 'mingren-photo.png', { type: 'image/png' });
         await navigator.share({
           title: `我跟${celeb?.name || '名人'}合影了！`,
-          text: `快来 mingren.pics 生成你跟名人的合影！${inviteCode ? ` 邀请码: ${inviteCode}` : ''}`,
+          text: `快来 mingren.pics 生成你跟名人的合影！${invite.display ? ` 邀请码: ${invite.display}` : ''}`,
           url: shareLink,
           files: [file],
         });
@@ -185,7 +193,7 @@ export default function ResultStep() {
 
     try {
       await navigator.clipboard.writeText(
-        `我跟${celeb?.name || '名人'}合影了！快来 mingren.pics 生成你的名人合影！${inviteCode ? `\n邀请码: ${inviteCode}` : ''}\n${shareLink}`
+        `我跟${celeb?.name || '名人'}合影了！快来 mingren.pics 生成你的名人合影！${invite.display ? `\n邀请码: ${invite.display}` : ''}\n${shareLink}`
       );
       alert('分享文案已复制！');
     } catch {
@@ -241,7 +249,7 @@ export default function ResultStep() {
     }
   };
 
-  const inviteCode = getInviteCode();
+  const invite = getInviteCode();
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col items-center gap-5 mt-4 px-4">
@@ -277,9 +285,9 @@ export default function ResultStep() {
                   <div className="px-3 py-1 bg-[#ff0] comic-border-thin font-black text-xs text-black">
                     ⚡ mingren.pics
                   </div>
-                  {inviteCode && (
+                  {invite.display && (
                     <div className="px-2 py-1 bg-[#8b5cf6] border-2 border-white font-black text-[10px] text-white">
-                      码: {inviteCode}
+                      码: {invite.display}
                     </div>
                   )}
                 </div>
@@ -318,16 +326,16 @@ export default function ResultStep() {
       )}
 
       {/* 邀请码展示区 */}
-      {inviteCode && registered && (
+      {invite.display && registered && (
         <div className="w-full max-w-[320px] bg-gradient-to-r from-[#8b5cf6]/10 to-[#ec4899]/10 border-2 border-dashed border-[#8b5cf6]/40 rounded-lg p-3 animate-float">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black text-[#8b5cf6] uppercase tracking-wider">你的专属邀请码</p>
-              <p className="text-lg font-black text-black font-mono">{inviteCode}</p>
+              <p className="text-lg font-black text-black font-mono">{invite.display}</p>
             </div>
             <button
               onClick={() => {
-                const link = `https://mingren.pics/?ref=${inviteCode}`;
+                const link = `https://mingren.pics/?ref=${encodeURIComponent(invite.token)}`;
                 navigator.clipboard.writeText(link);
               }}
               className="px-3 py-2 bg-[#8b5cf6] text-white comic-border-thin font-black text-xs hover:bg-[#7c3aed] transition-colors"

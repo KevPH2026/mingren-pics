@@ -1,15 +1,6 @@
 import { createHmac } from 'crypto';
 
-// Conditional KV import — won't crash if KV store isn't created yet
-let kv: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  kv = require('@vercel/kv').kv;
-} catch {
-  // KV not configured yet
-}
-
-const SECRET = process.env.JWT_SECRET || 'mingren-pics-dev-secret-2026';
+const SECRET = process.env.AUTH_SECRET || 'mingren-pics-dev-secret-2026';
 
 export interface UserData {
   email: string;
@@ -17,24 +8,23 @@ export interface UserData {
   childCodes: string[];
   bonusQuota: number;
   inviteCount: number;
-  parentCode: string | null;
   createdAt: string;
 }
 
-export interface InviteCode {
+export interface InvitePayload {
   code: string;
-  ownerUserId: string;
-  createdBy: string;
+  ownerEmail: string;
   usesLeft: number;
   maxUses: number;
   level: number;
+  ts: number; // creation timestamp
 }
 
 export function hashEmail(email: string): string {
   return createHmac('sha256', SECRET).update(email.toLowerCase()).digest('hex').slice(0, 12);
 }
 
-export function generateCode(): string {
+function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
   for (let i = 0; i < 6; i++) {
@@ -43,126 +33,132 @@ export function generateCode(): string {
   return code;
 }
 
-async function kvGet(key: string): Promise<any> {
-  if (!kv) return null;
-  try { return await kv.get(key); } catch { return null; }
+// HMAC sign a payload object
+function signPayload(payload: InvitePayload): string {
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = createHmac('sha256', SECRET).update(data).digest('hex').slice(0, 16);
+  return `${data}.${sig}`;
 }
 
-async function kvSet(key: string, value: string): Promise<void> {
-  if (!kv) return;
-  try { await kv.set(key, value); } catch {}
-}
-
-export async function getUser(userId: string): Promise<UserData | null> {
+// Verify and decode a signed invite code
+function verifyAndDecode(token: string): InvitePayload | null {
   try {
-    const raw = await kvGet(`user:${userId}`);
-    if (!raw) return null;
-    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+    const dotIdx = token.lastIndexOf('.');
+    if (dotIdx === -1) return null;
+    const data = token.slice(0, dotIdx);
+    const sig = token.slice(dotIdx + 1);
+    const expectedSig = createHmac('sha256', SECRET).update(data).digest('hex').slice(0, 16);
+    if (sig !== expectedSig) return null;
+    return JSON.parse(Buffer.from(data, 'base64url').toString());
   } catch {
     return null;
   }
 }
 
-export async function createRootInviteCode(count: number = 10): Promise<string[]> {
+// Create root invite codes (admin use)
+export function createRootInviteCodes(count: number = 10): string[] {
   const codes: string[] = [];
   for (let i = 0; i < count; i++) {
     const code = generateCode();
-    const data: InviteCode = { code, ownerUserId: 'root', createdBy: 'root', usesLeft: 3, maxUses: 3, level: 0 };
-    await kvSet(`invite:${code}`, JSON.stringify(data));
-    await kvSet(`invite:${code}:user`, 'root');
-    codes.push(code);
+    const payload: InvitePayload = {
+      code,
+      ownerEmail: 'root',
+      usesLeft: 99,
+      maxUses: 99,
+      level: 0,
+      ts: Date.now(),
+    };
+    codes.push(signPayload(payload));
   }
   return codes;
 }
 
-async function createChildCodes(userId: string, level: number): Promise<string[]> {
-  const childCodes: string[] = [];
+// Generate 3 child codes for a new user
+function createChildCodes(ownerEmail: string, level: number): string[] {
+  const codes: string[] = [];
   for (let i = 0; i < 3; i++) {
     const code = generateCode();
-    const data: InviteCode = { code, ownerUserId: userId, createdBy: userId, usesLeft: 3, maxUses: 3, level };
-    await kvSet(`invite:${code}`, JSON.stringify(data));
-    await kvSet(`invite:${code}:user`, userId);
-    childCodes.push(code);
+    const payload: InvitePayload = {
+      code,
+      ownerEmail,
+      usesLeft: 3,
+      maxUses: 3,
+      level,
+      ts: Date.now(),
+    };
+    codes.push(signPayload(payload));
   }
-  return childCodes;
+  return codes;
 }
 
-export async function createUser(email: string, inviteCode?: string): Promise<{
+// Extract the 6-char display code from a signed token
+export function extractDisplayCode(token: string): string {
+  const payload = verifyAndDecode(token);
+  return payload?.code || token.slice(0, 6).toUpperCase();
+}
+
+// Verify an invite code and return its payload (with usesLeft decremented)
+export function verifyInviteCode(token: string): InvitePayload | null {
+  const payload = verifyAndDecode(token);
+  if (!payload) return null;
+  if (payload.usesLeft <= 0) return null;
+  // Return with decremented usesLeft (stateless — caller must issue new token if needed)
+  return { ...payload, usesLeft: payload.usesLeft - 1 };
+}
+
+// Get the 6-char codes from signed tokens (for display)
+export function getDisplayCodes(tokens: string[]): string[] {
+  return tokens.map(extractDisplayCode);
+}
+
+// Create user (no KV needed — returns user data + child invite codes)
+export async function createUser(email: string, inviteCodeToken?: string): Promise<{
   userId: string;
   referralCode: string;
   childCodes: string[];
+  childCodeDisplays: string[];
   bonusQuota: number;
+  inviteReward: number;
 }> {
   const userId = hashEmail(email);
-  const existing = await getUser(userId);
-  if (existing) {
-    return { userId, referralCode: existing.referralCode, childCodes: existing.childCodes, bonusQuota: existing.bonusQuota };
-  }
-
   const referralCode = generateCode();
-  let parentCode: string | null = null;
-  let childCodes: string[] = [];
   let parentLevel = 0;
+  let inviteReward = 0;
 
-  // Validate invite code
-  if (inviteCode) {
-    const raw = await kvGet(`invite:${inviteCode}`);
-    if (raw) {
-      const codeData: InviteCode = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      if (codeData.usesLeft > 0) {
-        codeData.usesLeft -= 1;
-        await kvSet(`invite:${inviteCode}`, JSON.stringify(codeData));
-        parentCode = inviteCode;
-        parentLevel = codeData.level + 1;
-
-        // Reward inviter
-        const inviterId = await kvGet(`invite:${inviteCode}:user`);
-        if (inviterId && inviterId !== 'root') {
-          const inviter = await getUser(inviterId);
-          if (inviter) {
-            inviter.bonusQuota += 3;
-            inviter.inviteCount += 1;
-            await kvSet(`user:${inviterId}`, JSON.stringify(inviter));
-          }
-        }
-      }
+  // Verify invite code
+  if (inviteCodeToken) {
+    const payload = verifyInviteCode(inviteCodeToken);
+    if (payload) {
+      parentLevel = payload.level + 1;
+      inviteReward = 3; // inviter gets 3 bonus quota (tracked client-side / in future DB)
     }
   }
 
-  // Generate 3 child codes for new user
-  childCodes = await createChildCodes(userId, parentLevel || 1);
+  // Generate 3 child codes
+  const childCodes = createChildCodes(email.toLowerCase(), parentLevel || 1);
+  const childCodeDisplays = childCodes.map(extractDisplayCode);
 
-  const userData: UserData = {
-    email: email.toLowerCase(),
+  return {
+    userId,
     referralCode,
     childCodes,
+    childCodeDisplays,
     bonusQuota: 3,
-    inviteCount: 0,
-    parentCode,
-    createdAt: new Date().toISOString(),
+    inviteReward,
   };
-
-  await kvSet(`user:${userId}`, JSON.stringify(userData));
-  await kvSet(`ref:${referralCode}:user`, userId);
-
-  return { userId, referralCode, childCodes, bonusQuota: 3 };
 }
 
 export async function getQuota(userId: string): Promise<{ dailyLimit: number; bonusQuota: number }> {
-  const data = await getUser(userId);
-  return { dailyLimit: 3, bonusQuota: data?.bonusQuota || 0 };
+  // Without persistent storage, bonus is tracked client-side via cookies
+  return { dailyLimit: 3, bonusQuota: 0 };
+}
+
+export async function getUser(userId: string): Promise<UserData | null> {
+  // Without persistent storage, return null
+  return null;
 }
 
 export async function useBonusQuota(userId: string): Promise<boolean> {
-  const data = await getUser(userId);
-  if (!data || data.bonusQuota <= 0) return false;
-  data.bonusQuota -= 1;
-  await kvSet(`user:${userId}`, JSON.stringify(data));
-  return true;
-}
-
-export async function getUserCodes(userId: string): Promise<string[]> {
-  const user = await getUser(userId);
-  if (!user) return [];
-  return [user.referralCode, ...user.childCodes];
+  // Without persistent storage, always false
+  return false;
 }

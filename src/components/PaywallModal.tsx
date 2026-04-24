@@ -98,8 +98,11 @@ export default function PaywallModal() {
         localStorage.setItem('mingren_referral_code', data.referralCode);
         setReferralCode(data.referralCode);
       }
-      if (data.childCodes) {
-        setChildCodes(data.childCodes);
+      if (data.childCodes && data.childCodeDisplays) {
+        setChildCodes(data.childCodeDisplays);
+        // 存储完整的签名 tokens 用于分享链接
+        localStorage.setItem('mingren_child_codes', JSON.stringify(data.childCodes));
+        localStorage.setItem('mingren_child_displays', JSON.stringify(data.childCodeDisplays));
       }
       setSuccess(true);
 
@@ -130,20 +133,28 @@ export default function PaywallModal() {
                 <p className="text-xs font-black mb-2 text-[#8b5cf6]">🎫 你的3个专属邀请码</p>
                 <p className="text-[10px] text-black/40 mb-2">每个码可邀请3人，被邀请人注册后再获3个码！</p>
                 <div className="flex flex-col gap-2">
-                  {childCodes.map((code, i) => (
-                    <div key={code} className="flex items-center gap-2 bg-white rounded border-2 border-[#8b5cf6]/30 p-2">
-                      <span className="text-xs font-black text-black/30">#{i + 1}</span>
-                      <code className="flex-1 text-sm font-black tracking-wider text-black">{code}</code>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(`https://mingren.pics/?ref=${code}`);
-                        }}
-                        className="px-2 py-1 bg-[#8b5cf6] text-white text-[10px] font-black rounded hover:bg-[#7c3aed]"
-                      >
-                        复制
-                      </button>
-                    </div>
-                  ))}
+                  {(() => {
+                    const storedTokens = typeof window !== 'undefined'
+                      ? JSON.parse(localStorage.getItem('mingren_child_codes') || '[]')
+                      : [];
+                    return childCodes.map((displayCode, i) => {
+                      const fullToken = storedTokens[i] || displayCode;
+                      return (
+                        <div key={displayCode} className="flex items-center gap-2 bg-white rounded border-2 border-[#8b5cf6]/30 p-2">
+                          <span className="text-xs font-black text-black/30">#{i + 1}</span>
+                          <code className="flex-1 text-sm font-black tracking-wider text-black">{displayCode}</code>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`https://mingren.pics/?ref=${encodeURIComponent(fullToken)}`);
+                            }}
+                            className="px-2 py-1 bg-[#8b5cf6] text-white text-[10px] font-black rounded hover:bg-[#7c3aed]"
+                          >
+                            复制
+                          </button>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             )}
