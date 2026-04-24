@@ -1,17 +1,32 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 
 export default function ResultStep() {
-  const { generatedImages, selectedCelebrityId, selectedScenarioId, reset, setStep, addToHistory } = useAppStore();
+  const { generatedImages, selectedCelebrityId, selectedScenarioId, reset, setStep, addToHistory, isRegistered, setShowPaywall, setGeneratedImages, userImage } = useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const scenario = scenarios.find((s) => s.id === selectedScenarioId);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const savedRef = useRef(false);
 
   const currentImage = generatedImages[0];
+  const registered = isRegistered();
+
+  // 修改指令相关
+  const [editInstruction, setEditInstruction] = useState('');
+  const [editing, setEditing] = useState(false);
+
+  // 快捷指令
+  const quickEdits = [
+    { label: '👔 换西装', prompt: 'Change both people to wearing formal business suits' },
+    { label: '🕶️ 加墨镜', prompt: 'Add sunglasses on both people' },
+    { label: '🌃 变夜景', prompt: 'Change the scene to nighttime with city lights in the background' },
+    { label: '🎨 油画风', prompt: 'Transform this photo into an oil painting style artwork' },
+    { label: '❄️ 下雪', prompt: 'Add snow falling in the scene, winter atmosphere' },
+    { label: '📸 黑白', prompt: 'Convert this photo to classic black and white film style' },
+  ];
 
   // 自动保存到历史记录（只保存一次）
   useEffect(() => {
@@ -46,12 +61,10 @@ export default function ResultStep() {
       ctx.font = `900 ${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
 
-      // White outline
       ctx.strokeStyle = '#000';
       ctx.lineWidth = fontSize / 6;
       ctx.strokeText('mingren.pics', img.width / 2, img.height - 25);
 
-      // Yellow fill
       ctx.fillStyle = '#ff0';
       ctx.fillText('mingren.pics', img.width / 2, img.height - 25);
 
@@ -91,6 +104,54 @@ export default function ResultStep() {
     }
   };
 
+  const handleEdit = async (instruction: string) => {
+    if (!instruction.trim() || !currentImage) return;
+
+    if (!registered) {
+      setShowPaywall(true);
+      return;
+    }
+
+    setEditing(true);
+
+    const editPrompt = `Modify this photo: ${instruction}. Keep the two people and their positions, only change what is requested. Photorealistic quality.`;
+
+    try {
+      const resp = await fetch('/api/generate/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: editPrompt,
+          userImageBase64: currentImage, // 用当前生成的图作为参考
+        }),
+      });
+
+      const data = await resp.json();
+
+      if (data.images) {
+        setGeneratedImages(data.images);
+        savedRef.current = false; // 允许再次自动保存
+      } else if (data.imageUrl) {
+        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`;
+        const imgResp = await fetch(proxyUrl);
+        const blob = await imgResp.blob();
+        const reader = new FileReader();
+        reader.onload = () => {
+          setGeneratedImages([reader.result as string]);
+          savedRef.current = false;
+        };
+        reader.readAsDataURL(blob);
+      } else {
+        alert(data.error || '修改失败，请重试');
+      }
+    } catch {
+      alert('网络异常，请重试');
+    } finally {
+      setEditing(false);
+      setEditInstruction('');
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto flex flex-col items-center gap-5 mt-4 px-4">
       <canvas ref={canvasRef} className="hidden" />
@@ -107,7 +168,7 @@ export default function ResultStep() {
 
       {/* Result image in comic frame */}
       {currentImage && (
-        <div className="relative w-full max-w-[320px] animate-bounce-in">
+        <div className={`relative w-full max-w-[320px] animate-bounce-in ${editing ? 'opacity-60' : ''}`}>
           {/* Comic frame layers */}
           <div className="absolute inset-0 bg-[#e00] comic-border rotate-[-1deg] rounded" />
           <div className="absolute inset-[3px] bg-[#ff0] rounded-sm" />
@@ -125,6 +186,14 @@ export default function ResultStep() {
               </div>
             </div>
           </div>
+          {editing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
+              <div className="text-center">
+                <div className="text-4xl animate-spin">🎨</div>
+                <p className="text-white text-xs font-black mt-2">AI修改中...</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -134,6 +203,57 @@ export default function ResultStep() {
           你跟 <span className="text-[#e00]">{celeb.name}</span> 的合影 🎉
         </p>
       )}
+
+      {/* ===== 修改指令区域（注册用户可用） ===== */}
+      <div className="w-full max-w-[320px] flex flex-col gap-3">
+        {/* 快捷指令按钮 */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          {quickEdits.map((q) => (
+            <button
+              key={q.label}
+              onClick={() => handleEdit(q.prompt)}
+              disabled={editing}
+              className={`px-3 py-1.5 text-xs font-black comic-border-thin transition-all ${
+                registered
+                  ? 'bg-white hover:bg-[#ff0] hover:translate-y-[-2px] hover:comic-shadow-sm'
+                  : 'bg-[#f0f0f0] text-black/30'
+              }`}
+            >
+              {q.label}
+              {!registered && ' 🔒'}
+            </button>
+          ))}
+        </div>
+
+        {/* 自定义修改输入 */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={editInstruction}
+            onChange={(e) => setEditInstruction(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleEdit(editInstruction)}
+            placeholder={registered ? '✏️ 输入修改指令...如"把背景换成海边"' : '🔒 注册后可自定义修改'}
+            disabled={!registered || editing}
+            className="flex-1 py-2.5 px-3 border-2 border-black text-xs font-bold focus:outline-none focus:border-[#e00] disabled:bg-[#f5f5f5] disabled:text-black/30"
+          />
+          <button
+            onClick={() => handleEdit(editInstruction)}
+            disabled={!registered || editing || !editInstruction.trim()}
+            className="px-4 py-2.5 bg-[#8b5cf6] text-white border-2 border-black font-black text-xs hover:translate-x-[1px] hover:translate-y-[1px] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {editing ? '⏳' : '🎨 修改'}
+          </button>
+        </div>
+
+        {!registered && (
+          <button
+            onClick={() => setShowPaywall(true)}
+            className="text-center text-[10px] font-bold text-[#8b5cf6] hover:underline"
+          >
+            🔓 注册解锁AI修改功能 →
+          </button>
+        )}
+      </div>
 
       {/* Main actions */}
       <div className="flex gap-3 w-full max-w-[320px]">
