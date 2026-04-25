@@ -1,31 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac } from 'crypto';
 import { verifyPassword } from '@/lib/password';
-import { getUserRecord } from '@/lib/user-store';
+import { getUserRecord, getReferralOwner, registerReferralCode } from '@/lib/user-store';
 import { hashEmail } from '@/lib/kv';
-
-const SECRET=process.env.NEXTAUTH_SECRET || 'mingren-pics-dev-secret-2026';
-
-function signToken(userId: string): string {
-  return createHmac('sha256', SECRET).update(`token:${userId}:${Date.now().toString().slice(0, -5)}`).digest('hex').slice(0, 32);
-}
+import { signToken, authCookieOpts, publicCookieOpts } from '@/lib/auth';
 
 function setLoginCookies(res: NextResponse, email: string, referralCode: string) {
   const userId = hashEmail(email.toLowerCase());
   const sig = signToken(userId);
 
-  res.cookies.set('mingren_uid', userId, {
-    httpOnly: true, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-  });
-  res.cookies.set('mingren_sig', sig, {
-    httpOnly: true, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-  });
-  res.cookies.set('mingren_email', email.toLowerCase(), {
-    httpOnly: false, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-  });
-  res.cookies.set('mingren_ref', referralCode, {
-    httpOnly: false, secure: true, maxAge: 365 * 24 * 3600, path: '/', sameSite: 'lax',
-  });
+  res.cookies.set('mingren_uid', userId, authCookieOpts());
+  res.cookies.set('mingren_sig', sig, authCookieOpts());
+  res.cookies.set('mingren_email', email.toLowerCase(), publicCookieOpts());
+  res.cookies.set('mingren_ref', referralCode, publicCookieOpts());
 }
 
 export async function POST(req: NextRequest) {
@@ -48,10 +34,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '密码错误' }, { status: 401 });
     }
 
+    // Ensure referral code is registered in lookup
+    if (record.referralCode) {
+      const existing = getReferralOwner(record.referralCode);
+      if (!existing) {
+        // Re-register after server restart
+        registerReferralCode(record.referralCode, normalizedEmail);
+      }
+    }
+
     const res = NextResponse.json({
       ok: true,
       email: normalizedEmail,
       referralCode: record.referralCode,
+      inviteCount: record.inviteCount,
     });
 
     setLoginCookies(res, normalizedEmail, record.referralCode);

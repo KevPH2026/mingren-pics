@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { hashEmail } from '@/lib/kv';
-import { getUserRecord, setTempToken } from '@/lib/user-store';
+import { setTempToken, getTempTokenEntry, getUserRecord } from '@/lib/user-store';
 
-const SECRET = process.env.SECRET || 'mingren-pics-dev-secret-2026';
+const SECRET = process.env.AUTH_SECRET || 'mingren-pics-dev-secret-2026';
 
 function signCode(email: string, code: string): string {
   return createHmac('sha256', SECRET).update(`${email}:${code}`).digest('hex');
@@ -11,7 +11,7 @@ function signCode(email: string, code: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, code, signature } = await req.json();
+    const { email, code, signature, referralCode } = await req.json();
 
     if (!email || !code) {
       return NextResponse.json({ error: '参数缺失' }, { status: 400 });
@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.toLowerCase();
     const existingUser = getUserRecord(normalizedEmail);
 
-    // 无论新老用户，都发 tempToken（新用户注册用，老用户修改密码用）
-    const tempToken = setTempToken(normalizedEmail);
+    // Store referralCode in tempToken for set-password to use later
+    const tempToken = setTempToken(normalizedEmail, referralCode || undefined);
 
     if (existingUser) {
       return NextResponse.json({

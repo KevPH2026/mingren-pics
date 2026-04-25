@@ -21,9 +21,8 @@ interface AppState {
   isGenerating: boolean;
   history: HistoryItem[];
   showPaywall: boolean;
-  dailyUsage: { date: string; count: number };
   // 服务端数据
-  serverQuota: { registered: boolean; dailyLimit: number; bonusQuota: number; inviteCount: number; referralCode: string; email?: string } | null;
+  serverQuota: { registered: boolean; dailyLimit: number; usedToday: number; bonusQuota: number; remaining: number; inviteCount: number; referralCode: string; email?: string } | null;
   referralCode: string | null;
   inviteCount: number;
 
@@ -37,7 +36,6 @@ interface AppState {
   removeFromHistory: (id: string) => void;
   clearHistory: () => void;
   setShowPaywall: (v: boolean) => void;
-  incrementDailyUsage: () => void;
   getRemainingToday: () => number;
   isRegistered: () => boolean;
   canGenerate: () => boolean;
@@ -47,13 +45,13 @@ interface AppState {
 }
 
 const STORAGE_KEY = 'mingren_history';
-const USAGE_KEY = 'mingren_daily_usage';
 const REGISTERED_KEY = 'mingren_registered';
 const REFERRAL_CODE_KEY = 'mingren_referral_code';
 
 const FREE_LIMIT = 1;
 const REG_LIMIT = 3;
-const MAX_HISTORY = 50;
+const MAX_HISTORY_ITEMS = 20; // 限制条目数
+const MAX_HISTORY_BYTES = 4 * 1024 * 1024; // 4MB localStorage budget
 
 function getTodayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -67,31 +65,32 @@ function loadJSON<T>(key: string, fallback: T): T {
   } catch { return fallback; }
 }
 
-function saveJSON(key: string, data: any) {
-  if (typeof window === 'undefined') return;
-  try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
-}
-
-function loadDailyUsage(): { date: string; count: number } {
-  const parsed = loadJSON<{ date: string; count: number }>(USAGE_KEY, { date: getTodayStr(), count: 0 });
-  if (parsed.date !== getTodayStr()) return { date: getTodayStr(), count: 0 };
-  return parsed;
-}
-
-function saveDailyUsage(data: { date: string; count: number }) {
-  saveJSON(USAGE_KEY, data);
-}
-
 function loadHistory(): HistoryItem[] {
   return loadJSON<HistoryItem[]>(STORAGE_KEY, []);
 }
 
+function estimateHistoryBytes(items: HistoryItem[]): number {
+  return JSON.stringify(items).length * 2; // UTF-16
+}
+
 function saveHistory(items: HistoryItem[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    const data = JSON.stringify(items);
+    localStorage.setItem(STORAGE_KEY, data);
   } catch {
-    const trimmed = items.slice(Math.floor(items.length / 2));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    // localStorage full — trim oldest items aggressively
+    let trimmed = items.slice(0, Math.floor(items.length / 2));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    } catch {
+      // Still too big, keep only last 3
+      trimmed = items.slice(0, 3);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+      } catch {
+        // Give up
+      }
+    }
   }
 }
 
@@ -101,11 +100,10 @@ const initialState = {
   userImageFile: null,
   selectedCelebrityId: null,
   selectedScenarioId: null,
-  generatedImages: [],
+  generatedImages: [] as string[],
   isGenerating: false,
   history: [] as HistoryItem[],
   showPaywall: false,
-  dailyUsage: { date: getTodayStr(), count: 0 },
   serverQuota: null as AppState['serverQuota'],
   referralCode: null as string | null,
   inviteCount: 0,
@@ -127,9 +125,18 @@ export const useAppStore = create<AppState>((set, get) => ({
       id: `h_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       createdAt: Date.now(),
     };
-    const updated = [historyItem, ...get().history].slice(0, MAX_HISTORY);
-    set({ history: updated });
-    saveHistory(updated);
+    const updated = [historyItem, ...get().history];
+
+    // Trim by count first
+    let trimmed = updated.slice(0, MAX_HISTORY_ITEMS);
+
+    // Then trim by size
+    while (estimateHistoryBytes(trimmed) > MAX_HISTORY_BYTES && trimmed.length > 1) {
+      trimmed = trimmed.slice(0, trimmed.length - 1);
+    }
+
+    set({ history: trimmed });
+    saveHistory(trimmed);
   },
 
   removeFromHistory: (id) => {
@@ -145,42 +152,18 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setShowPaywall: (v) => set({ showPaywall: v }),
 
-  incrementDailyUsage: () => {
-    const today = getTodayStr();
-    const current = get().dailyUsage;
-    // 优先扣 bonusQuota（服务端管理的）
-    const bonus = get().serverQuota?.bonusQuota || 0;
-    if (bonus > 0) {
-      // 扣服务端 bonus
-      fetch('/api/quota/use', { method: 'POST' }).catch(() => {});
-      // 同时更新本地 cache
-      if (get().serverQuota) {
-        set({ serverQuota: { ...get().serverQuota!, bonusQuota: bonus - 1 } });
-      }
-      return;
-    }
-    // 扣 daily
-    const usage = current.date === today ? { date: today, count: current.count + 1 } : { date: today, count: 1 };
-    set({ dailyUsage: usage });
-    saveDailyUsage(usage);
-  },
-
+  // Quota now fully managed server-side via signed cookie
+  // This is a client-side convenience that reads from serverQuota
   getRemainingToday: () => {
-    const today = getTodayStr();
-    const current = get().dailyUsage;
-    const count = current.date === today ? current.count : 0;
+    const sq = get().serverQuota;
+    if (sq) return Math.max(0, sq.remaining);
     const registered = get().isRegistered();
-    const dailyLimit = registered ? REG_LIMIT : FREE_LIMIT;
-    const dailyRemaining = Math.max(0, dailyLimit - count);
-    const bonus = get().serverQuota?.bonusQuota || 0;
-    return dailyRemaining + bonus;
+    return registered ? REG_LIMIT : FREE_LIMIT;
   },
 
   isRegistered: () => {
     if (typeof window === 'undefined') return false;
-    // 优先看 serverQuota（服务端通过 httpOnly cookie 判断）
     if (get().serverQuota?.registered) return true;
-    // fallback: localStorage
     return localStorage.getItem(REGISTERED_KEY) === '1';
   },
 
@@ -211,15 +194,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  reset: () => set({ ...initialState, history: get().history, dailyUsage: get().dailyUsage }),
+  reset: () => set({ ...initialState, history: get().history }),
 }));
 
 // 客户端初始化
 if (typeof window !== 'undefined') {
   const saved = loadHistory();
-  const usage = loadDailyUsage();
   const referralCode = localStorage.getItem(REFERRAL_CODE_KEY);
-  useAppStore.setState({ history: saved, dailyUsage: usage, referralCode });
+  useAppStore.setState({ history: saved, referralCode });
 
   // 从 URL 提取 ref 参数
   const urlParams = new URLSearchParams(window.location.search);

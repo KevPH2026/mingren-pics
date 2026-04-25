@@ -61,7 +61,7 @@ export default function ProfilePage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const remaining = getRemainingToday();
+  const remaining = serverQuota ? Math.max(0, serverQuota.remaining) : getRemainingToday();
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -69,10 +69,11 @@ export default function ProfilePage() {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {}
     // Also clear client-side
-    document.cookie = 'mingren_uid=; path=/; max-age=0';
-    document.cookie = 'mingren_sig=; path=/; max-age=0';
-    document.cookie = 'mingren_email=; path=/; max-age=0';
-    document.cookie = 'mingren_ref=; path=/; max-age=0';
+      document.cookie = 'mingren_uid=; path=/; max-age=0';
+      document.cookie = 'mingren_sig=; path=/; max-age=0';
+      document.cookie = 'mingren_email=; path=/; max-age=0';
+      document.cookie = 'mingren_ref=; path=/; max-age=0';
+      document.cookie = 'mingren_usage=; path=/; max-age=0';
     localStorage.removeItem('mingren_registered');
     localStorage.removeItem('mingren_referral_code');
     localStorage.removeItem('mingren_email');

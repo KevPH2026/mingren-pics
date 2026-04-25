@@ -307,6 +307,7 @@ export default function ResultStep() {
     } finally {
       setEditing(false);
       setEditInstruction('');
+      useAppStore.getState().fetchServerQuota();
     }
   };
 

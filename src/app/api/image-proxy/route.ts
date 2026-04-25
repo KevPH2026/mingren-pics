@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Only allow whitelisted domains
-  const allowedHosts = ['novartspace.art', 'upload.wikimedia.org'];
+  const allowedHosts = ['novartspace.art'];
   try {
     const parsed = new URL(imageUrl);
     if (!allowedHosts.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {

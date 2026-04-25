@@ -7,7 +7,7 @@ import { celebrities, scenarios } from '@/lib/celebrities';
 const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
 export default function SelectScenario() {
-  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, incrementDailyUsage, canGenerate, getRemainingToday, isRegistered } =
+  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, canGenerate, getRemainingToday, isRegistered, fetchServerQuota } =
     useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,6 @@ export default function SelectScenario() {
     selectScenario(scenarioId);
     setLoading(true);
     setError(null);
-    incrementDailyUsage();
 
     if (!selectedCelebrityId) return;
 
@@ -64,6 +63,13 @@ export default function SelectScenario() {
       });
 
       const data = await resp.json();
+
+      if (resp.status === 429) {
+        setError(data.error || '今日次数已用完，明天再来或邀请好友获取更多！');
+        setShowPaywall(true);
+        setStep('scenario');
+        return;
+      }
 
       if (resp.status === 202 && data.queued) {
         await new Promise(r => setTimeout(r, 10000));
@@ -99,6 +105,8 @@ export default function SelectScenario() {
       setStep('scenario');
     } finally {
       setLoading(false);
+      // Refresh quota from server (server set new cookie)
+      fetchServerQuota();
     }
   };
 

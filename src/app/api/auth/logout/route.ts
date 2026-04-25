@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isProd } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
     const res = NextResponse.json({ ok: true });
 
-    // Clear all mingren_ prefixed cookies
-    const cookieNames = ['mingren_uid', 'mingren_sig', 'mingren_email', 'mingren_ref', 'mingren_invite_codes'];
+    const cookieNames = ['mingren_uid', 'mingren_sig', 'mingren_email', 'mingren_ref', 'mingren_usage'];
 
     for (const name of cookieNames) {
+      const isPublic = name === 'mingren_email' || name === 'mingren_ref';
       res.cookies.set(name, '', {
-        httpOnly: name !== 'mingren_email' && name !== 'mingren_ref' && name !== 'mingren_invite_codes',
-        secure: true,
+        httpOnly: !isPublic,
+        secure: isProd,
         maxAge: 0,
         path: '/',
         sameSite: 'lax',
