@@ -53,6 +53,7 @@ export default function SelectScenario() {
     setStep('generating');
 
     try {
+      // Step 1: Submit async task
       const resp = await fetch('/api/generate/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,15 +61,13 @@ export default function SelectScenario() {
           prompt,
           userImageBase64: userImage || undefined,
         }),
-        signal: AbortSignal.timeout(120_000),
+        signal: AbortSignal.timeout(30_000),
       });
 
       const data = await resp.json();
 
-      // 任何非成功状态码都停止，不重试
       if (!resp.ok) {
         const errMsg = data.error || '生成失败，请稍后重试';
-        // 503 = 账号限制/维护中, 502/504 = 上游故障
         setError(resp.status === 503 ? errMsg : `${celeb?.name || '该人物'} 暂时不可用，请稍后再试或换个人物`);
         setStep('scenario');
         return;
@@ -76,34 +75,68 @@ export default function SelectScenario() {
 
       if (data.images) {
         setGeneratedImages(data.images);
-      } else if (data.imageUrl) {
-        await downloadAndSet(data.imageUrl);
-      } else {
-        setError(`${celeb?.name || '该人物'} 暂时不可用，请稍后再试或换个人物`);
-        setStep('scenario');
+        return;
       }
+
+      if (data.imageUrl) {
+        setGeneratedImages([`/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`]);
+        return;
+      }
+
+      // Step 2: Poll for async result
+      if (data.taskId) {
+        const result = await pollForResult(data.taskId);
+        if (result.imageUrl) {
+          setGeneratedImages([`/api/image-proxy?url=${encodeURIComponent(result.imageUrl)}`]);
+        } else if (result.error) {
+          setError(result.error);
+          setStep('scenario');
+        } else {
+          setError('生成失败，请重试');
+          setStep('scenario');
+        }
+        return;
+      }
+
+      setError(`${celeb?.name || '该人物'} 暂时不可用，请稍后再试或换个人物`);
+      setStep('scenario');
     } catch (err: any) {
       const msg = err?.name === 'TimeoutError' ? '生成超时，请稍后重试' : '网络异常，请重试';
       setError(msg);
       setStep('scenario');
     } finally {
       setLoading(false);
-      // Refresh quota from server (server set new cookie)
       fetchServerQuota();
     }
   };
 
-  const downloadAndSet = async (imageUrl: string) => {
-    const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
-    const imgResp = await fetch(proxyUrl);
-    const blob = await imgResp.blob();
-    return new Promise<void>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setGeneratedImages([reader.result as string]);
-        resolve();
+  const pollForResult = (taskId: string): Promise<{ imageUrl?: string; error?: string }> => {
+    return new Promise((resolve) => {
+      const maxAttempts = 60; // 60 * 3s = 3 minutes max
+      let attempts = 0;
+      const poll = async () => {
+        attempts++;
+        try {
+          const resp = await fetch(`/api/generate/start?taskId=${taskId}`);
+          const data = await resp.json();
+          if (data.status === 'success' && data.imageUrl) {
+            resolve({ imageUrl: data.imageUrl });
+          } else if (data.status === 'failed') {
+            resolve({ error: data.error || '生成失败，请重试' });
+          } else if (attempts >= maxAttempts) {
+            resolve({ error: '生成超时，请稍后重试' });
+          } else {
+            setTimeout(poll, 3000);
+          }
+        } catch {
+          if (attempts >= maxAttempts) {
+            resolve({ error: '网络异常，请重试' });
+          } else {
+            setTimeout(poll, 3000);
+          }
+        }
       };
-      reader.readAsDataURL(blob);
+      setTimeout(poll, 2000); // First poll after 2s
     });
   };
 

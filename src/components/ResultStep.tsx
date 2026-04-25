@@ -5,6 +5,27 @@ import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 import QRCode from 'qrcode';
 
+function makeThumbnail(dataUrl: string, maxSize: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { reject(new Error('no canvas')); return; }
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
+    };
+    img.onerror = () => reject(new Error('img load failed'));
+    img.src = dataUrl;
+  });
+}
+
 export default function ResultStep() {
   const { generatedImages, selectedCelebrityId, selectedScenarioId, reset, setStep, addToHistory, isRegistered, setShowPaywall, setGeneratedImages, userImage, history } = useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
@@ -47,12 +68,27 @@ export default function ResultStep() {
   useEffect(() => {
     if (currentImage && celeb && !savedRef.current) {
       savedRef.current = true;
-      addToHistory({
-        imageUrl: currentImage,
-        celebrityId: celeb.id,
-        celebrityName: celeb.name,
-        scenarioLabel: scenario?.label || '合影',
-      });
+      // Save thumbnail to avoid localStorage overflow
+      const saveToHistory = async () => {
+        try {
+          const thumb = await makeThumbnail(currentImage, 200);
+          addToHistory({
+            imageUrl: thumb,
+            celebrityId: celeb.id,
+            celebrityName: celeb.name,
+            scenarioLabel: scenario?.label || '合影',
+          });
+        } catch {
+          // If thumbnail fails, save with a placeholder
+          addToHistory({
+            imageUrl: '',
+            celebrityId: celeb.id,
+            celebrityName: celeb.name,
+            scenarioLabel: scenario?.label || '合影',
+          });
+        }
+      };
+      saveToHistory();
     }
   }, [currentImage, celeb, scenario, addToHistory]);
 
@@ -290,15 +326,8 @@ export default function ResultStep() {
         setGeneratedImages(data.images);
         savedRef.current = false;
       } else if (data.imageUrl) {
-        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`;
-        const imgResp = await fetch(proxyUrl);
-        const blob = await imgResp.blob();
-        const reader = new FileReader();
-        reader.onload = () => {
-          setGeneratedImages([reader.result as string]);
-          savedRef.current = false;
-        };
-        reader.readAsDataURL(blob);
+        setGeneratedImages([`/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`]);
+        savedRef.current = false;
       } else {
         alert(data.error || '修改失败，请重试');
       }

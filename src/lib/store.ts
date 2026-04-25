@@ -51,7 +51,7 @@ const REFERRAL_CODE_KEY = 'mingren_referral_code';
 const FREE_LIMIT = 1;
 const REG_LIMIT = 3;
 const MAX_HISTORY_ITEMS = 20; // 限制条目数
-const MAX_HISTORY_BYTES = 4 * 1024 * 1024; // 4MB localStorage budget
+const MAX_HISTORY_BYTES = 2 * 1024 * 1024; // 2MB localStorage budget
 
 function getTodayStr() {
   return new Date().toISOString().slice(0, 10);

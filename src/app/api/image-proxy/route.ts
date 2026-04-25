@@ -1,46 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/image-proxy?url=xxx — proxies image download with API key
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
-  const imageUrl = req.nextUrl.searchParams.get('url');
-  if (!imageUrl) {
-    return NextResponse.json({ error: 'Missing url' }, { status: 400 });
+  const url = req.nextUrl.searchParams.get('url');
+  if (!url) {
+    return NextResponse.json({ error: 'Missing url param' }, { status: 400 });
   }
 
-  // Only allow whitelisted domains
-  const allowedHosts = ['novartspace.art'];
-  try {
-    const parsed = new URL(imageUrl);
-    if (!allowedHosts.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {
-      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
-    }
-  } catch {
+  // Only allow Nova URLs to prevent SSRF
+  if (!url.startsWith('https://www.novartspace.art/')) {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
   }
 
   try {
-    const isNova = imageUrl.includes('novartspace.art');
     const apiKey = process.env.NOVA_API_KEY || '';
-    const resp = await fetch(imageUrl, {
-      headers: isNova ? { 'Authorization': `Bearer ${apiKey}` } : {},
+    const resp = await fetch(url, {
+      headers: {
+        'Accept': '*/*',
+        ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}),
+      },
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!resp.ok) {
-      return NextResponse.json({ error: 'Download failed' }, { status: resp.status });
+      const errText = await resp.text().catch(() => '');
+      console.error('Image proxy error:', resp.status, errText.substring(0, 200));
+      return NextResponse.json({ error: 'Upstream error', status: resp.status, detail: errText.substring(0, 200) }, { status: resp.status });
     }
 
-    const contentType = resp.headers.get('content-type') || 'image/jpeg';
-    const buffer = await resp.arrayBuffer();
+    const contentType = resp.headers.get('content-type') || '';
 
-    return new NextResponse(buffer, {
+    // If response is JSON (e.g. base64 encoded), extract the image data
+    if (contentType.includes('application/json')) {
+      const json = await resp.json();
+      // Nova might return { data: [...] } with base64 or URLs
+      const b64 = json?.data?.[0]?.b64_json || json?.b64_json || json?.data?.[0]?.url;
+      if (b64 && b64.startsWith('data:')) {
+        // data:image/png;base64,xxx
+        const match = b64.match(/^data:(image\/\w+);base64,(.+)$/);
+        if (match) {
+          const buf = Buffer.from(match[2], 'base64');
+          return new NextResponse(buf, {
+            headers: { 'Content-Type': match[1], 'Cache-Control': 'public, max-age=86400' },
+          });
+        }
+      }
+      if (b64 && !b64.startsWith('http')) {
+        // raw base64
+        const buf = Buffer.from(b64, 'base64');
+        return new NextResponse(buf, {
+          headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' },
+        });
+      }
+      // It's a URL - redirect or fetch again
+      if (b64 && b64.startsWith('http')) {
+        const imgResp = await fetch(b64, { signal: AbortSignal.timeout(30_000) });
+        const imgBuf = await imgResp.arrayBuffer();
+        const imgCt = imgResp.headers.get('content-type') || 'image/png';
+        return new NextResponse(imgBuf, {
+          headers: { 'Content-Type': imgCt, 'Cache-Control': 'public, max-age=86400' },
+        });
+      }
+      console.error('Unexpected JSON response from Nova file URL:', JSON.stringify(json).substring(0, 300));
+      return NextResponse.json({ error: 'Unexpected response format' }, { status: 502 });
+    }
+
+    // Direct image response
+    const body = await resp.arrayBuffer();
+    return new NextResponse(body, {
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': contentType || 'image/png',
         'Cache-Control': 'public, max-age=86400',
-        'Content-Length': buffer.byteLength.toString(),
       },
     });
-  } catch (error: any) {
-    console.error('Image proxy error:', error);
-    return NextResponse.json({ error: '图片下载失败' }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Proxy fetch failed' }, { status: 502 });
   }
 }

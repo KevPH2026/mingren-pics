@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAuthenticated, verifyQuota, signQuota, getTodayStr, authCookieOpts, isProd } from '@/lib/auth';
+import { isAuthenticated, verifyQuota, signQuota, getTodayStr, isProd } from '@/lib/auth';
 import { trackGeneration } from '@/app/api/admin/stats/route';
 
 export const maxDuration = 300;
@@ -7,216 +7,165 @@ export const dynamic = 'force-dynamic';
 
 const NOVA_BASE = 'https://www.novartspace.art';
 const getApiKey = () => process.env.NOVA_API_KEY || '';
-const FREE_LIMIT = 1;
-const REG_LIMIT = 3;
+const FREE_LIMIT = 3;
+const REG_LIMIT = 6;
 
 function serverError(msg = '服务异常，请稍后重试', status = 500) {
-  return NextResponse.json(
-    { error: msg },
-    { status, headers: { 'Content-Type': 'application/json' } }
-  );
+  return NextResponse.json({ error: msg }, { status, headers: { 'Content-Type': 'application/json' } });
 }
 
+// ===== POST: Submit async generation task =====
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { prompt, userImageBase64 } = body;
+    if (!prompt) return NextResponse.json({ error: 'Missing prompt' }, { status: 400 });
 
-    if (!prompt) {
-      return NextResponse.json({ error: 'Missing prompt' }, {
-        status: 400, headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // ===== Auth check =====
     const auth = isAuthenticated(req);
     const registered = auth.ok;
     const dailyLimit = registered ? REG_LIMIT : FREE_LIMIT;
 
-    // ===== Quota check from signed cookie =====
     const usageCookie = req.cookies.get('mingren_usage')?.value;
     const quota = usageCookie ? verifyQuota(usageCookie) : null;
     const today = getTodayStr();
     const count = quota?.d === today ? quota.c : 0;
     const bonus = quota?.b || 0;
     const remaining = dailyLimit + bonus - count;
-
     if (remaining <= 0) {
       return NextResponse.json({
         error: registered ? '今日生成次数已用完，明天再来或邀请好友获取更多！' : '免费次数已用完，注册后每天3次',
-        remaining: 0,
-        registered,
-      }, {
-        status: 429, headers: { 'Content-Type': 'application/json' },
-      });
+      }, { status: 429 });
     }
 
     const apiKey = getApiKey();
+    const reqBody: any = {
+      model: 'nova-g-image-2',
+      prompt,
+      size: '1024x1024',
+      response_format: 'url',
+    };
+    if (userImageBase64) reqBody.reference_images = [userImageBase64];
 
-    // ===== Build parts for Nova API =====
-    const parts: any[] = [{ text: prompt }];
-    let hasRefImage = false;
-
-    if (userImageBase64) {
-      let imageData = userImageBase64;
-      let mimeType = 'image/jpeg';
-      if (userImageBase64.startsWith('data:')) {
-        const match = userImageBase64.match(/^data:(image\/[\w+]+);base64,(.+)$/);
-        if (match) { mimeType = match[1]; imageData = match[2]; }
-      }
-      parts.push({ inlineData: { mimeType, data: imageData } });
-      hasRefImage = true;
-    }
-
-    console.log('Starting generation, hasRefImage:', hasRefImage);
-
-    // ===== Attempt 1: nova-g-image-2 (Nova Gemini接口 + 参考图) =====
-    let response: Response;
+    // Submit as async task
+    console.log('Submitting async task to Nova...');
+    let submitResp: Response;
     try {
-      response = await fetch(
-        `${NOVA_BASE}/v1beta/models/nova-g-image-2:generateContent`,
-        {
-          method: 'POST',
-          headers: {
-            'x-goog-api-key': apiKey,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts }],
-            generationConfig: {
-              responseModalities: ['TEXT', 'IMAGE'],
-              imageConfig: { aspectRatio: '1:1', novartResolution: '1k' },
-            },
-          }),
-          signal: AbortSignal.timeout(55_000),
-        }
-      );
-    } catch (fetchErr: any) {
-      console.warn('Nova fetch timeout/error, skipping to fallback:', fetchErr.message);
-      response = new Response(null, { status: 504, statusText: 'Gateway Timeout' });
-    }
-
-    // Check for Nova account restriction (403 ACCOUNT_RESTRICTED)
-    if (response.status === 403) {
-      const novaErrText = await response.text().catch(() => '');
-      console.error('Nova 403:', novaErrText.substring(0, 300));
-      trackGeneration({ timestamp: new Date().toISOString(), success: false });
-      // Don't deduct quota on account restriction
-      return serverError('AI绘图服务暂时维护中，请30分钟后再试 ⏳', 503);
-    }
-
-    if (response.ok) {
-      const novaText = await response.text();
-      const imgMatch = novaText.match(/"inlineData"\s*:\s*\{[^}]*"data"\s*:\s*"([A-Za-z0-9+/=]+)/);
-
-      if (imgMatch) {
-        const mimeMatch = novaText.match(/"inlineData"\s*:\s*\{[^}]*"mimeType"\s*:\s*"([^"]+)"/);
-        const imgMime = mimeMatch?.[1] || 'image/png';
-        console.log('Nova generation succeeded');
-
-        trackGeneration({
-          timestamp: new Date().toISOString(),
-          email: auth.ok ? auth.email : undefined,
-          success: true,
-        });
-
-        const res = NextResponse.json(
-          { images: [`data:${imgMime};base64,${imgMatch[1]}`] },
-          { headers: { 'Content-Type': 'application/json' } }
-        );
-        setQuotaCookie(req, res, registered);
-        return res;
-      }
-    }
-
-    // ===== Log failure =====
-    const errStatus = response.ok ? 'No image in response' : `${response.status}`;
-    console.warn('Nova failed:', errStatus, '— falling back to nova-image-pro-flex');
-
-    // ===== Attempt 2: Fallback — nova-image-pro-flex =====
-    let fallbackResp: Response;
-    try {
-      fallbackResp = await fetch(`${NOVA_BASE}/v1/images/generations`, {
+      submitResp = await fetch(`${NOVA_BASE}/v1/images/generations?async=1`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'nova-image-pro-flex',
-          prompt,
-          n: 1,
-          size: '1024x1024',
-        }),
-        signal: AbortSignal.timeout(55_000),
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqBody),
+        signal: AbortSignal.timeout(15_000),
       });
-    } catch (fetchErr: any) {
-      console.error('Flex fallback fetch timeout/error:', fetchErr.message);
-      trackGeneration({ timestamp: new Date().toISOString(), success: false });
-      return serverError('生成超时，请稍后重试', 504);
+    } catch (e: any) {
+      console.error('Submit timeout:', e.message);
+      return serverError('提交超时，请稍后重试', 504);
     }
 
-    if (!fallbackResp.ok) {
-      console.error('Flex fallback also failed:', fallbackResp.status);
-      if (fallbackResp.status === 402) {
-        trackGeneration({ timestamp: new Date().toISOString(), success: false });
-        return serverError('生成服务暂时不可用，请稍后再试', 503);
-      }
-      trackGeneration({ timestamp: new Date().toISOString(), success: false });
-      return serverError('生成失败，请稍后重试', 502);
+    if (!submitResp.ok) {
+      const errText = await submitResp.text().catch(() => '');
+      console.error('Submit error:', submitResp.status, errText.substring(0, 200));
+      if (submitResp.status === 409) return serverError('当前生成请求较多，请稍后再试 🔄', 503);
+      if (submitResp.status === 429) return serverError('请求过于频繁，请1分钟后再试 ⏳', 429);
+      return serverError('提交失败，请稍后重试', 502);
     }
 
-    const flexText = await fallbackResp.text();
-    const urlMatch = flexText.match(/"url"\s*:\s*"([^"]+)"/);
-
-    if (urlMatch) {
-      console.log('Flex fallback succeeded (url mode)');
-      trackGeneration({ timestamp: new Date().toISOString(), email: auth.ok ? auth.email : undefined, success: true });
-      const res = NextResponse.json(
-        { imageUrl: urlMatch[1] },
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-      setQuotaCookie(req, res, registered);
-      return res;
+    const submitData = await submitResp.json();
+    const taskId = submitData?.data?.task_id;
+    if (!taskId) {
+      console.error('No task_id in response:', JSON.stringify(submitData).substring(0, 300));
+      return serverError('提交失败，请重试');
     }
 
-    const b64Match = flexText.match(/"b64_json"\s*:\s*"([A-Za-z0-9+/=]+)/);
-    if (b64Match) {
-      console.log('Flex fallback succeeded (b64 mode)');
-      trackGeneration({ timestamp: new Date().toISOString(), email: auth.ok ? auth.email : undefined, success: true });
-      const res = NextResponse.json(
-        { images: [`data:image/png;base64,${b64Match[1]}`] },
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-      setQuotaCookie(req, res, registered);
-      return res;
-    }
-
-    console.error('Flex fallback returned unexpected format');
-    trackGeneration({ timestamp: new Date().toISOString(), success: false });
-    return serverError('生成失败，请重试');
+    console.log('Task submitted, task_id:', taskId);
+    const res = NextResponse.json(
+      { taskId: String(taskId), status: 'submitted' },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    return res;
 
   } catch (error: any) {
-    console.error('Generate error:', error);
-    trackGeneration({ timestamp: new Date().toISOString(), success: false });
-    return serverError('生成服务异常，请稍后重试');
+    console.error('Submit error:', error);
+    return serverError('提交异常，请稍后重试');
   }
 }
 
-// Helper: read current quota, increment count, set cookie on response
-function setQuotaCookie(req: NextRequest, res: NextResponse, registered: boolean) {
-  const usageCookie = req.cookies.get('mingren_usage')?.value;
-  const quota = usageCookie ? verifyQuota(usageCookie) : null;
-  const today = getTodayStr();
-  const count = quota?.d === today ? quota.c : 0;
-  const bonus = quota?.b || 0;
+// ===== GET: Poll task status =====
+export async function GET(req: NextRequest) {
+  const taskId = req.nextUrl.searchParams.get('taskId');
+  if (!taskId) return NextResponse.json({ error: 'Missing taskId' }, { status: 400 });
 
-  const newQuota = signQuota({ d: today, c: count + 1, b: bonus });
-  res.cookies.set('mingren_usage', newQuota, {
-    httpOnly: true,
-    secure: isProd,
-    maxAge: 86400,
-    path: '/',
-    sameSite: 'lax',
-  });
+  const apiKey = getApiKey();
+  const auth = isAuthenticated(req);
+  const registered = auth.ok;
+
+  try {
+    const pollResp = await fetch(`${NOVA_BASE}/v1/images/${taskId}`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!pollResp.ok) {
+      const errText = await pollResp.text().catch(() => '');
+      console.error('Poll error:', pollResp.status, errText.substring(0, 200));
+      return NextResponse.json({ status: 'error', error: '查询失败' }, { status: 502 });
+    }
+
+    const pollData = await pollResp.json();
+    console.log('Poll raw response:', JSON.stringify(pollData).substring(0, 500));
+
+    // Try multiple response formats
+    const task = pollData?.data || pollData;
+    const taskStatus = task?.status; // queued/running/success/failed or QUEUED/RUNNING/SUCCESS/FAILED
+
+    if (!taskStatus) {
+      return NextResponse.json({ status: 'error', error: '任务不存在', raw: pollData }, { status: 404 });
+    }
+
+    const normalizedStatus = taskStatus.toUpperCase();
+
+    if (normalizedStatus === 'SUCCESS' && task.results?.length > 0) {
+      // Get the result image URL
+      const resultUrl = `${NOVA_BASE}/v1/files/images/${taskId}/results/0/content`;
+      console.log('Task succeeded:', taskId);
+
+      trackGeneration({
+        timestamp: new Date().toISOString(),
+        email: auth.ok ? auth.email : undefined,
+        success: true,
+      });
+
+      // Set quota cookie on success
+      const usageCookie = req.cookies.get('mingren_usage')?.value;
+      const quota = usageCookie ? verifyQuota(usageCookie) : null;
+      const today = getTodayStr();
+      const count = quota?.d === today ? quota.c : 0;
+      const bonus = quota?.b || 0;
+      const newQuota = signQuota({ d: today, c: count + 1, b: bonus });
+
+      const res = NextResponse.json({
+        status: 'success',
+        imageUrl: resultUrl,
+      });
+      res.cookies.set('mingren_usage', newQuota, {
+        httpOnly: true, secure: isProd, maxAge: 86400, path: '/', sameSite: 'lax',
+      });
+      return res;
+    }
+
+    if (normalizedStatus === 'FAILED') {
+      console.error('Task failed:', taskId, JSON.stringify(task).substring(0, 300));
+      trackGeneration({ timestamp: new Date().toISOString(), success: false });
+      return NextResponse.json({
+        status: 'failed',
+        error: task.error?.message || '生成失败，请重试',
+      });
+    }
+
+    // Still QUEUED or RUNNING
+    return NextResponse.json({ status: taskStatus.toLowerCase() });
+
+  } catch (e: any) {
+    console.error('Poll error:', e.message);
+    return NextResponse.json({ status: 'error', error: '查询超时' }, { status: 502 });
+  }
 }
