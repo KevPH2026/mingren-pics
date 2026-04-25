@@ -10,6 +10,29 @@ import ProfilePage from '@/components/ProfilePage';
 import PaywallModal from '@/components/PaywallModal';
 import { useAppStore, AppStep } from '@/lib/store';
 
+// 像素化覆盖组件：用canvas将图片缩小再放大实现像素化
+function PixelateOverlay({ src }: { src: string }) {
+  return (
+    <canvas
+      className="absolute inset-0 w-full h-full z-[5]"
+      ref={(canvas) => {
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        canvas.width = 24;
+        canvas.height = 32;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(img, 0, 0, 24, 32);
+        };
+        img.src = src;
+      }}
+    />
+  );
+}
+
 function AuthButton() {
   const { isRegistered, setShowPaywall, serverQuota, setStep } = useAppStore();
   const email = serverQuota?.email || (typeof window !== 'undefined' ? localStorage.getItem('mingren_email') || '' : '');
@@ -90,35 +113,48 @@ export default function HomeContent() {
         </div>
       </div>
 
-      {/* ===== 右侧滚动案例 ===== */}
+      {/* ===== 右侧滚动案例（真实名人像素化） ===== */}
       <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-[180px] overflow-hidden pointer-events-none z-0">
         <div className="flex flex-col gap-4 animate-scroll-down" style={{ animationDuration: '45s' }}>
           {[
-            { celeb: 'Lady Gaga', emoji: '🎤', bg: '#e84393' },
-            { celeb: 'C罗', emoji: '⚽', bg: '#0984e3' },
-            { celeb: 'BTS', emoji: '🎵', bg: '#fdcb6e' },
-            { celeb: 'Lisa', emoji: '💃', bg: '#6c5ce7' },
-            { celeb: '成龍', emoji: '🥋', bg: '#e17055' },
-            { celeb: 'Zendaya', emoji: '✨', bg: '#00cec9' },
-            { celeb: 'Mbappe', emoji: '⚡', bg: '#fab1a0' },
-            { celeb: 'IU', emoji: '🎀', bg: '#a29bfe' },
+            { celeb: 'Lady Gaga', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Lady_Gaga_at_the_2024_LACMA_Art_Film_Gala_%28cropped%29.jpg/220px-Lady_Gaga_at_the_2024_LACMA_Art_Film_Gala_%28cropped%29.jpg', bg: '#e84393' },
+            { celeb: 'C罗', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Cristiano_Ronaldo_playing_for_Al_Nassr_FC_against_Persepolis%2C_September_2023_%28cropped%29.jpg/220px-Cristiano_Ronaldo_playing_for_Al_Nassr_FC_against_Persepolis%2C_September_2023_%28cropped%29.jpg', bg: '#0984e3' },
+            { celeb: 'BTS', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/BTS_%28%EB%B0%A9%ED%83%84%EC%86%8C%EB%85%84%EB%8B%A8%29%27Love_Yourself%27_in_Seoul_%28cropped%29.jpg/220px-BTS_%28%EB%B0%A9%ED%83%84%EC%86%8C%EB%85%84%EB%8B%A8%29%27Love_Yourself%27_in_Seoul_%28cropped%29.jpg', bg: '#fdcb6e' },
+            { celeb: 'Lisa', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Lisa_%28Lalisa_Manobal%29_at_the_Paris_Fashion_Week_2024_02.jpg/220px-Lisa_%28Lalisa_Manobal%29_at_the_Paris_Fashion_Week_2024_02.jpg', bg: '#6c5ce7' },
+            { celeb: 'Zendaya', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Zendaya_-_2024.jpg/220px-Zendaya_-_2024.jpg', bg: '#00cec9' },
+            { celeb: 'IU', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/IU_at_%22Dreaming_of_a_Fairy_Tale%22_Press_Conference%2C_24_March_2025_04.jpg/220px-IU_at_%22Dreaming_of_a_Fairy_Tale%22_Press_Conference%2C_24_March_2025_04.jpg', bg: '#a29bfe' },
+            { celeb: 'Messi', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg/220px-Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', bg: '#ffe66d' },
+            { celeb: 'Taylor Swift', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png/220px-Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png', bg: '#ff6b9d' },
           ].concat([
-            { celeb: 'Lady Gaga', emoji: '🎤', bg: '#e84393' },
-            { celeb: 'C罗', emoji: '⚽', bg: '#0984e3' },
-            { celeb: 'BTS', emoji: '🎵', bg: '#fdcb6e' },
-            { celeb: 'Lisa', emoji: '💃', bg: '#6c5ce7' },
-            { celeb: '成龍', emoji: '🥋', bg: '#e17055' },
-            { celeb: 'Zendaya', emoji: '✨', bg: '#00cec9' },
-            { celeb: 'Mbappe', emoji: '⚡', bg: '#fab1a0' },
-            { celeb: 'IU', emoji: '🎀', bg: '#a29bfe' },
+            { celeb: 'Lady Gaga', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Lady_Gaga_at_the_2024_LACMA_Art_Film_Gala_%28cropped%29.jpg/220px-Lady_Gaga_at_the_2024_LACMA_Art_Film_Gala_%28cropped%29.jpg', bg: '#e84393' },
+            { celeb: 'C罗', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Cristiano_Ronaldo_playing_for_Al_Nassr_FC_against_Persepolis%2C_September_2023_%28cropped%29.jpg/220px-Cristiano_Ronaldo_playing_for_Al_Nassr_FC_against_Persepolis%2C_September_2023_%28cropped%29.jpg', bg: '#0984e3' },
+            { celeb: 'BTS', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/BTS_%28%EB%B0%A9%ED%83%84%EC%86%8C%EB%85%84%EB%8B%A8%29%27Love_Yourself%27_in_Seoul_%28cropped%29.jpg/220px-BTS_%28%EB%B0%A9%ED%83%84%EC%86%8C%EB%85%84%EB%8B%A8%29%27Love_Yourself%27_in_Seoul_%28cropped%29.jpg', bg: '#fdcb6e' },
+            { celeb: 'Lisa', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Lisa_%28Lalisa_Manobal%29_at_the_Paris_Fashion_Week_2024_02.jpg/220px-Lisa_%28Lalisa_Manobal%29_at_the_Paris_Fashion_Week_2024_02.jpg', bg: '#6c5ce7' },
+            { celeb: 'Zendaya', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Zendaya_-_2024.jpg/220px-Zendaya_-_2024.jpg', bg: '#00cec9' },
+            { celeb: 'IU', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/IU_at_%22Dreaming_of_a_Fairy_Tale%22_Press_Conference%2C_24_March_2025_04.jpg/220px-IU_at_%22Dreaming_of_a_Fairy_Tale%22_Press_Conference%2C_24_March_2025_04.jpg', bg: '#a29bfe' },
+            { celeb: 'Messi', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg/220px-Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', bg: '#ffe66d' },
+            { celeb: 'Taylor Swift', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png/220px-Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png', bg: '#ff6b9d' },
           ]).map((item, i) => (
             <div key={i} className="flex-shrink-0 w-[150px] rounded-lg comic-border-thin overflow-hidden mx-auto">
-              <div className="w-full aspect-[3/4] flex flex-col items-center justify-center gap-2 relative" style={{ backgroundColor: item.bg }}>
-                <span className="text-5xl">{item.emoji}</span>
-                <span className="text-xs font-black text-white px-2 py-0.5 bg-black/30 rounded">跟 {item.celeb} 合影</span>
-                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent" />
-                <div className="absolute bottom-2 left-0 right-0 text-center">
-                  <span className="text-[9px] font-bold text-white/70">mingren.pics</span>
+              <div className="w-full aspect-[3/4] relative" style={{ backgroundColor: item.bg }}>
+                {/* 像素化名人照片：缩小到32px再放大，实现像素风 */}
+                <img
+                  src={item.src}
+                  alt={item.celeb}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{
+                    imageRendering: 'pixelated',
+                    filter: 'brightness(0.7) saturate(1.2)',
+                  }}
+                  loading="lazy"
+                />
+                {/* 像素化遮罩层：用小canvas实现真正的像素化效果 */}
+                <PixelateOverlay src={item.src} />
+                {/* 底部渐变 + 文字 */}
+                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10" />
+                <div className="absolute bottom-0 left-0 right-0 p-2 z-10">
+                  <span className="text-xs font-black text-white drop-shadow-lg block">跟 {item.celeb} 合影</span>
+                  <span className="text-[9px] font-bold text-white/60 block mt-0.5">mingren.pics</span>
                 </div>
               </div>
             </div>

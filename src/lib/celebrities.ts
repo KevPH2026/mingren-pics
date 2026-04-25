@@ -425,4 +425,12 @@ export const scenarios = [
   { id: 'stage', label: '同台演出', emoji: '🎤', prompt: 'performing together on a massive concert stage, dramatic stage lighting, crowd cheering in background' },
   { id: 'sports', label: '一起运动', emoji: '💪', prompt: 'playing sports together on a professional field/court, athletic atmosphere, action shot' },
   { id: 'business', label: '商务会面', emoji: '🤝', prompt: 'shaking hands at a formal business meeting, modern office or conference room, professional atmosphere' },
+  { id: 'cruise', label: '豪华邮轮', emoji: '🚢', prompt: 'standing together on the deck of a luxury cruise ship, ocean waves in background, sunset golden hour, glamorous vacation vibe' },
+  { id: 'beach', label: '沙滩度假', emoji: '🏖️', prompt: 'relaxing together on a beautiful tropical beach, white sand, turquoise water, palm trees, sunny paradise atmosphere' },
+  { id: 'karaoke', label: '一起K歌', emoji: '🎤', prompt: 'singing karaoke together in a private KTV room, colorful neon lights, microphones in hand, fun party atmosphere' },
+  { id: 'hotpot', label: '一起吃火锅', emoji: '🍲', prompt: 'sitting together around a bubbling hotpot in a lively Chinese restaurant, steam rising, chopsticks ready, cozy dining atmosphere' },
+  { id: 'studio', label: '录制播客', emoji: '🎙️', prompt: 'sitting together in a professional podcast studio with microphones and headphones, intimate conversation atmosphere, recording in progress' },
+  { id: 'game', label: '一起打游戏', emoji: '🎮', prompt: 'sitting together on a couch playing video games, controllers in hand, TV screen glowing, fun competitive gaming atmosphere' },
+  { id: 'graduation', label: '毕业典礼', emoji: '🎓', prompt: 'standing together at a university graduation ceremony, wearing graduation caps and gowns, throwing caps in the air, celebratory atmosphere' },
+  { id: 'hospitality', label: '深夜食堂', emoji: '🌙', prompt: 'sitting together at a small late-night Japanese ramen shop counter, warm ambient lighting, steam from bowls, intimate late-night conversation' },
 ];
