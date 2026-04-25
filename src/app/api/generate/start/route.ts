@@ -10,26 +10,6 @@ const getApiKey = () => process.env.NOVA_API_KEY || '';
 const FREE_LIMIT = 1;
 const REG_LIMIT = 3;
 
-// Rate limiter for send-code (in-memory, per email + per IP)
-const sendCodeLimits: Record<string, { count: number; resetAt: number }> = {};
-const SEND_CODE_MAX_PER_EMAIL = 3; // per 10 min
-const SEND_CODE_MAX_PER_IP = 10; // per hour
-const SEND_CODE_EMAIL_WINDOW = 10 * 60 * 1000;
-const SEND_CODE_IP_WINDOW = 60 * 60 * 1000;
-
-function checkRateLimit(key: string, max: number, windowMs: number): boolean {
-  const now = Date.now();
-  const entry = sendCodeLimits[key];
-  if (!entry || now > entry.resetAt) {
-    sendCodeLimits[key] = { count: 1, resetAt: now + windowMs };
-    return true;
-  }
-  if (entry.count >= max) return false;
-  entry.count++;
-  return true;
-}
-
-// Generic error response — never leak internal details
 function serverError(msg = '服务异常，请稍后重试', status = 500) {
   return NextResponse.json(
     { error: msg },
@@ -41,7 +21,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { prompt, userImageBase64 } = body;
-    // ⚠️ skipQuota is intentionally NOT destructured — never trust client input
 
     if (!prompt) {
       return NextResponse.json({ error: 'Missing prompt' }, {
@@ -54,7 +33,7 @@ export async function POST(req: NextRequest) {
     const registered = auth.ok;
     const dailyLimit = registered ? REG_LIMIT : FREE_LIMIT;
 
-    // ===== Quota check from signed cookie (ALWAYS enforced) =====
+    // ===== Quota check from signed cookie =====
     const usageCookie = req.cookies.get('mingren_usage')?.value;
     const quota = usageCookie ? verifyQuota(usageCookie) : null;
     const today = getTodayStr();
@@ -74,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     const apiKey = getApiKey();
 
-    // ===== Strategy: Gemini with ref image first, fallback to flex =====
+    // ===== Build parts for Nova API =====
     const parts: any[] = [{ text: prompt }];
     let hasRefImage = false;
 
@@ -91,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     console.log('Starting generation, hasRefImage:', hasRefImage);
 
-    // Attempt 1: Gemini with reference image
+    // ===== Attempt 1: nova-g-image-2 (Nova Gemini接口 + 参考图) =====
     const response = await fetch(
       `${NOVA_BASE}/v1beta/models/nova-g-image-2:generateContent`,
       {
@@ -117,7 +96,7 @@ export async function POST(req: NextRequest) {
       if (imgMatch) {
         const mimeMatch = novaText.match(/"inlineData"\s*:\s*\{[^}]*"mimeType"\s*:\s*"([^"]+)"/);
         const imgMime = mimeMatch?.[1] || 'image/png';
-        console.log('Gemini generation succeeded');
+        console.log('Nova generation succeeded');
 
         trackGeneration({
           timestamp: new Date().toISOString(),
@@ -134,11 +113,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Log Gemini failure
-    const geminiErr = response.ok ? 'No image in response' : `${response.status}`;
-    console.warn('Gemini failed:', geminiErr, '— falling back to nova-image-pro-flex');
+    // ===== Log failure =====
+    const errStatus = response.ok ? 'No image in response' : `${response.status}`;
+    console.warn('Nova failed:', errStatus, '— falling back to nova-image-pro-flex');
 
-    // Attempt 2: Fallback — nova-image-pro-flex (no reference image)
+    // ===== Attempt 2: Fallback — nova-image-pro-flex =====
     const fallbackResp = await fetch(`${NOVA_BASE}/v1/images/generations`, {
       method: 'POST',
       headers: {
@@ -155,10 +134,11 @@ export async function POST(req: NextRequest) {
 
     if (!fallbackResp.ok) {
       console.error('Flex fallback also failed:', fallbackResp.status);
-      // Check for 402 (balance depleted)
       if (fallbackResp.status === 402) {
+        trackGeneration({ timestamp: new Date().toISOString(), success: false });
         return serverError('生成服务暂时不可用，请稍后再试', 503);
       }
+      trackGeneration({ timestamp: new Date().toISOString(), success: false });
       return serverError('生成失败，请稍后重试', 502);
     }
 
@@ -189,6 +169,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.error('Flex fallback returned unexpected format');
+    trackGeneration({ timestamp: new Date().toISOString(), success: false });
     return serverError('生成失败，请重试');
 
   } catch (error: any) {
@@ -215,6 +196,3 @@ function setQuotaCookie(req: NextRequest, res: NextResponse, registered: boolean
     sameSite: 'lax',
   });
 }
-
-// Export rate limiter for send-code route to use
-export { checkRateLimit, SEND_CODE_MAX_PER_EMAIL, SEND_CODE_MAX_PER_IP, SEND_CODE_EMAIL_WINDOW, SEND_CODE_IP_WINDOW };
