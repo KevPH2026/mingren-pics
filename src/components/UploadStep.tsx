@@ -25,6 +25,8 @@ function compressImage(dataUrl: string, maxWidth = 800, quality = 0.7): Promise<
 
 export default function UploadStep() {
   const setUserImage = useAppStore((s) => s.setUserImage);
+  const setShowPaywall = useAppStore((s) => s.setShowPaywall);
+  const isRegistered = useAppStore((s) => s.isRegistered);
   const albumInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -167,6 +169,22 @@ export default function UploadStep() {
           </span>
         ))}
       </div>
+
+      {/* ===== 注册引导条（未登录时显示） ===== */}
+      {!isRegistered() && (
+        <div className="w-full max-w-[320px] bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] rounded-xl p-4 flex flex-col items-center gap-3 comic-border-thin border-[#8b5cf6]">
+          <div className="text-center">
+            <p className="text-white font-black text-sm">🎁 注册免费体验</p>
+            <p className="text-white/80 text-[11px] font-bold mt-0.5">每天3次AI合影 · 邀请好友再+3次</p>
+          </div>
+          <button
+            onClick={() => setShowPaywall(true)}
+            className="w-full py-2.5 bg-[#ff0] text-black font-black text-sm comic-border-thin comic-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+          >
+            🚀 免费注册
+          </button>
+        </div>
+      )}
     </div>
   );
 }
