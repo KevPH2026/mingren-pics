@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedEmail = email.toLowerCase();
-    const record = getUserRecord(normalizedEmail);
+    const record = await getUserRecord(normalizedEmail);
 
     if (!record) {
       return NextResponse.json({ error: '账号不存在' }, { status: 404 });
@@ -36,10 +36,10 @@ export async function POST(req: NextRequest) {
 
     // Ensure referral code is registered in lookup
     if (record.referralCode) {
-      const existing = getReferralOwner(record.referralCode);
+      const existing = await getReferralOwner(record.referralCode);
       if (!existing) {
         // Re-register after server restart
-        registerReferralCode(record.referralCode, normalizedEmail);
+        await registerReferralCode(record.referralCode, normalizedEmail);
       }
     }
 

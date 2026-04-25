@@ -24,14 +24,14 @@ export async function POST(req: NextRequest) {
       if (email && password) {
         const normalizedEmail = email.toLowerCase();
         const { hash, salt } = hashPassword(password);
-        createUserRecord(normalizedEmail, hash, salt, code);
+        await createUserRecord(normalizedEmail, hash, salt, code);
         results.push({ code, assignedTo: normalizedEmail });
       } else {
         // Just generate the code (can be distributed manually)
         // Register a placeholder so the code is tracked
         const placeholderEmail = `admin_${code.toLowerCase()}@placeholder.local`;
         const { hash, salt } = hashPassword(Math.random().toString(36));
-        createUserRecord(placeholderEmail, hash, salt, code);
+        await createUserRecord(placeholderEmail, hash, salt, code);
         results.push({ code });
       }
     }

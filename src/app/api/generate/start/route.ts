@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated, verifyQuota, signQuota, getTodayStr, isProd } from '@/lib/auth';
-import { trackGeneration } from '@/app/api/admin/stats/route';
+import { trackGeneration } from '@/lib/user-store';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -129,7 +129,7 @@ export async function GET(req: NextRequest) {
       const resultUrl = `${NOVA_BASE}/v1/files/images/${taskId}/results/0/content`;
       console.log('Task succeeded:', taskId);
 
-      trackGeneration({
+      await trackGeneration({
         timestamp: new Date().toISOString(),
         email: auth.ok ? auth.email : undefined,
         success: true,
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
 
     if (normalizedStatus === 'FAILED') {
       console.error('Task failed:', taskId, JSON.stringify(task).substring(0, 300));
-      trackGeneration({ timestamp: new Date().toISOString(), success: false });
+      await trackGeneration({ timestamp: new Date().toISOString(), success: false });
       const errMsg = task.error?.message || '';
       // 内容审核类错误（政治/暴力/IP相关敏感词）
       const isContentBlocked = errMsg.toLowerCase().includes('content') ||

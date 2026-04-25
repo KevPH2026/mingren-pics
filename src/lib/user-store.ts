@@ -1,4 +1,13 @@
-export interface UserRecord {
+// Pure REST API approach — no SDK needed, works in all environments
+const EDGE_CONFIG_ID = process.env.EDGE_CONFIG_ID || '';
+const VERCEL_TOKEN = process.env.VERCEL_TOKEN || '';
+
+const KEYS = {
+  users: 'users_v1',
+  generations: 'generations_v1',
+} as const;
+
+interface UserRecord {
   hash: string;
   salt: string;
   email: string;
@@ -7,62 +16,96 @@ export interface UserRecord {
   createdAt: string;
 }
 
-export interface TempTokenEntry {
-  email: string;
-  expires: number; // Date.now() + 10 * 60 * 1000
-  referralCode?: string; // invite code from ?ref= parameter
+interface GenRecord {
+  timestamp: string;
+  email?: string;
+  celebId?: string;
+  scenarioId?: string;
+  success: boolean;
 }
 
-// Persistent user store (survives cold starts via /tmp + fs)
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+// In-memory cache with hydration
+let cache: {
+  users: Map<string, UserRecord>;
+  generations: GenRecord[];
+  hydrated: boolean;
+} = {
+  users: new Map(),
+  generations: [],
+  hydrated: false,
+};
 
-const DATA_DIR = '/tmp/mingren-pics';
-const USERS_FILE = join(DATA_DIR, 'users.json');
-const REFERRALS_FILE = join(DATA_DIR, 'referrals.json');
-
-function ensureDataDir() {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
-}
-
-function loadJSON<T>(file: string, fallback: T): T {
+async function edgeConfigGet<T>(key: string): Promise<T | undefined> {
+  if (!EDGE_CONFIG_ID || !VERCEL_TOKEN) return undefined;
   try {
-    if (existsSync(file)) return JSON.parse(readFileSync(file, 'utf-8'));
-  } catch {}
-  return fallback;
-}
-
-function saveJSON(file: string, data: unknown) {
-  ensureDataDir();
-  writeFileSync(file, JSON.stringify(data), 'utf-8');
-}
-
-// In-memory stores — hydrated from disk on first access
-let userMap: Map<string, UserRecord>;
-let referralLookup: Map<string, string>;
-
-function ensureLoaded() {
-  if (!userMap) {
-    userMap = new Map<string, UserRecord>(loadJSON<[string, UserRecord][]>(USERS_FILE, []));
-    referralLookup = new Map<string, string>(loadJSON<[string, string][]>(REFERRALS_FILE, []));
+    const resp = await fetch(`https://api.vercel.com/v1/edge-config/${EDGE_CONFIG_ID}/item/${key}`, {
+      headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!resp.ok) return undefined;
+    const data = await resp.json();
+    return data?.value as T;
+  } catch (e) {
+    console.error('EdgeConfig get error:', e);
+    return undefined;
   }
 }
 
-function persistUsers() {
-  ensureLoaded();
-  saveJSON(USERS_FILE, Array.from(userMap.entries()));
-  saveJSON(REFERRALS_FILE, Array.from(referralLookup.entries()));
+async function edgeConfigSet(key: string, value: unknown): Promise<void> {
+  if (!EDGE_CONFIG_ID || !VERCEL_TOKEN) return;
+  try {
+    await fetch(`https://api.vercel.com/v1/edge-config/${EDGE_CONFIG_ID}/items`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${VERCEL_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        items: [{ operation: 'upsert', key, value }]
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (e) {
+    console.error('EdgeConfig set error:', e);
+  }
 }
 
-const tempTokens = new Map<string, TempTokenEntry>();
+async function ensureHydrated() {
+  if (cache.hydrated) return;
+  try {
+    const usersData = await edgeConfigGet<Record<string, UserRecord>>(KEYS.users);
+    if (usersData) {
+      cache.users = new Map(Object.entries(usersData));
+    }
+    const genData = await edgeConfigGet<GenRecord[]>(KEYS.generations);
+    if (genData) {
+      cache.generations = genData;
+    }
+    cache.hydrated = true;
+  } catch (e) {
+    console.error('Hydrate error:', e);
+    cache.hydrated = true;
+  }
+}
 
-export function createUserRecord(
+async function persistUsers() {
+  const obj = Object.fromEntries(cache.users.entries());
+  await edgeConfigSet(KEYS.users, obj);
+}
+
+async function persistGenerations() {
+  const trimmed = cache.generations.slice(-500);
+  await edgeConfigSet(KEYS.generations, trimmed);
+}
+
+// User operations
+export async function createUserRecord(
   email: string,
   hash: string,
   salt: string,
   referralCode: string,
-): UserRecord {
-  ensureLoaded();
+): Promise<UserRecord> {
+  await ensureHydrated();
   const record: UserRecord = {
     hash,
     salt,
@@ -71,35 +114,67 @@ export function createUserRecord(
     inviteCount: 0,
     createdAt: new Date().toISOString(),
   };
-  userMap.set(email, record);
-  referralLookup.set(referralCode, email);
-  persistUsers();
+  cache.users.set(email, record);
+  await persistUsers();
   return record;
 }
 
-export function getUserRecord(email: string): UserRecord | undefined {
-  ensureLoaded();
-  return userMap.get(email);
+export async function getUserRecord(email: string): Promise<UserRecord | undefined> {
+  await ensureHydrated();
+  return cache.users.get(email);
 }
 
-export function getReferralOwner(displayCode: string): string | undefined {
-  return referralLookup.get(displayCode);
+export async function getReferralOwner(displayCode: string): Promise<string | undefined> {
+  await ensureHydrated();
+  for (const [email, user] of cache.users.entries()) {
+    if (user.referralCode === displayCode) return email;
+  }
+  return undefined;
 }
 
-export function incrementInviteCount(email: string): number {
-  ensureLoaded();
-  const record = userMap.get(email);
+export async function incrementInviteCount(email: string): Promise<number> {
+  await ensureHydrated();
+  const record = cache.users.get(email);
   if (!record) return 0;
   record.inviteCount++;
-  persistUsers();
+  await persistUsers();
   return record.inviteCount;
 }
 
-export function registerReferralCode(referralCode: string, email: string): void {
-  ensureLoaded();
-  referralLookup.set(referralCode, email);
-  persistUsers();
+export async function registerReferralCode(referralCode: string, email: string): Promise<void> {
+  await ensureHydrated();
+  const user = cache.users.get(email);
+  if (user) {
+    user.referralCode = referralCode;
+    await persistUsers();
+  }
 }
+
+export async function getAllUserRecords(): Promise<UserRecord[]> {
+  await ensureHydrated();
+  return Array.from(cache.users.values());
+}
+
+// Generation tracking
+export async function trackGeneration(record: GenRecord): Promise<void> {
+  await ensureHydrated();
+  cache.generations.push(record);
+  await persistGenerations();
+}
+
+export async function getGenerations(): Promise<GenRecord[]> {
+  await ensureHydrated();
+  return [...cache.generations];
+}
+
+// Temp tokens (keep in-memory, short-lived)
+interface TempTokenEntry {
+  email: string;
+  expires: number;
+  referralCode?: string;
+}
+
+const tempTokens = new Map<string, TempTokenEntry>();
 
 export function setTempToken(email: string, referralCode?: string): string {
   const token = `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
@@ -128,9 +203,4 @@ export function verifyTempToken(token: string): string | null {
 
 export function clearTempToken(token: string): void {
   tempTokens.delete(token);
-}
-
-export function getAllUserRecords(): UserRecord[] {
-  ensureLoaded();
-  return Array.from(userMap.values());
 }

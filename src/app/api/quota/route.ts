@@ -16,10 +16,10 @@ export async function GET(req: NextRequest) {
   const dailyLimit = auth.ok ? 3 : 1;
   const remaining = Math.max(0, dailyLimit + bonus - count);
 
-  // Get invite count from user record (in-memory)
+  // Get invite count from user record
   let inviteCount = 0;
   if (auth.ok && auth.email) {
-    const user = getUserRecord(auth.email);
+    const user = await getUserRecord(auth.email);
     if (user) inviteCount = user.inviteCount;
   }
 

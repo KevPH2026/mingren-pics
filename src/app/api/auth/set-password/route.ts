@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const { hash, salt } = hashPassword(password);
 
     // 3. Check if user record already exists (e.g. password reset)
-    const existing = getUserRecord(normalizedEmail);
+    const existing = await getUserRecord(normalizedEmail);
     if (existing) {
       existing.hash = hash;
       existing.salt = salt;
@@ -54,13 +54,13 @@ export async function POST(req: NextRequest) {
 
     // 4. Create new user
     const referralCode = generateReferralCode();
-    createUserRecord(normalizedEmail, hash, salt, referralCode);
+    await createUserRecord(normalizedEmail, hash, salt, referralCode);
 
     // 5. Award inviter if invite code was used
     if (inviteCode) {
-      const inviterEmail = getReferralOwner(inviteCode);
+      const inviterEmail = await getReferralOwner(inviteCode);
       if (inviterEmail && inviterEmail !== normalizedEmail) {
-        incrementInviteCount(inviterEmail);
+        await incrementInviteCount(inviterEmail);
       }
     }
 

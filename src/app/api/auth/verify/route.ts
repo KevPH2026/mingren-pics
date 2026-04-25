@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedEmail = email.toLowerCase();
-    const existingUser = getUserRecord(normalizedEmail);
+    const existingUser = await getUserRecord(normalizedEmail);
 
     // Store referralCode in tempToken for set-password to use later
     const tempToken = setTempToken(normalizedEmail, referralCode || undefined);
