@@ -12,6 +12,15 @@ const phases = [
   { text: '✨ AI 最后润色...', duration: 18 },
 ];
 
+// 重试时显示的专属phase
+const retryPhases = [
+  { text: '🔄 切换描述方案...', duration: 5 },
+  { text: '🎨 重新合成...', duration: 10 },
+  { text: '📐 调整光影...', duration: 15 },
+  { text: '🎨 渲染中...', duration: 20 },
+  { text: '✨ 最后润色...', duration: 25 },
+];
+
 const funFacts = [
   { emoji: '🧠', text: 'AI生成一张合影需要分析超过1亿个参数，比人脑眨一次眼还复杂' },
   { emoji: '📸', text: '全球每天产生超过50亿张照片，但跟名人合影的机会不到0.001%' },
@@ -48,6 +57,8 @@ export default function GeneratingStep() {
   const selectedCelebrityId = useAppStore((s) => s.selectedCelebrityId);
   const selectedScenarioId = useAppStore((s) => s.selectedScenarioId);
   const userImage = useAppStore((s) => s.userImage);
+  const retryingVariant = useAppStore((s) => s.retryingVariant);
+  const isRetryingFlag = useAppStore((s) => s.isRetryingFlag);
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const scenario = scenarios.find((s) => s.id === selectedScenarioId);
   const [elapsed, setElapsed] = useState(0);
@@ -64,9 +75,10 @@ export default function GeneratingStep() {
       setElapsed(sec);
 
       // Phase transitions
+      const currentPhases = isRetryingFlag ? retryPhases : phases;
       let cumulative = 0;
-      for (let i = 0; i < phases.length; i++) {
-        cumulative += phases[i].duration;
+      for (let i = 0; i < currentPhases.length; i++) {
+        cumulative += currentPhases[i].duration;
         if (sec < cumulative) {
           setPhaseIndex(i);
           break;
@@ -134,10 +146,15 @@ export default function GeneratingStep() {
           className="text-2xl font-black text-[#e00]"
           style={{ WebkitTextStroke: '1px #000' }}
         >
-          AI正在合成合影
+          {isRetryingFlag ? 'AI正在重新合成 🔄' : 'AI正在合成合影'}
         </div>
         <div className="text-sm font-bold text-black/50 mt-1">
           {celeb?.name} × 你 · {scenario?.label || ''}
+          {isRetryingFlag && retryingVariant > 0 && (
+            <span className="ml-2 text-[10px] bg-[#0cf] px-2 py-0.5 rounded-full">
+              第{retryingVariant + 1}套方案
+            </span>
+          )}
         </div>
       </div>
 
@@ -158,7 +175,7 @@ export default function GeneratingStep() {
 
       {/* Phase text */}
       <div className="bg-[#ff0] comic-border-thin px-5 py-2 font-black text-sm animate-wiggle">
-        {phases[phaseIndex].text}
+        {isRetryingFlag ? retryPhases[phaseIndex]?.text : phases[phaseIndex]?.text}
       </div>
 
       {/* Timer + hint */}

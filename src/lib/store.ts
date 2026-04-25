@@ -25,6 +25,8 @@ interface AppState {
   serverQuota: { registered: boolean; dailyLimit: number; usedToday: number; bonusQuota: number; remaining: number; inviteCount: number; referralCode: string; email?: string } | null;
   referralCode: string | null;
   inviteCount: number;
+  retryingVariant: number;  // 当前在尝试第几套prompt变体（-1=未重试）
+  isRetryingFlag: boolean;  // 是否正在自动重试中
 
   setStep: (step: AppStep) => void;
   setUserImage: (dataUrl: string, file: File) => void;
@@ -42,6 +44,8 @@ interface AppState {
   getReferralLink: () => string;
   fetchServerQuota: () => Promise<void>;
   reset: () => void;
+  setRetryingVariant: (v: number) => void;
+  setIsRetryingFlag: (v: boolean) => void;
 }
 
 const STORAGE_KEY = 'mingren_history';
@@ -107,6 +111,8 @@ const initialState = {
   serverQuota: null as AppState['serverQuota'],
   referralCode: null as string | null,
   inviteCount: 0,
+  retryingVariant: -1,
+  isRetryingFlag: false,
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -195,6 +201,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   reset: () => set({ ...initialState, history: get().history }),
+  setRetryingVariant: (v) => set({ retryingVariant: v }),
+  setIsRetryingFlag: (v) => set({ isRetryingFlag: v }),
 }));
 
 // 客户端初始化

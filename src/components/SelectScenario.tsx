@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 
 const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
 export default function SelectScenario() {
-  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, canGenerate, getRemainingToday, isRegistered, fetchServerQuota } =
+  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, canGenerate, getRemainingToday, isRegistered, fetchServerQuota, setRetryingVariant, setIsRetryingFlag } =
     useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false); // 本地：控制按钮文案和重复提交
   const [showCustom, setShowCustom] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
 
@@ -20,40 +21,66 @@ export default function SelectScenario() {
   const [diceValue, setDiceValue] = useState(0);
   const [diceResult, setDiceResult] = useState<string | null>(null);
 
+  // 重试时保留的生成参数
+  const pendingRetry = useRef<{ scenarioId: string; customText?: string } | null>(null);
+
   const remaining = getRemainingToday();
   const registered = isRegistered();
 
-  const handleGenerate = async (scenarioId: string, customText?: string) => {
-    if (loading) return;
-
-    if (!canGenerate()) {
-      if (registered) {
-        alert('今日生成次数已用完，明天再来或邀请好友获取更多次数！');
-      } else {
-        setShowPaywall(true);
-      }
-      return;
-    }
-
-    selectScenario(scenarioId);
-    setLoading(true);
-    setError(null);
-
-    if (!selectedCelebrityId) return;
-
-    let prompt: string;
+  // 构建prompt（支持变体切换）
+  const buildPrompt = useCallback((variantIndex: number, scenarioId: string, customText?: string): string => {
+    if (!celeb) return '';
+    const variants = celeb.promptVariants || [];
+    const refPrompt = variants[variantIndex] || celeb.referencePrompt;
 
     if (customText && customText.trim()) {
-      prompt = `Create a photorealistic photograph: ${customText.trim()}. The photo features two real people standing together. Person A is a famous celebrity who looks exactly like this: ${celeb?.referencePrompt}. Generate their face with highly recognizable celebrity features — make it look like a real photo of this famous person, not a generic lookalike. Person B is from the reference image — preserve their exact face, identity and appearance. Both people should look equally real and natural. Natural lighting, authentic candid moment, high quality DSLR photo.`;
-    } else {
-      const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
-      prompt = `Create a photorealistic photograph of two real people ${scenario.prompt}. Person A is a famous celebrity who looks exactly like this: ${celeb?.referencePrompt}. Generate their face with highly recognizable celebrity features — make it look like a real photo of this famous person, not a generic lookalike. Person B is from the reference image — preserve their exact face, identity and appearance. Both people should look equally real and natural. Natural lighting, authentic candid moment, DSLR quality.`;
+      return `Create a photorealistic photograph: ${customText.trim()}. The photo features two real people standing together. Person A looks exactly like this: ${refPrompt}. Generate their face with highly recognizable distinctive features. Person B is from the reference image — preserve their exact face, identity and appearance. Both people should look equally real and natural. Natural lighting, authentic candid moment, high quality DSLR photo.`;
     }
+    const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
+    return `Create a photorealistic photograph of two real people ${scenario.prompt}. Person A looks exactly like this: ${refPrompt}. Generate their face with highly recognizable distinctive features. Person B is from the reference image — preserve their exact face, identity and appearance. Both people should look equally real and natural. Natural lighting, authentic candid moment, DSLR quality.`;
+  }, [celeb]);
 
+  // 轮询任务结果
+  const pollForResult = (taskId: string): Promise<{ imageUrl?: string; error?: string; code?: string }> => {
+    return new Promise((resolve) => {
+      const maxAttempts = 60;
+      let attempts = 0;
+      const poll = async () => {
+        attempts++;
+        try {
+          const resp = await fetch(`/api/generate/start?taskId=${taskId}`);
+          const data = await resp.json();
+          if (data.status === 'success' && data.imageUrl) {
+            resolve({ imageUrl: data.imageUrl });
+          } else if (data.status === 'failed') {
+            resolve({ error: data.error || '生成失败，请重试', code: data.code });
+          } else if (data.status === 'error') {
+            resolve({ error: data.error || '查询失败', code: data.code });
+          } else if (attempts >= maxAttempts) {
+            resolve({ error: '生成超时，请稍后重试', code: 'TIMEOUT' });
+          } else {
+            setTimeout(poll, 3000);
+          }
+        } catch {
+          if (attempts >= maxAttempts) {
+            resolve({ error: '网络异常，请重试', code: 'NETWORK_ERROR' });
+          } else {
+            setTimeout(poll, 3000);
+          }
+        }
+      };
+      setTimeout(poll, 2000);
+    });
+  };
+
+  // 核心生成逻辑（内部封装，支持变体切换）
+  const doGenerate = async (scenarioId: string, variantIndex: number, customText?: string) => {
+    selectScenario(scenarioId);
     setStep('generating');
 
     try {
-      // Step 1: Submit async task
+      const prompt = buildPrompt(variantIndex, scenarioId, customText);
+
       const resp = await fetch('/api/generate/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,15 +93,19 @@ export default function SelectScenario() {
 
       const data = await resp.json();
 
+      // 配额/服务器直接错误（不走异步）
       if (!resp.ok) {
         const errMsg = data.error || '生成失败，请稍后重试';
-        setError(resp.status === 503 ? errMsg : `${celeb?.name || '该人物'} 暂时不可用，请稍后再试或换个人物`);
+        if (data.code === 'QUOTA_EXCEEDED') {
+          setError(errMsg);
+        } else if (data.code === 'CONCURRENCY_LIMIT') {
+          setError('当前生成请求较多，请稍后再试 🔄');
+        } else if (data.code === 'RATE_LIMIT') {
+          setError('请求过于频繁，请1分钟后再试 ⏳');
+        } else {
+          setError(errMsg);
+        }
         setStep('scenario');
-        return;
-      }
-
-      if (data.images) {
-        setGeneratedImages(data.images);
         return;
       }
 
@@ -83,22 +114,50 @@ export default function SelectScenario() {
         return;
       }
 
-      // Step 2: Poll for async result
       if (data.taskId) {
         const result = await pollForResult(data.taskId);
         if (result.imageUrl) {
           setGeneratedImages([`/api/image-proxy?url=${encodeURIComponent(result.imageUrl)}`]);
-        } else if (result.error) {
-          setError(result.error);
-          setStep('scenario');
-        } else {
-          setError('生成失败，请重试');
-          setStep('scenario');
+          return;
         }
+
+        // 生成失败：判断是否要自动换变体重试
+        const variants = celeb?.promptVariants || [];
+        const canRetry = result.code === 'CONTENT_BLOCKED' || result.code === 'GENERATION_FAILED';
+        const hasMoreVariants = variantIndex < variants.length - 1;
+
+        if (canRetry && hasMoreVariants) {
+          // 自动换prompt变体重试
+          const nextVariant = variantIndex + 1;
+          console.log(`Prompt variant ${variantIndex} blocked, trying variant ${nextVariant}`);
+          setRetryingVariant(nextVariant);
+          setIsRetryingFlag(true);
+          setIsRetrying(true);
+          // 短暂提示后重新生成
+          setTimeout(() => {
+            doGenerate(scenarioId, nextVariant, customText);
+          }, 1200);
+          return;
+        }
+
+        // 无更多变体或非审核类错误，展示友好提示
+        let friendlyMsg = result.error || '生成失败，请重试';
+        if (result.code === 'CONTENT_BLOCKED') {
+          friendlyMsg = `这个场景对${celeb?.name}来说有点难合成 😔 可以尝试：\n① 换个场景 ② 换个名人 ③ 稍后再试`;
+        } else if (result.code === 'TIMEOUT') {
+          friendlyMsg = '生成超时了，服务器有点忙 😅 稍后再试吧';
+        } else if (result.code === 'NETWORK_ERROR') {
+          friendlyMsg = '网络波动，生成中断了 😤 重新试一次？';
+        }
+        setError(friendlyMsg);
+        setStep('scenario');
+        setIsRetrying(false);
+        setIsRetryingFlag(false);
+        setRetryingVariant(-1);
         return;
       }
 
-      setError(`${celeb?.name || '该人物'} 暂时不可用，请稍后再试或换个人物`);
+      setError(`${celeb?.name || '该人物'} 暂时不可用`);
       setStep('scenario');
     } catch (err: any) {
       const msg = err?.name === 'TimeoutError' ? '生成超时，请稍后重试' : '网络异常，请重试';
@@ -106,38 +165,45 @@ export default function SelectScenario() {
       setStep('scenario');
     } finally {
       setLoading(false);
+      setIsRetryingFlag(false);
+      setIsRetrying(false);
       fetchServerQuota();
     }
   };
 
-  const pollForResult = (taskId: string): Promise<{ imageUrl?: string; error?: string }> => {
-    return new Promise((resolve) => {
-      const maxAttempts = 60; // 60 * 3s = 3 minutes max
-      let attempts = 0;
-      const poll = async () => {
-        attempts++;
-        try {
-          const resp = await fetch(`/api/generate/start?taskId=${taskId}`);
-          const data = await resp.json();
-          if (data.status === 'success' && data.imageUrl) {
-            resolve({ imageUrl: data.imageUrl });
-          } else if (data.status === 'failed') {
-            resolve({ error: data.error || '生成失败，请重试' });
-          } else if (attempts >= maxAttempts) {
-            resolve({ error: '生成超时，请稍后重试' });
-          } else {
-            setTimeout(poll, 3000);
-          }
-        } catch {
-          if (attempts >= maxAttempts) {
-            resolve({ error: '网络异常，请重试' });
-          } else {
-            setTimeout(poll, 3000);
-          }
-        }
-      };
-      setTimeout(poll, 2000); // First poll after 2s
-    });
+  // 对外暴露的生成入口
+  const handleGenerate = async (scenarioId: string, customText?: string) => {
+    if (loading && !isRetrying) return;
+
+    if (!canGenerate() && !isRetrying) {
+      if (registered) {
+        alert('今日生成次数已用完，明天再来或邀请好友获取更多次数！');
+      } else {
+        setShowPaywall(true);
+      }
+      return;
+    }
+
+    if (!selectedCelebrityId) return;
+
+    setLoading(true);
+    setError(null);
+    setRetryingVariant(-1);
+    pendingRetry.current = { scenarioId, customText };
+
+    await doGenerate(scenarioId, 0, customText);
+  };
+
+  // 重试（保留当前参数，从变体1开始重试）
+  const handleRetry = () => {
+    if (!pendingRetry.current) return;
+    setLoading(true);
+    setError(null);
+    setRetryingVariant(1);
+    setIsRetryingFlag(true);
+    setIsRetrying(true);
+    const { scenarioId, customText } = pendingRetry.current;
+    doGenerate(scenarioId, 1, customText);
   };
 
   const handleCustomGenerate = () => {
@@ -162,7 +228,6 @@ export default function SelectScenario() {
         setDiceValue(finalIndex % 6);
         setDiceResult(scenarios[finalIndex].label);
         setRolling(false);
-        // 自动触发生成
         setTimeout(() => handleGenerate(scenarios[finalIndex].id), 600);
       }
     }, 80);
@@ -218,10 +283,44 @@ export default function SelectScenario() {
         )}
       </div>
 
+      {/* 错误展示 + 重试按钮 */}
       {error && (
-        <div className="bg-[#e00] text-white comic-border-thin px-4 py-3 text-sm font-bold flex items-center gap-2">
-          <span>⚠️</span>
-          <span>{error}</span>
+        <div className="flex flex-col gap-2">
+          <div className="bg-[#e00] text-white comic-border-thin px-4 py-3 text-sm font-bold flex items-start gap-2 leading-snug">
+            <span className="shrink-0 mt-0.5">⚠️</span>
+            <span className="whitespace-pre-line">{error}</span>
+          </div>
+          {pendingRetry.current && (
+            <button
+              onClick={handleRetry}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 py-3 bg-[#ff0] comic-border font-black text-sm hover:bg-[#0cf] transition-all disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  {isRetrying ? (
+                    <span>正在重新生成（换一套描述）...</span>
+                  ) : (
+                    <span>重试中...</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span>🔄</span>
+                  <span>重新生成（已自动换描述）</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 正在切换prompt变体中的提示 */}
+      {isRetrying && !error && (
+        <div className="bg-[#0cf] text-black comic-border-thin px-4 py-3 text-sm font-bold flex items-center gap-2 animate-pulse">
+          <span>🔄</span>
+          <span>检测到合成失败，自动切换描述重试中...</span>
         </div>
       )}
 

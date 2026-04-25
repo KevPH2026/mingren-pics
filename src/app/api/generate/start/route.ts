@@ -7,11 +7,11 @@ export const dynamic = 'force-dynamic';
 
 const NOVA_BASE = 'https://www.novartspace.art';
 const getApiKey = () => process.env.NOVA_API_KEY || '';
-const FREE_LIMIT = 3;
-const REG_LIMIT = 6;
+const FREE_LIMIT = 1;
+const REG_LIMIT = 3;
 
-function serverError(msg = '服务异常，请稍后重试', status = 500) {
-  return NextResponse.json({ error: msg }, { status, headers: { 'Content-Type': 'application/json' } });
+function serverError(msg = '服务异常，请稍后重试', status = 500, code = 'SERVER_ERROR') {
+  return NextResponse.json({ error: msg, code }, { status, headers: { 'Content-Type': 'application/json' } });
 }
 
 // ===== POST: Submit async generation task =====
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { prompt, userImageBase64 } = body;
-    if (!prompt) return NextResponse.json({ error: 'Missing prompt' }, { status: 400 });
+    if (!prompt) return NextResponse.json({ error: 'Missing prompt', code: 'INVALID_REQUEST' }, { status: 400 });
 
     const auth = isAuthenticated(req);
     const registered = auth.ok;
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     if (remaining <= 0) {
       return NextResponse.json({
         error: registered ? '今日生成次数已用完，明天再来或邀请好友获取更多！' : '免费次数已用完，注册后每天3次',
+        code: 'QUOTA_EXCEEDED',
       }, { status: 429 });
     }
 
@@ -64,9 +65,9 @@ export async function POST(req: NextRequest) {
     if (!submitResp.ok) {
       const errText = await submitResp.text().catch(() => '');
       console.error('Submit error:', submitResp.status, errText.substring(0, 200));
-      if (submitResp.status === 409) return serverError('当前生成请求较多，请稍后再试 🔄', 503);
-      if (submitResp.status === 429) return serverError('请求过于频繁，请1分钟后再试 ⏳', 429);
-      return serverError('提交失败，请稍后重试', 502);
+      if (submitResp.status === 409) return serverError('当前生成请求较多，请稍后再试 🔄', 503, 'CONCURRENCY_LIMIT');
+      if (submitResp.status === 429) return serverError('请求过于频繁，请1分钟后再试 ⏳', 429, 'RATE_LIMIT');
+      return serverError('提交失败，请稍后重试', 502, 'SUBMIT_FAILED');
     }
 
     const submitData = await submitResp.json();
@@ -107,7 +108,7 @@ export async function GET(req: NextRequest) {
     if (!pollResp.ok) {
       const errText = await pollResp.text().catch(() => '');
       console.error('Poll error:', pollResp.status, errText.substring(0, 200));
-      return NextResponse.json({ status: 'error', error: '查询失败' }, { status: 502 });
+      return NextResponse.json({ status: 'error', error: '查询失败', code: 'POLL_ERROR' }, { status: 502 });
     }
 
     const pollData = await pollResp.json();
@@ -118,7 +119,7 @@ export async function GET(req: NextRequest) {
     const taskStatus = task?.status; // queued/running/success/failed or QUEUED/RUNNING/SUCCESS/FAILED
 
     if (!taskStatus) {
-      return NextResponse.json({ status: 'error', error: '任务不存在', raw: pollData }, { status: 404 });
+      return NextResponse.json({ status: 'error', error: '任务不存在', code: 'TASK_NOT_FOUND', raw: pollData }, { status: 404 });
     }
 
     const normalizedStatus = taskStatus.toUpperCase();
@@ -155,9 +156,19 @@ export async function GET(req: NextRequest) {
     if (normalizedStatus === 'FAILED') {
       console.error('Task failed:', taskId, JSON.stringify(task).substring(0, 300));
       trackGeneration({ timestamp: new Date().toISOString(), success: false });
+      const errMsg = task.error?.message || '';
+      // 内容审核类错误（政治/暴力/IP相关敏感词）
+      const isContentBlocked = errMsg.toLowerCase().includes('content') ||
+        errMsg.toLowerCase().includes('safety') ||
+        errMsg.toLowerCase().includes('policy') ||
+        errMsg.toLowerCase().includes('blocked') ||
+        errMsg.toLowerCase().includes('restricted') ||
+        errMsg.toLowerCase().includes('violation');
       return NextResponse.json({
         status: 'failed',
-        error: task.error?.message || '生成失败，请重试',
+        error: errMsg || '生成失败，请重试',
+        code: isContentBlocked ? 'CONTENT_BLOCKED' : 'GENERATION_FAILED',
+        canRetry: true,
       });
     }
 
@@ -166,6 +177,6 @@ export async function GET(req: NextRequest) {
 
   } catch (e: any) {
     console.error('Poll error:', e.message);
-    return NextResponse.json({ status: 'error', error: '查询超时' }, { status: 502 });
+    return NextResponse.json({ status: 'error', error: '查询超时', code: 'POLL_TIMEOUT' }, { status: 502 });
   }
 }
