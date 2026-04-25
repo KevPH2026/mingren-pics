@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated, verifyQuota, signQuota, getTodayStr, authCookieOpts, isProd } from '@/lib/auth';
+import { trackGeneration } from '@/app/api/admin/stats/route';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -118,6 +119,12 @@ export async function POST(req: NextRequest) {
         const imgMime = mimeMatch?.[1] || 'image/png';
         console.log('Gemini generation succeeded');
 
+        trackGeneration({
+          timestamp: new Date().toISOString(),
+          email: auth.ok ? auth.email : undefined,
+          success: true,
+        });
+
         const res = NextResponse.json(
           { images: [`data:${imgMime};base64,${imgMatch[1]}`] },
           { headers: { 'Content-Type': 'application/json' } }
@@ -160,6 +167,7 @@ export async function POST(req: NextRequest) {
 
     if (urlMatch) {
       console.log('Flex fallback succeeded (url mode)');
+      trackGeneration({ timestamp: new Date().toISOString(), email: auth.ok ? auth.email : undefined, success: true });
       const res = NextResponse.json(
         { imageUrl: urlMatch[1] },
         { headers: { 'Content-Type': 'application/json' } }
@@ -171,6 +179,7 @@ export async function POST(req: NextRequest) {
     const b64Match = flexText.match(/"b64_json"\s*:\s*"([A-Za-z0-9+/=]+)/);
     if (b64Match) {
       console.log('Flex fallback succeeded (b64 mode)');
+      trackGeneration({ timestamp: new Date().toISOString(), email: auth.ok ? auth.email : undefined, success: true });
       const res = NextResponse.json(
         { images: [`data:image/png;base64,${b64Match[1]}`] },
         { headers: { 'Content-Type': 'application/json' } }
@@ -184,6 +193,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('Generate error:', error);
+    trackGeneration({ timestamp: new Date().toISOString(), success: false });
     return serverError('生成服务异常，请稍后重试');
   }
 }
