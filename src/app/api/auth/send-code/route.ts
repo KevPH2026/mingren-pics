@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createHmac } from 'crypto';
+import { isProd } from '@/lib/auth';
 
 const SECRET = process.env.AUTH_SECRET || 'mingren-pics-dev-secret-2026';
 
+// ⚠️ Production safety: reject requests if using default secret
+if (isProd && SECRET === 'mingren-pics-dev-secret-2026') {
+  console.warn('⚠️ AUTH_SECRET is using default value in production! Set AUTH_SECRET env var.');
+}
+
 function signCode(email: string, code: string): string {
   return createHmac('sha256', SECRET).update(`${email}:${code}`).digest('hex');
+}
+
+// Rate limiting (in-memory)
+const rateLimits: Record<string, { count: number; resetAt: number }> = {};
+function checkRateLimit(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateLimits[key];
+  if (!entry || now > entry.resetAt) {
+    rateLimits[key] = { count: 1, resetAt: now + windowMs };
+    return true;
+  }
+  if (entry.count >= max) return false;
+  entry.count++;
+  return true;
 }
 
 export async function POST(req: NextRequest) {
@@ -16,13 +36,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '请输入有效邮箱' }, { status: 400 });
     }
 
-    // 生成6位验证码
+    const normalizedEmail = email.toLowerCase();
+
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!checkRateLimit(`email:${normalizedEmail}`, 3, 10 * 60 * 1000)) {
+      return NextResponse.json({ error: '该邮箱验证码发送过于频繁，请10分钟后再试' }, { status: 429 });
+    }
+    if (!checkRateLimit(`ip:${ip}`, 10, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: '请求过于频繁，请稍后再试' }, { status: 429 });
+    }
+
+    // Generate 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const signature = signCode(email.toLowerCase(), code);
+    const signature = signCode(normalizedEmail, code);
 
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      // 无API key时，开发模式直接返回验证码
+      // Dev mode — only return code when NOT in production
+      if (isProd) {
+        console.error('RESEND_API_KEY not set in production!');
+        return NextResponse.json({ error: '邮件服务未配置' }, { status: 500 });
+      }
       console.log(`[DEV] 验证码 for ${email}: ${code}`);
       return NextResponse.json({ ok: true, dev: true, code, signature });
     }
@@ -50,11 +85,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '邮件发送失败，请重试' }, { status: 500 });
     }
 
-    // 返回 signature 给前端，前端 verify 时传回来
-    // code 不返回（通过邮件发送），但 dev 模式返回
     return NextResponse.json({ ok: true, signature });
   } catch (e: any) {
     console.error('Send code error:', e);
-    return NextResponse.json({ error: '发送失败' }, { status: 500 });
+    return NextResponse.json({ error: '发送失败，请稍后重试' }, { status: 500 });
   }
 }

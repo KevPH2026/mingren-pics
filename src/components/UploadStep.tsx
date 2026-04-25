@@ -124,7 +124,7 @@ export default function UploadStep() {
         ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
+        capture="user"
         className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f); }}
       />

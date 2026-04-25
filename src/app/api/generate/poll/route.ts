@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ status: 'processing' });
   } catch (error: any) {
-    return NextResponse.json({ status: 'error', error: error.message });
+    console.error('Poll error:', error);
+    return NextResponse.json({ status: 'error', error: '查询失败，请稍后重试' });
   }
 }
