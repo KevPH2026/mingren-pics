@@ -180,9 +180,15 @@ export default function HomeContent() {
         <StepComponent />
       </div>
 
-      {/* Bottom branding */}
-      <footer className="bg-black text-white text-center py-2 text-[10px] font-black tracking-[4px] uppercase">
-        MINGREN.PICS
+      {/* Bottom branding + disclaimer */}
+      <footer className="bg-black text-white/60 text-center py-3 px-4 space-y-1">
+        <p className="text-[9px] font-bold leading-relaxed">
+          ⚠️ 免责声明：本站生成的合影图片均为AI虚构创作，仅供娱乐，不代表真实合影。名人肖像权归本人所有，请勿用于商业用途。
+        </p>
+        <p className="text-[9px] font-bold text-white/30 leading-relaxed">
+          🤖 本页面完全由 AI 开发，AI 维护
+        </p>
+        <p className="text-[9px] font-black tracking-[4px] uppercase text-white/20">MINGREN.PICS</p>
       </footer>
 
       {/* Paywall Modal */}
