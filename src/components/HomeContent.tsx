@@ -172,7 +172,7 @@ export default function HomeContent() {
         </button>
         <div className="flex items-center gap-2">
           <AuthButton />
-          <span className="text-[10px] font-bold opacity-70 tracking-wider">⚡ GPT-IMAGE 2.0</span>
+          <span className="hidden sm:inline text-[10px] font-bold opacity-70 tracking-wider">⚡ GPT-IMAGE 2.0</span>
           {historyCount > 0 && step !== 'history' && (
             <button
               onClick={() => setStep('history')}
@@ -186,6 +186,42 @@ export default function HomeContent() {
           )}
         </div>
       </header>
+
+      {/* ===== 移动端水平滚动像素化名人条 ===== */}
+      <div className="lg:hidden flex-shrink-0 relative z-10">
+        <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {[
+            { celeb: 'Taylor Swift', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png/220px-Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png', bg: '#ff6b9d' },
+            { celeb: 'Elon Musk', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Elon_Musk_at_Royal_Society_of_London_%28cropped2%29.jpg/220px-Elon_Musk_at_Royal_Society_of_London_%28cropped2%29.jpg', bg: '#4ecdc4' },
+            { celeb: 'Lisa', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Lisa_%28Lalisa_Manobal%29_at_the_Paris_Fashion_Week_2024_02.jpg/220px-Lisa_%28Lalisa_Manobal%29_at_the_Paris_Fashion_Week_2024_02.jpg', bg: '#6c5ce7' },
+            { celeb: 'Messi', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg/220px-Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', bg: '#ffe66d' },
+            { celeb: 'Lady Gaga', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Lady_Gaga_at_the_2024_LACMA_Art_Film_Gala_%28cropped%29.jpg/220px-Lady_Gaga_at_the_2024_LACMA_Art_Film_Gala_%28cropped%29.jpg', bg: '#e84393' },
+            { celeb: 'IU', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/IU_at_%22Dreaming_of_a_Fairy_Tale%22_Press_Conference%2C_24_March_2025_04.jpg/220px-IU_at_%22Dreaming_of_a_Fairy_Tale%22_Press_Conference%2C_24_March_2025_04.jpg', bg: '#a29bfe' },
+            { celeb: 'Zendaya', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Zendaya_-_2024.jpg/220px-Zendaya_-_2024.jpg', bg: '#00cec9' },
+            { celeb: 'C罗', src: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Cristiano_Ronaldo_playing_for_Al_Nassr_FC_against_Persepolis%2C_September_2023_%28cropped%29.jpg/220px-Cristiano_Ronaldo_playing_for_Al_Nassr_FC_against_Persepolis%2C_September_2023_%28cropped%29.jpg', bg: '#0984e3' },
+          ].map((item, i) => (
+            <div key={i} className="flex-shrink-0 w-[72px] rounded-lg overflow-hidden comic-border-thin">
+              <div className="w-full aspect-[3/4] relative" style={{ backgroundColor: item.bg }}>
+                <img
+                  src={item.src}
+                  alt={item.celeb}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{
+                    imageRendering: 'pixelated',
+                    filter: 'brightness(0.7) saturate(1.2)',
+                  }}
+                  loading="lazy"
+                />
+                <PixelateOverlay src={item.src} />
+                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10" />
+                <div className="absolute bottom-0 left-0 right-0 p-1 z-10">
+                  <span className="text-[8px] font-black text-white drop-shadow-lg block leading-tight text-center">{item.celeb}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="flex-1 flex flex-col items-center justify-start pb-8 relative z-10">
         <StepComponent />
