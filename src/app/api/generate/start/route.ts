@@ -71,23 +71,39 @@ export async function POST(req: NextRequest) {
     console.log('Starting generation, hasRefImage:', hasRefImage);
 
     // ===== Attempt 1: nova-g-image-2 (Nova Gemini接口 + 参考图) =====
-    const response = await fetch(
-      `${NOVA_BASE}/v1beta/models/nova-g-image-2:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'x-goog-api-key': apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts }],
-          generationConfig: {
-            responseModalities: ['TEXT', 'IMAGE'],
-            imageConfig: { aspectRatio: '1:1', novartResolution: '1k' },
+    let response: Response;
+    try {
+      response = await fetch(
+        `${NOVA_BASE}/v1beta/models/nova-g-image-2:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'x-goog-api-key': apiKey,
+            'Content-Type': 'application/json',
           },
-        }),
-      }
-    );
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts }],
+            generationConfig: {
+              responseModalities: ['TEXT', 'IMAGE'],
+              imageConfig: { aspectRatio: '1:1', novartResolution: '1k' },
+            },
+          }),
+          signal: AbortSignal.timeout(55_000),
+        }
+      );
+    } catch (fetchErr: any) {
+      console.warn('Nova fetch timeout/error, skipping to fallback:', fetchErr.message);
+      response = new Response(null, { status: 504, statusText: 'Gateway Timeout' });
+    }
+
+    // Check for Nova account restriction (403 ACCOUNT_RESTRICTED)
+    if (response.status === 403) {
+      const novaErrText = await response.text().catch(() => '');
+      console.error('Nova 403:', novaErrText.substring(0, 300));
+      trackGeneration({ timestamp: new Date().toISOString(), success: false });
+      // Don't deduct quota on account restriction
+      return serverError('AI绘图服务暂时维护中，请30分钟后再试 ⏳', 503);
+    }
 
     if (response.ok) {
       const novaText = await response.text();
@@ -118,19 +134,27 @@ export async function POST(req: NextRequest) {
     console.warn('Nova failed:', errStatus, '— falling back to nova-image-pro-flex');
 
     // ===== Attempt 2: Fallback — nova-image-pro-flex =====
-    const fallbackResp = await fetch(`${NOVA_BASE}/v1/images/generations`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'nova-image-pro-flex',
-        prompt,
-        n: 1,
-        size: '1024x1024',
-      }),
-    });
+    let fallbackResp: Response;
+    try {
+      fallbackResp = await fetch(`${NOVA_BASE}/v1/images/generations`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'nova-image-pro-flex',
+          prompt,
+          n: 1,
+          size: '1024x1024',
+        }),
+        signal: AbortSignal.timeout(55_000),
+      });
+    } catch (fetchErr: any) {
+      console.error('Flex fallback fetch timeout/error:', fetchErr.message);
+      trackGeneration({ timestamp: new Date().toISOString(), success: false });
+      return serverError('生成超时，请稍后重试', 504);
+    }
 
     if (!fallbackResp.ok) {
       console.error('Flex fallback also failed:', fallbackResp.status);

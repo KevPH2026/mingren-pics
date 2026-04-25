@@ -60,36 +60,18 @@ export default function SelectScenario() {
           prompt,
           userImageBase64: userImage || undefined,
         }),
+        signal: AbortSignal.timeout(120_000),
       });
 
       const data = await resp.json();
 
-      if (resp.status === 429) {
-        setError(data.error || '今日次数已用完，明天再来或邀请好友获取更多！');
-        setShowPaywall(true);
+      // 任何非成功状态码都停止，不重试
+      if (!resp.ok) {
+        const errMsg = data.error || '生成失败，请稍后重试';
+        // 503 = 账号限制/维护中, 502/504 = 上游故障
+        setError(resp.status === 503 ? errMsg : `${celeb?.name || '该人物'} 暂时不可用，请稍后再试或换个人物`);
         setStep('scenario');
         return;
-      }
-
-      if (resp.status === 202 && data.queued) {
-        await new Promise(r => setTimeout(r, 10000));
-        const retryResp = await fetch('/api/generate/start', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, userImageBase64: userImage || undefined }),
-        });
-        const retryData = await retryResp.json();
-        if (retryData.images) {
-          setGeneratedImages(retryData.images);
-          return;
-        } else if (retryData.imageUrl) {
-          await downloadAndSet(retryData.imageUrl);
-          return;
-        } else {
-          setError(retryData.error || '生成失败，请重试');
-          setStep('scenario');
-          return;
-        }
       }
 
       if (data.images) {
@@ -97,11 +79,12 @@ export default function SelectScenario() {
       } else if (data.imageUrl) {
         await downloadAndSet(data.imageUrl);
       } else {
-        setError(data.error || '生成失败，请重试');
+        setError(`${celeb?.name || '该人物'} 暂时不可用，请稍后再试或换个人物`);
         setStep('scenario');
       }
     } catch (err: any) {
-      setError('网络异常，请重试');
+      const msg = err?.name === 'TimeoutError' ? '生成超时，请稍后重试' : '网络异常，请重试';
+      setError(msg);
       setStep('scenario');
     } finally {
       setLoading(false);
