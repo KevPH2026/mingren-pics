@@ -3,6 +3,7 @@ import { hashPassword } from '@/lib/password';
 import { createUserRecord, getUserRecord, getTempTokenEntry, clearTempToken, getReferralOwner, incrementInviteCount } from '@/lib/user-store';
 import { hashEmail, generateReferralCode } from '@/lib/kv';
 import { signToken, authCookieOpts, publicCookieOpts } from '@/lib/auth';
+import { notifyNewRegistration } from '@/lib/notify';
 
 function setLoginCookies(res: NextResponse, email: string, referralCode: string) {
   const userId = hashEmail(email.toLowerCase());
@@ -70,10 +71,13 @@ export async function POST(req: NextRequest) {
       referralCode,
     });
 
-    setLoginCookies(res, normalizedEmail, referralCode);
-    clearTempToken(tempToken);
+  setLoginCookies(res, normalizedEmail, referralCode);
+  clearTempToken(tempToken);
 
-    return res;
+  // Fire-and-forget: notify Telegram (don't block response)
+  notifyNewRegistration(normalizedEmail, referralCode, !!inviteCode);
+
+  return res;
   } catch (e: any) {
     console.error('Set-password error:', e);
     return NextResponse.json({ error: '设置密码失败' }, { status: 500 });
