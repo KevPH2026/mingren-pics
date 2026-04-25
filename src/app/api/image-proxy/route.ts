@@ -7,16 +7,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing url' }, { status: 400 });
   }
 
-  // Only allow novartspace.art URLs
-  if (!imageUrl.includes('novartspace.art')) {
+  // Only allow whitelisted domains
+  const allowedHosts = ['novartspace.art', 'upload.wikimedia.org'];
+  try {
+    const parsed = new URL(imageUrl);
+    if (!allowedHosts.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
+  } catch {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
   }
 
-  const apiKey = process.env.NOVA_API_KEY || '';
-
   try {
+    const isNova = imageUrl.includes('novartspace.art');
+    const apiKey = process.env.NOVA_API_KEY || '';
     const resp = await fetch(imageUrl, {
-      headers: { 'Authorization': `Bearer ${apiKey}` },
+      headers: isNova ? { 'Authorization': `Bearer ${apiKey}` } : {},
     });
 
     if (!resp.ok) {
