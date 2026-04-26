@@ -223,7 +223,7 @@ function Dice3D({ isRolling, matchedCeleb }: { isRolling: boolean; matchedCeleb:
         {[0, 1, 2, 3, 4, 5].map((face) => (
           <div
             key={face}
-            className="absolute w-32 h-32 rounded-2xl flex items-center justify-center text-4xl"
+            className="absolute w-32 h-32 rounded-2xl flex items-center justify-center text-4xl border-4 border-black"
             style={{
               backfaceVisibility: "hidden",
               transform: [
@@ -234,8 +234,8 @@ function Dice3D({ isRolling, matchedCeleb }: { isRolling: boolean; matchedCeleb:
                 "rotateX(90deg) translateZ(64px)",
                 "rotateX(-90deg) translateZ(64px)",
               ][face],
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              boxShadow: "inset 0 0 20px rgba(255,255,255,0.2)",
+              background: ["#e00", "#ff0", "#0cf", "#0f0", "#f5e6d3", "#fff"][face],
+              boxShadow: "6px 6px 0 #000",
             }}
           >
             {isRolling ? (
@@ -243,7 +243,7 @@ function Dice3D({ isRolling, matchedCeleb }: { isRolling: boolean; matchedCeleb:
             ) : matchedCeleb ? (
               <span className="text-5xl">{matchedCeleb.avatarUrl}</span>
             ) : (
-              <Dice5 className="w-12 h-12 text-white" />
+              <Dice5 className="w-12 h-12 text-black" />
             )}
           </div>
         ))}
@@ -269,47 +269,44 @@ function ShareCard({
   return (
     <div
       id="share-card"
-      className="relative w-[375px] bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 rounded-3xl overflow-hidden"
+      className="relative w-[375px] bg-[#f5e6d3] rounded-3xl overflow-hidden border-4 border-black comic-shadow"
       style={{ aspectRatio: "9/16" }}
     >
-      {/* 背景装饰 */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-purple-500 rounded-full blur-3xl" />
-        <div className="absolute bottom-40 right-10 w-40 h-40 bg-cyan-500 rounded-full blur-3xl" />
-      </div>
+      {/* 背景装饰 - 半调网点 */}
+      <div className="absolute inset-0 halftone opacity-10" />
 
       {/* 顶部品牌 */}
       <div className="relative pt-6 px-5 flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">
+        <div className="w-8 h-8 rounded-lg bg-[#e00] flex items-center justify-center text-white font-bold text-sm comic-shadow-sm">
           M
         </div>
-        <span className="text-white/80 text-sm font-medium">mingren.pics</span>
-        <span className="ml-auto text-white/40 text-xs">灵魂合影</span>
+        <span className="text-black/80 text-sm font-black">mingren.pics</span>
+        <span className="ml-auto text-black/40 text-xs font-bold">灵魂合影</span>
       </div>
 
       {/* 主图区域 */}
-      <div className="relative mt-4 mx-4 rounded-2xl overflow-hidden bg-slate-800/50" style={{ aspectRatio: "1/1" }}>
+      <div className="relative mt-4 mx-4 rounded-2xl overflow-hidden bg-white border-4 border-black comic-shadow-sm" style={{ aspectRatio: "1/1" }}>
         {generatedImage ? (
           <Image src={generatedImage} alt="灵魂合影" fill className="object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-white">
             <div className="text-center">
               <div className="text-6xl mb-2">{celeb.avatarUrl}</div>
-              <div className="text-white/60 text-sm">{celeb.name}</div>
+              <div className="text-black/60 text-sm font-bold">{celeb.name}</div>
             </div>
           </div>
         )}
 
         {/* 用户小头像角标 */}
-        <div className="absolute bottom-3 right-3 w-14 h-14 rounded-full border-2 border-white/30 overflow-hidden shadow-lg">
+        <div className="absolute bottom-3 right-3 w-14 h-14 rounded-full border-4 border-black overflow-hidden shadow-lg bg-white">
           <Image src={userPhoto} alt="我" fill className="object-cover" />
         </div>
       </div>
 
       {/* 文案区域 */}
       <div className="relative mt-4 px-5">
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-          <p className="text-white text-base leading-relaxed font-medium">
+        <div className="bg-white rounded-xl p-4 border-4 border-black comic-shadow-sm">
+          <p className="text-black text-base leading-relaxed font-black">
             {caption}
           </p>
         </div>
@@ -319,23 +316,23 @@ function ShareCard({
       <div className="relative mt-3 px-5 flex items-center gap-3">
         <div className="text-3xl">{celeb.avatarUrl}</div>
         <div>
-          <div className="text-white font-semibold">{celeb.name}</div>
-          <div className="text-white/50 text-xs">{celeb.tags.join(" · ")}</div>
+          <div className="text-black font-black">{celeb.name}</div>
+          <div className="text-black/50 text-xs font-bold">{celeb.tags.join(" · ")}</div>
         </div>
       </div>
 
       {/* 底部 CTA */}
       <div className="absolute bottom-0 left-0 right-0 p-5">
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+        <div className="bg-white rounded-xl p-4 border-4 border-black comic-shadow-sm">
           <div className="flex items-center gap-3">
             {/* 真实二维码 */}
             {qrDataUrl ? (
-              <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0">
+              <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border-2 border-black">
                 <Image src={qrDataUrl} alt="扫码访问" width={64} height={64} />
               </div>
             ) : (
-              <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center shrink-0">
-                <div className="text-slate-900 text-xs text-center leading-tight">
+              <div className="w-16 h-16 bg-[#ff0] rounded-lg flex items-center justify-center shrink-0 border-4 border-black comic-shadow-sm">
+                <div className="text-black text-xs text-center leading-tight font-bold">
                   扫码
                   <br />
                   测测你的
@@ -345,8 +342,8 @@ function ShareCard({
               </div>
             )}
             <div className="flex-1">
-              <div className="text-white font-semibold text-sm">测测你的灵魂名人是谁</div>
-              <div className="text-white/50 text-xs mt-0.5">上传自拍，扔骰子匹配</div>
+              <div className="text-black font-black text-sm">测测你的灵魂名人是谁</div>
+              <div className="text-black/50 text-xs mt-0.5 font-medium">上传自拍，扔骰子匹配</div>
             </div>
           </div>
         </div>
@@ -470,18 +467,18 @@ export default function SoulPage() {
   }, [caption]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[#f5e6d3] text-black">
       {/* 顶部导航 */}
-      <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
+      <header className="sticky top-0 z-50 bg-[#f5e6d3]/90 backdrop-blur-xl border-b-4 border-black">
         <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-8 h-8 rounded-lg bg-[#e00] flex items-center justify-center text-white font-bold text-sm comic-shadow-sm">
               M
             </div>
-            <span className="font-semibold">mingren.pics</span>
+            <span className="font-bold text-lg">mingren.pics</span>
           </div>
-          <a href="/" className="text-sm text-white/50 hover:text-white transition-colors">
-            经典模式
+          <a href="/" className="text-sm font-bold text-black/60 hover:text-black transition-colors">
+            经典模式 →
           </a>
         </div>
       </header>
@@ -499,15 +496,15 @@ export default function SoulPage() {
             >
               {/* 标题 */}
               <div className="text-center space-y-2">
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  🎲 灵魂合影骰子
+                <h1 className="text-3xl font-black tracking-tight">
+                  <span className="bg-[#ff0] px-2 py-1 comic-border inline-block transform -rotate-1">🎲 灵魂合影骰子</span>
                 </h1>
-                <p className="text-white/50 text-sm">上传自拍，扔骰子，看看你的灵魂名人是谁</p>
+                <p className="text-black/60 text-sm font-medium">上传自拍，扔骰子，看看你的灵魂名人是谁</p>
               </div>
 
               {/* 上传区域 */}
               <div
-                className="relative rounded-2xl border-2 border-dashed border-white/20 hover:border-violet-500/50 transition-colors overflow-hidden"
+                className="relative rounded-2xl border-4 border-black bg-white comic-shadow overflow-hidden"
                 style={{ aspectRatio: "3/4" }}
               >
                 {userPhoto ? (
@@ -515,7 +512,7 @@ export default function SoulPage() {
                     <Image src={userPhoto} alt="预览" fill className="object-cover" />
                     <button
                       onClick={() => setUserPhoto(null)}
-                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#e00] flex items-center justify-center text-white comic-shadow-sm hover:scale-110 transition-transform"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -523,11 +520,11 @@ export default function SoulPage() {
                 ) : (
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-full flex flex-col items-center justify-center gap-3 text-white/40 hover:text-white/60 transition-colors"
+                    className="w-full h-full flex flex-col items-center justify-center gap-3 text-black/40 hover:text-black/60 transition-colors"
                   >
                     <Upload className="w-12 h-12" />
-                    <span className="text-sm">点击上传自拍</span>
-                    <span className="text-xs text-white/20">支持 JPG、PNG</span>
+                    <span className="text-sm font-bold">点击上传自拍</span>
+                    <span className="text-xs text-black/30">支持 JPG、PNG</span>
                   </button>
                 )}
                 <input
@@ -541,24 +538,24 @@ export default function SoulPage() {
 
               {/* 性别选择 */}
               <div className="space-y-2">
-                <label className="text-sm text-white/50">选择性别（匹配更准，可选）</label>
+                <label className="text-sm font-bold text-black/50">选择性别（匹配更准，可选）</label>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setGender("male")}
-                    className={`flex-1 py-3 rounded-xl border transition-all ${
+                    className={`flex-1 py-3 rounded-xl border-4 transition-all font-bold ${
                       gender === "male"
-                        ? "border-violet-500 bg-violet-500/20 text-violet-300"
-                        : "border-white/10 text-white/40 hover:border-white/20"
+                        ? "border-black bg-[#0cf] text-black comic-shadow"
+                        : "border-black/20 text-black/40 hover:border-black/40"
                     }`}
                   >
                     👨 男生
                   </button>
                   <button
                     onClick={() => setGender("female")}
-                    className={`flex-1 py-3 rounded-xl border transition-all ${
+                    className={`flex-1 py-3 rounded-xl border-4 transition-all font-bold ${
                       gender === "female"
-                        ? "border-pink-500 bg-pink-500/20 text-pink-300"
-                        : "border-white/10 text-white/40 hover:border-white/20"
+                        ? "border-black bg-[#ff0] text-black comic-shadow"
+                        : "border-black/20 text-black/40 hover:border-black/40"
                     }`}
                   >
                     👩 女生
@@ -570,10 +567,10 @@ export default function SoulPage() {
               <button
                 onClick={handleRoll}
                 disabled={!userPhoto}
-                className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
+                className={`w-full py-4 rounded-xl font-black text-lg transition-all border-4 ${
                   userPhoto
-                    ? "bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-lg shadow-violet-500/25"
-                    : "bg-white/5 text-white/20 cursor-not-allowed"
+                    ? "bg-[#e00] text-white border-black comic-shadow hover:translate-y-[-2px]"
+                    : "bg-black/5 text-black/20 border-black/10 cursor-not-allowed"
                 }`}
               >
                 {userPhoto ? "🎲 扔骰子！" : "先上传照片"}
@@ -592,7 +589,7 @@ export default function SoulPage() {
             >
               <Dice3D isRolling={true} matchedCeleb={null} />
               <motion.p
-                className="mt-8 text-white/60 text-lg"
+                className="mt-8 text-black/60 text-lg font-bold"
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
@@ -611,11 +608,11 @@ export default function SoulPage() {
             >
               {/* 匹配结果 */}
               <div className="text-center space-y-2">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/20 border border-violet-500/30">
-                  <span className="text-violet-300 text-sm">✨ 灵魂匹配成功</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0cf] border-4 border-black comic-shadow">
+                  <span className="text-black text-sm font-black">✨ 灵魂匹配成功</span>
                 </div>
-                <h2 className="text-2xl font-bold">
-                  你的灵魂名人是 <span className="text-violet-400">{matchedCeleb.name}</span>
+                <h2 className="text-2xl font-black">
+                  你的灵魂名人是 <span className="bg-[#ff0] px-2 py-1 comic-border inline-block">{matchedCeleb.name}</span>
                 </h2>
               </div>
 
@@ -632,9 +629,9 @@ export default function SoulPage() {
 
               {/* 生成状态 */}
               {isGenerating && (
-                <div className="text-center text-white/50 text-sm">
+                <div className="text-center text-black/50 text-sm font-medium">
                   <motion.div
-                    className="inline-block w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full"
+                    className="inline-block w-5 h-5 border-4 border-[#e00] border-t-transparent rounded-full"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   />
@@ -646,14 +643,14 @@ export default function SoulPage() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleDownload}
-                  className="py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium flex items-center justify-center gap-2 transition-colors"
+                  className="py-3 rounded-xl bg-white border-4 border-black comic-shadow font-bold text-black flex items-center justify-center gap-2 hover:bg-[#f5e6d3] transition-colors"
                 >
                   <Download className="w-4 h-4" />
                   保存图片
                 </button>
                 <button
                   onClick={handleShare}
-                  className="py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium flex items-center justify-center gap-2 transition-colors"
+                  className="py-3 rounded-xl bg-[#e00] border-4 border-black comic-shadow font-bold text-white flex items-center justify-center gap-2 hover:bg-[#c00] transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
                   分享
@@ -666,7 +663,7 @@ export default function SoulPage() {
                   setUserPhoto(null);
                   setGeneratedImage(null);
                 }}
-                className="w-full py-3 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-3 rounded-xl border-4 border-black/20 text-black/50 font-bold hover:border-black/40 hover:text-black flex items-center justify-center gap-2 transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
                 再玩一次
