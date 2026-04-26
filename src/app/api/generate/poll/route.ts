@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const statusMatch = text.match(/"status"\s*:\s*"([^"]+)"/);
     const status = statusMatch?.[1] || 'UNKNOWN';
 
-    if (status === 'COMPLETED' || status === 'SUCCEEDED') {
+    if (status === 'COMPLETED' || status === 'SUCCEEDED' || status === 'SUCCESS') {
       const b64Match = text.match(/"b64_json"\s*:\s*"([A-Za-z0-9+/=]+)/);
       if (b64Match) {
         return NextResponse.json({ status: 'completed', images: [`data:image/png;base64,${b64Match[1]}`] });
