@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
       if (b64Match) {
         return NextResponse.json({ status: 'completed', images: [`data:image/png;base64,${b64Match[1]}`] });
       }
-      const urlMatch = text.match(/"url"\s*:\s*"([^"]+)"/);
+      // Nova返回的URL字段可能是 "url", "download_url", 或 "signed_download_url"
+      const urlMatch = text.match(/"(?:url|download_url|signed_download_url)"\s*:\s*"([^"]+)"/);
       if (urlMatch) {
         return NextResponse.json({ status: 'completed', imageUrl: urlMatch[1] });
       }
