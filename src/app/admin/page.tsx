@@ -66,6 +66,8 @@ interface DashboardData {
     success: boolean;
     imageUrl: string | null;
     hasUserImage: boolean;
+    hasArchivedUserImage: boolean;
+    hasArchivedResultImage: boolean;
   }>;
   evolutionLogs: Array<{
     celebrityId: string;
@@ -92,6 +94,9 @@ export default function AdminPage() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [refreshing, setRefreshing] = useState(false);
+  const [viewingArchive, setViewingArchive] = useState<string | null>(null);
+  const [archiveData, setArchiveData] = useState<any>(null);
+  const [archiveLoading, setArchiveLoading] = useState(false);
   const router = useRouter();
 
   const fetchData = async () => {
@@ -119,6 +124,22 @@ export default function AdminPage() {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // 加载存档图片
+  useEffect(() => {
+    if (viewingArchive) {
+      setArchiveLoading(true);
+      fetch(`/api/admin/archive?timestamp=${encodeURIComponent(viewingArchive)}`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          setArchiveData(data);
+          setArchiveLoading(false);
+        })
+        .catch(() => {
+          setArchiveLoading(false);
+        });
+    }
+  }, [viewingArchive]);
 
   // Track admin page visit
   useTrackVisit('/admin');
@@ -441,7 +462,13 @@ export default function AdminPage() {
                   .filter(g => g.imageUrl)
                   .slice(0, 8)
                   .map((gen, i) => (
-                    <div key={i} className="relative group rounded-lg overflow-hidden border border-violet-500/10 hover:border-violet-500/40 transition-all bg-[#0f0f1a]">
+                    <div key={i} className="relative group rounded-lg overflow-hidden border border-violet-500/10 hover:border-violet-500/40 transition-all bg-[#0f0f1a] cursor-pointer"
+                      onClick={() => {
+                        if (gen.hasArchivedUserImage || gen.hasArchivedResultImage) {
+                          setViewingArchive(gen.time);
+                        }
+                      }}
+                    >
                       <img
                         src={`/api/image-proxy?url=${encodeURIComponent(gen.imageUrl!)}`}
                         alt={`${gen.celeb}`}
@@ -451,7 +478,12 @@ export default function AdminPage() {
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}
                       />
-                      {gen.hasUserImage && (
+                      {gen.hasArchivedUserImage && (
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-green-500/80 text-white text-[10px] rounded">
+                          📦已存档
+                        </div>
+                      )}
+                      {gen.hasUserImage && !gen.hasArchivedUserImage && (
                         <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-violet-500/80 text-white text-[10px] rounded">
                           有原图
                         </div>
@@ -600,6 +632,74 @@ export default function AdminPage() {
           </div>
         )}
       </main>
+
+      {/* 存档图片查看模态框 */}
+      {viewingArchive && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => {
+            setViewingArchive(null);
+            setArchiveData(null);
+          }}
+        >
+          <div className="bg-[#1a1a2e] rounded-xl border border-violet-500/30 max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">📦 存档图片查看</h3>
+              <button
+                onClick={() => {
+                  setViewingArchive(null);
+                  setArchiveData(null);
+                }}
+                className="text-gray-400 hover:text-white text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {archiveLoading ? (
+              <div className="text-center py-8 text-gray-500">加载中...</div>
+            ) : archiveData?.error ? (
+              <div className="text-center py-8 text-red-400">{archiveData.error}</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-sm text-gray-400">
+                  <p>时间: {archiveData?.timestamp ? new Date(archiveData.timestamp).toLocaleString('zh-CN') : '-'}</p>
+                  <p>用户: {archiveData?.email || '匿名用户'}</p>
+                  <p>名人: {archiveData?.celebId || '-'}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {archiveData?.archivedUserImage && (
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2">👤 用户原始照片</p>
+                      <img
+                        src={`data:image/jpeg;base64,${archiveData.archivedUserImage}`}
+                        alt="用户原始照片"
+                        className="w-full rounded-lg border border-violet-500/20"
+                      />
+                    </div>
+                  )}
+                  {archiveData?.archivedResultImage && (
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2">🎨 AI生成合影</p>
+                      <img
+                        src={`data:image/jpeg;base64,${archiveData.archivedResultImage}`}
+                        alt="AI生成合影"
+                        className="w-full rounded-lg border border-violet-500/20"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {!archiveData?.archivedUserImage && !archiveData?.archivedResultImage && (
+                  <div className="text-center py-8 text-gray-500">暂无存档图片</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
