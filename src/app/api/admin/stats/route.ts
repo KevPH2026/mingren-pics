@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllUserRecords, getGenerations, trackGeneration } from '@/lib/user-store';
+import { isAdminSession } from '../login/route';
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'mingren-admin-2026';
 
@@ -18,8 +19,9 @@ export async function trackGen(record: GenRecord) {
 
 // GET /api/admin/stats — Return registration + usage stats
 export async function GET(req: NextRequest) {
+  // 支持新的 session 鉴权或旧的 key 鉴权
   const adminKey = req.nextUrl.searchParams.get('key') || req.headers.get('x-admin-key');
-  if (adminKey !== ADMIN_KEY) {
+  if (!isAdminSession(req) && adminKey !== ADMIN_KEY) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
