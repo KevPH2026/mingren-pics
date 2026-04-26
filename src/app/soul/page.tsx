@@ -165,24 +165,9 @@ function getSoulCaption(celebId: string): string {
 }
 
 // ========== 智能匹配算法 ==========
-function smartMatchCelebrity(
-  gender: "male" | "female" | null,
-  _photoUrl: string
-): Celebrity {
-  // 根据性别过滤
-  let pool = celebrities;
-  if (gender === "female") {
-    // 女性用户优先匹配男性名人
-    const malePrefer = ["jaychou", "dengchao", "einstein", "newton", "davinci",
-      "napoleon", "lincoln", "churchill", "shakespeare", "columbus",
-      "confucius", "libai", "qinshihuang", "zhugeliang", "caocao", "sushi", "zhenhe",
-      "gdragon", "tomholland", "elonmusk", "messi", "luffy", "trump"];
-    pool = celebrities.filter((c) => malePrefer.includes(c.id));
-  } else if (gender === "male") {
-    // 男性用户优先匹配女性名人
-    const femalePrefer = ["jisoo", "taylor", "wuzetian"];
-    pool = celebrities.filter((c) => femalePrefer.includes(c.id));
-  }
+function smartMatchCelebrity(): Celebrity {
+  // 纯随机 + 热度加权，不区分性别
+  const pool = celebrities;
 
   // 按热度加权随机
   const weights = pool.map((c) => c.hotness || 50);
@@ -356,7 +341,6 @@ function ShareCard({
 export default function SoulPage() {
   const [step, setStep] = useState<"upload" | "rolling" | "result">("upload");
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
-  const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [matchedCeleb, setMatchedCeleb] = useState<Celebrity | null>(null);
   const [caption, setCaption] = useState<string>("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -386,7 +370,7 @@ export default function SoulPage() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // 智能匹配
-    const celeb = smartMatchCelebrity(gender, userPhoto);
+    const celeb = smartMatchCelebrity();
     const cap = getSoulCaption(celeb.id);
 
     setMatchedCeleb(celeb);
@@ -426,31 +410,169 @@ export default function SoulPage() {
     } finally {
       setIsGenerating(false);
     }
-  }, [userPhoto, gender]);
+  }, [userPhoto]);
 
   const handleDownload = useCallback(async () => {
     const card = document.getElementById("share-card");
     if (!card) return;
 
     try {
-      // 动态导入 html2canvas
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(card, {
-        scale: 2,
-        backgroundColor: null,
-        useCORS: true,
-        allowTaint: true,
-      });
+      // 使用原生 canvas API 绘制分享图
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas context not available");
 
+      // 设置画布尺寸 (375 x 667 即 9:16)
+      const width = 375;
+      const height = 667;
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      ctx.scale(2, 2);
+
+      // 背景色
+      ctx.fillStyle = "#f5e6d3";
+      ctx.fillRect(0, 0, width, height);
+
+      // 绘制半调网点背景
+      ctx.fillStyle = "rgba(0,0,0,0.03)";
+      for (let x = 0; x < width; x += 8) {
+        for (let y = 0; y < height; y += 8) {
+          ctx.beginPath();
+          ctx.arc(x, y, 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // 绘制顶部品牌
+      ctx.fillStyle = "#e00";
+      ctx.fillRect(20, 20, 32, 32);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("M", 36, 40);
+
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 14px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("mingren.pics", 60, 40);
+
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("灵魂合影", width - 20, 40);
+
+      // 绘制主图区域边框
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 4;
+      const imgX = 20;
+      const imgY = 70;
+      const imgW = width - 40;
+      const imgH = imgW;
+      ctx.strokeRect(imgX, imgY, imgW, imgH);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(imgX + 4, imgY + 4, imgW - 8, imgH - 8);
+
+      // 绘制名人emoji
+      ctx.font = "80px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(matchedCeleb?.avatarUrl || "📸", width / 2, imgY + imgH / 2 + 20);
+
+      // 绘制名人名字
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText(matchedCeleb?.name || "名人", width / 2, imgY + imgH / 2 + 60);
+
+      // 绘制用户小头像角标
+      const avatarX = imgX + imgW - 50;
+      const avatarY = imgY + imgH - 50;
+      ctx.beginPath();
+      ctx.arc(avatarX + 25, avatarY + 25, 25, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // 绘制文案区域
+      const captionY = imgY + imgH + 20;
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(20, captionY, width - 40, 80);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(24, captionY + 4, width - 48, 72);
+
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 16px sans-serif";
+      ctx.textAlign = "left";
+      
+      // 分行绘制文案
+      const words = caption.split("");
+      let line = "";
+      let lineY = captionY + 28;
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i];
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > width - 60 && i > 0) {
+          ctx.fillText(line, 35, lineY);
+          line = words[i];
+          lineY += 24;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, 35, lineY);
+
+      // 绘制名人信息
+      const infoY = captionY + 100;
+      ctx.font = "30px sans-serif";
+      ctx.fillText(matchedCeleb?.avatarUrl || "", 30, infoY + 30);
+
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText(matchedCeleb?.name || "", 70, infoY + 20);
+
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillText(matchedCeleb?.tags.join(" · ") || "", 70, infoY + 40);
+
+      // 绘制底部CTA
+      const ctaY = height - 100;
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(20, ctaY, width - 40, 80);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(24, ctaY + 4, width - 48, 72);
+
+      // 二维码占位
+      ctx.fillStyle = "#ff0";
+      ctx.fillRect(35, ctaY + 15, 50, 50);
+      ctx.strokeRect(35, ctaY + 15, 50, 50);
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("扫码", 60, ctaY + 35);
+      ctx.fillText("测测", 60, ctaY + 48);
+      ctx.fillText("你的", 60, ctaY + 61);
+
+      ctx.textAlign = "left";
+      ctx.font = "bold 14px sans-serif";
+      ctx.fillText("测测你的灵魂名人是谁", 100, ctaY + 35);
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.font = "12px sans-serif";
+      ctx.fillText("上传自拍，扔骰子匹配", 100, ctaY + 55);
+
+      // 下载
       const link = document.createElement("a");
       link.download = `灵魂合影-${matchedCeleb?.name || "名人"}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
+
+      return "Download triggered";
     } catch (err) {
       console.error("保存失败:", err);
       alert("保存失败，请直接截图分享！");
+      return "Error: " + (err as Error).message;
     }
-  }, [matchedCeleb]);
+  }, [matchedCeleb, caption]);
 
   const handleShare = useCallback(() => {
     if (navigator.share) {
@@ -534,33 +656,6 @@ export default function SoulPage() {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-              </div>
-
-              {/* 性别选择 */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-black/50">选择性别（匹配更准，可选）</label>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setGender("male")}
-                    className={`flex-1 py-3 rounded-xl border-4 transition-all font-bold ${
-                      gender === "male"
-                        ? "border-black bg-[#0cf] text-black comic-shadow"
-                        : "border-black/20 text-black/40 hover:border-black/40"
-                    }`}
-                  >
-                    👨 男生
-                  </button>
-                  <button
-                    onClick={() => setGender("female")}
-                    className={`flex-1 py-3 rounded-xl border-4 transition-all font-bold ${
-                      gender === "female"
-                        ? "border-black bg-[#ff0] text-black comic-shadow"
-                        : "border-black/20 text-black/40 hover:border-black/40"
-                    }`}
-                  >
-                    👩 女生
-                  </button>
-                </div>
               </div>
 
               {/* 扔骰子按钮 */}
