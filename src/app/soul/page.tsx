@@ -251,57 +251,62 @@ function smartMatchCelebrity(): Celebrity {
   return pool[0];
 }
 
-// ========== 3D骰子组件 ==========
-function Dice3D({ isRolling, matchedCeleb }: { isRolling: boolean; matchedCeleb: Celebrity | null }) {
+// ========== 命运齿轮组件 ==========
+function FateGear({ isSpinning, matchedCeleb }: { isSpinning: boolean; matchedCeleb: Celebrity | null }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // 转动时快速切换名人
+  useEffect(() => {
+    if (!isSpinning) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % celebrities.length);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isSpinning]);
+
+  const currentCeleb = celebrities[currentIndex];
+
   return (
-    <div className="relative w-32 h-32 mx-auto" style={{ perspective: "600px" }}>
+    <div className="relative w-48 h-48 mx-auto">
+      {/* 外圈齿轮 */}
       <motion.div
-        className="w-full h-full relative"
-        style={{ transformStyle: "preserve-3d" }}
-        animate={
-          isRolling
-            ? {
-                rotateX: [0, 360, 720, 1080, 1440],
-                rotateY: [0, 180, 360, 540, 720],
-                rotateZ: [0, 90, 180, 270, 360],
-              }
-            : {
-                rotateX: 0,
-                rotateY: 0,
-                rotateZ: 0,
-              }
-        }
-        transition={isRolling ? { duration: 2, ease: "easeOut" } : { duration: 0.5 }}
+        className="absolute inset-0"
+        animate={isSpinning ? { rotate: 360 } : { rotate: 0 }}
+        transition={isSpinning ? { duration: 0.5, repeat: Infinity, ease: "linear" } : { duration: 1, ease: "easeOut" }}
       >
-        {/* 骰子六个面 */}
-        {[0, 1, 2, 3, 4, 5].map((face) => (
+        {/* 齿轮齿 */}
+        {Array.from({ length: 12 }).map((_, i) => (
           <div
-            key={face}
-            className="absolute w-32 h-32 rounded-2xl flex items-center justify-center text-4xl border-4 border-black"
+            key={i}
+            className="absolute w-6 h-8 bg-[#e00] border-4 border-black"
             style={{
-              backfaceVisibility: "hidden",
-              transform: [
-                "rotateY(0deg) translateZ(64px)",
-                "rotateY(180deg) translateZ(64px)",
-                "rotateY(90deg) translateZ(64px)",
-                "rotateY(-90deg) translateZ(64px)",
-                "rotateX(90deg) translateZ(64px)",
-                "rotateX(-90deg) translateZ(64px)",
-              ][face],
-              background: ["#e00", "#ff0", "#0cf", "#0f0", "#f5e6d3", "#fff"][face],
-              boxShadow: "6px 6px 0 #000",
+              top: "50%",
+              left: "50%",
+              transform: `rotate(${i * 30}deg) translateY(-96px)`,
+              transformOrigin: "center bottom",
             }}
-          >
-            {isRolling ? (
-              <span className="text-3xl">{["🎲", "✨", "🌟", "💫", "⭐", "🔮"][face]}</span>
-            ) : matchedCeleb ? (
-              <span className="text-5xl">{matchedCeleb.avatarUrl}</span>
-            ) : (
-              <Dice5 className="w-12 h-12 text-black" />
-            )}
-          </div>
+          />
         ))}
+        {/* 齿轮主体 */}
+        <div className="absolute inset-4 rounded-full bg-[#ff0] border-4 border-black comic-shadow flex items-center justify-center">
+          {isSpinning ? (
+            <div className="text-center">
+              <div className="text-6xl">{currentCeleb.avatarUrl}</div>
+              <div className="text-xs font-bold text-black/60 mt-1">{currentCeleb.name}</div>
+            </div>
+          ) : matchedCeleb ? (
+            <div className="text-center">
+              <div className="text-7xl">{matchedCeleb.avatarUrl}</div>
+              <div className="text-sm font-black text-black mt-1">{matchedCeleb.name}</div>
+            </div>
+          ) : (
+            <div className="text-6xl">⚙️</div>
+          )}
+        </div>
       </motion.div>
+
+      {/* 中心轴 */}
+      <div className="absolute top-1/2 left-1/2 w-8 h-8 -mt-4 -ml-4 rounded-full bg-black border-4 border-white z-10" />
     </div>
   );
 }
@@ -690,9 +695,9 @@ export default function SoulPage() {
               {/* 标题 */}
               <div className="text-center space-y-2">
                 <h1 className="text-3xl font-black tracking-tight">
-                  <span className="bg-[#ff0] px-2 py-1 comic-border inline-block transform -rotate-1">🎲 灵魂合影骰子</span>
+                  <span className="bg-[#ff0] px-2 py-1 comic-border inline-block transform -rotate-1">⚙️ 转动命运齿轮</span>
                 </h1>
-                <p className="text-black/60 text-sm font-medium">上传自拍，扔骰子，看看你的灵魂名人是谁</p>
+                <p className="text-black/60 text-sm font-medium">上传自拍，转动齿轮，看看命运把你和谁连在一起</p>
               </div>
 
               {/* 上传区域 */}
@@ -739,7 +744,7 @@ export default function SoulPage() {
                     : "bg-black/5 text-black/20 border-black/10 cursor-not-allowed"
                 }`}
               >
-                {userPhoto ? "🎲 扔骰子！" : "先上传照片"}
+                {userPhoto ? "⚙️ 转动齿轮！" : "先上传照片"}
               </button>
             </motion.div>
           )}
@@ -753,13 +758,13 @@ export default function SoulPage() {
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center py-20"
             >
-              <Dice3D isRolling={true} matchedCeleb={null} />
+              <FateGear isSpinning={true} matchedCeleb={null} />
               <motion.p
                 className="mt-8 text-black/60 text-lg font-bold"
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                正在匹配你的灵魂名人...
+                正在转动命运的齿轮...
               </motion.p>
             </motion.div>
           )}
@@ -786,13 +791,33 @@ export default function SoulPage() {
                 </div>
               </div>
 
-              {/* 趣味冷知识 */}
-              <div className="bg-white rounded-xl p-6 border-4 border-black comic-shadow mx-4 max-w-sm">
+              {/* 滚动文案区域 */}
+              <div className="bg-white rounded-xl p-6 border-4 border-black comic-shadow mx-4 max-w-sm overflow-hidden">
                 <div className="text-center space-y-3">
                   <div className="text-2xl">✨</div>
-                  <p className="text-black font-bold text-lg leading-relaxed">
-                    {funFact}
-                  </p>
+                  
+                  {/* 滚动文案 */}
+                  <div className="h-20 overflow-hidden relative">
+                    <motion.div
+                      className="space-y-2"
+                      animate={{ y: [0, -80, -160, -240, -320, 0] }}
+                      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                    >
+                      {[
+                        funFact,
+                        "AI正在给这位名人补妆，他/她说不能素颜出镜...",
+                        "摄影师正在调光，这位名人坚持要拍出最佳状态...",
+                        "这位名人正在查你的朋友圈，想找个共同话题...",
+                        "AI正在教这位名人摆pose，他/她学得有点慢...",
+                        "这位名人正在回忆跟你的前世缘分，需要一点时间...",
+                      ].map((text, i) => (
+                        <p key={i} className="text-black font-bold text-lg leading-relaxed h-20 flex items-center justify-center">
+                          {text}
+                        </p>
+                      ))}
+                    </motion.div>
+                  </div>
+                  
                   <div className="text-black/40 text-sm font-medium">
                     正在生成合影，请稍候...
                   </div>
@@ -822,10 +847,10 @@ export default function SoulPage() {
               {/* 匹配结果 */}
               <div className="text-center space-y-2">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0cf] border-4 border-black comic-shadow">
-                  <span className="text-black text-sm font-black">✨ 灵魂匹配成功</span>
+                  <span className="text-black text-sm font-black">⚙️ 命运齿轮停转</span>
                 </div>
                 <h2 className="text-2xl font-black">
-                  你的灵魂名人是 <span className="bg-[#ff0] px-2 py-1 comic-border inline-block">{matchedCeleb.name}</span>
+                  命运把你和 <span className="bg-[#ff0] px-2 py-1 comic-border inline-block">{matchedCeleb.name}</span> 连在一起
                 </h2>
               </div>
 
