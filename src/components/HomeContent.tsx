@@ -99,14 +99,16 @@ export default function HomeContent() {
             { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9' },
             { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe' },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
-            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
+            { celeb: 'Rihanna', img: '/pixelated/rihanna.png', bg: '#ff6b9d' },
           ]).concat([
             { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393' },
+            { celeb: 'C罗', img: '/pixelated/ronaldo.png', bg: '#0984e3' },
             { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e' },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7' },
             { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9' },
             { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe' },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
+            { celeb: 'Rihanna', img: '/pixelated/rihanna.png', bg: '#ff6b9d' },
           ]).map((item, i) => (
             <div key={i} className="flex-shrink-0 w-[150px] rounded-lg comic-border-thin overflow-hidden mx-auto">
               <div className="w-full aspect-[3/4] relative" style={{ backgroundColor: item.bg }}>
