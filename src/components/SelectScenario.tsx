@@ -83,11 +83,8 @@ export default function SelectScenario() {
       const resp = await fetch('/api/generate/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          userImageBase64: userImage || undefined,
-        }),
-        signal: AbortSignal.timeout(30_000),
+        body: JSON.stringify({ prompt, userImageBase64: userImage || undefined, celebrityId: selectedCelebrityId || undefined }),
+        signal: AbortSignal.timeout(60_000), // 60秒超时
       });
 
       const data = await resp.json();
@@ -144,6 +141,10 @@ export default function SelectScenario() {
         let friendlyMsg = result.error || '生成失败，请重试';
         if (result.code === 'CONTENT_BLOCKED') {
           friendlyMsg = `这个场景对${celeb?.name}来说有点难合成 😔 可以尝试：\n① 换个场景 ② 换个名人 ③ 稍后再试`;
+        } else if (result.code === 'RATE_LIMIT') {
+          friendlyMsg = '服务器太火爆了，请1分钟后再试 🔥';
+        } else if (result.code === 'ACCOUNT_RESTRICTED') {
+          friendlyMsg = '系统繁忙，请30分钟后再试 😴';
         } else if (result.code === 'TIMEOUT') {
           friendlyMsg = '生成超时了，服务器有点忙 😅 稍后再试吧';
         } else if (result.code === 'NETWORK_ERROR') {

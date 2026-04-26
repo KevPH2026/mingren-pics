@@ -77,7 +77,7 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
 }
 
 // 提交生成任务
-async function submitGeneration(prompt: string, userImageBase64?: string): Promise<{taskId?: string, error?: string}> {
+async function submitGeneration(prompt: string, userImageBase64?: string): Promise<{taskId?: string, error?: string, code?: string}> {
   const apiKey = getApiKey();
   const reqBody: any = {
     model: 'nova-g-image-2',
@@ -97,6 +97,13 @@ async function submitGeneration(prompt: string, userImageBase64?: string): Promi
     if (!submitResp.ok) {
       const errText = await submitResp.text().catch(() => '');
       console.error('Submit error:', submitResp.status, errText.substring(0, 200));
+      // 429 = 限流, 403 = 封号/内容限制 —— 直接返回具体错误
+      if (submitResp.status === 429) {
+        return { error: '服务器繁忙，请1分钟后再试', code: 'RATE_LIMIT' };
+      }
+      if (submitResp.status === 403) {
+        return { error: '该内容暂不支持生成，请换个人物或场景', code: 'FORBIDDEN' };
+      }
       return { error: `Submit failed: ${submitResp.status} - ${errText.substring(0, 100)}` };
     }
 
@@ -153,7 +160,7 @@ async function pollTask(taskId: string): Promise<{status: string, imageUrl?: str
 }
 
 // 等待任务完成（带重试）
-async function waitForTask(taskId: string, maxWaitMs = 30000): Promise<{status: string, imageUrl?: string, error?: string}> {
+async function waitForTask(taskId: string, maxWaitMs = 20000): Promise<{status: string, imageUrl?: string, error?: string}> {
   const startTime = Date.now();
   
   while (Date.now() - startTime < maxWaitMs) {
@@ -167,7 +174,7 @@ async function waitForTask(taskId: string, maxWaitMs = 30000): Promise<{status: 
     await new Promise(resolve => setTimeout(resolve, 2000));
   }
   
-  return { status: 'timeout', error: 'Task timed out' };
+  return { status: 'pending', error: 'Task still running' };
 }
 
 // ===== 自我进化：尝试多套prompt变体 =====
@@ -207,6 +214,16 @@ async function tryGenerateWithEvolution(
         lastError = submitResult.error;
         lastErrorType = analyzeError(lastError);
         console.log(`[EVOLUTION] Submit failed: ${lastError}, type: ${lastErrorType}`);
+        
+        // 如果收到限流，立即停止
+        if (submitResult.code === 'RATE_LIMIT') {
+          return {
+            success: false,
+            error: lastError,
+            errorType: 'RATE_LIMIT',
+            attemptsMade: variantIdx * MAX_RETRIES + attempt,
+          };
+        }
         
         // 如果收到账号限制或内容安全错误，立即停止所有重试
         if (lastError.includes('ACCOUNT_RESTRICTED') || lastError.includes('内容安全') || lastError.includes('封禁')) {
@@ -306,67 +323,95 @@ export async function POST(req: NextRequest) {
     const celebrity = celebrities.find(c => c.id === celebrityId);
     const promptVariants = celebrity?.promptVariants;
 
-    // 使用自我进化系统尝试生成
-    const result = await tryGenerateWithEvolution(
-      celebrityId || 'unknown',
-      prompt,
-      promptVariants,
-      userImageBase64
-    );
-
-    if (result.success) {
-      // 成功！更新配额并返回
-      await recordSuccess(celebrityId || 'unknown');
+    // 提交生成任务（不重试，直接返回结果或taskId）
+    const submitResult = await submitGeneration(prompt, userImageBase64);
+    
+    if (submitResult.error) {
+      // 提交失败
+      const errorType = analyzeError(submitResult.error);
+      let errorMsg = submitResult.error;
+      let errorCode = errorType;
+      let suggestion = '请尝试选择其他名人或场景';
       
+      if (submitResult.code === 'RATE_LIMIT' || errorType === 'RATE_LIMIT') {
+        errorMsg = '服务器太火爆了，请1分钟后再试 🔥';
+        errorCode = 'RATE_LIMIT';
+        suggestion = '等待1分钟后点击重试';
+      } else if (errorType === 'ACCOUNT_RESTRICTED') {
+        errorMsg = '系统繁忙，请30分钟后再试';
+        errorCode = 'ACCOUNT_RESTRICTED';
+        suggestion = '我们的AI正在休息，请稍后再来';
+      } else if (errorType === 'CONTENT_BLOCKED') {
+        errorMsg = '这个人物暂时无法生成，请换一位试试';
+        errorCode = 'CONTENT_BLOCKED';
+        suggestion = '建议选择动漫角色或运动员';
+      }
+      
+      return NextResponse.json({
+        status: 'failed',
+        error: errorMsg,
+        code: errorCode,
+        canRetry: errorType !== 'ACCOUNT_RESTRICTED',
+        suggestion,
+      });
+    }
+    
+    // 提交成功，等待结果
+    const taskResult = await waitForTask(submitResult.taskId!);
+    
+    if (taskResult.status === 'success') {
+      // 成功！
       await trackGeneration({
         timestamp: new Date().toISOString(),
         email: auth.ok ? auth.email : undefined,
         celebId: celebrityId || undefined,
         success: true,
-        imageUrl: result.imageUrl,
+        imageUrl: taskResult.imageUrl,
         userImageUrl: userImageBase64 || undefined,
       });
 
       const newQuota = signQuota({ d: today, c: count + 1, b: bonus });
       const res = NextResponse.json({
         status: 'success',
-        imageUrl: result.imageUrl,
-        attempts: result.attemptsMade,
+        imageUrl: taskResult.imageUrl,
       });
       res.cookies.set('mingren_usage', newQuota, {
         httpOnly: true, secure: isProd, maxAge: 86400, path: '/', sameSite: 'lax',
       });
       return res;
     }
-
-    // 所有尝试都失败了 - 记录失败并可能自动下线
-    const finalErrorType = result.errorType || 'UNKNOWN';
     
-    if (celebrityId && isProd) {
-      const status = await recordFailure(celebrityId, finalErrorType, prompt);
-      
-      if (status.disabled) {
-        // 名人已被自动下线
-        console.log(`[EVOLUTION] Celebrity ${celebrityId} has been auto-disabled`);
-        return NextResponse.json({
-          status: 'failed',
-          error: '该名人暂时不支持，请更换后重试',
-          code: 'CELEBRITY_AUTO_DISABLED',
-          canRetry: false,
-          suggestion: '该名人因内容审核原因已自动下线，请尝试选择其他名人',
-        });
-      }
+    if (taskResult.status === 'pending') {
+      // 任务还在运行，返回 taskId 让前端轮询
+      return NextResponse.json({
+        status: 'pending',
+        taskId: submitResult.taskId,
+        message: 'AI正在生成中...',
+      });
     }
-
-    // 返回通用失败提示
-    await trackGeneration({ timestamp: new Date().toISOString(), success: false });
+    
+    // 失败
+    const errorType = analyzeError(taskResult.error || 'Generation failed');
+    let errorMsg = taskResult.error || '生成失败，请重试';
+    let errorCode = errorType;
+    let suggestion = '请尝试选择其他名人或场景';
+    
+    if (errorType === 'CONTENT_BLOCKED') {
+      errorMsg = '这个人物暂时无法生成，请换一位试试';
+      errorCode = 'CONTENT_BLOCKED';
+      suggestion = '建议选择动漫角色或运动员';
+    } else if (errorType === 'TIMEOUT') {
+      errorMsg = '生成超时了，请重试';
+      errorCode = 'TIMEOUT';
+      suggestion = '网络波动，请点击重试';
+    }
     
     return NextResponse.json({
       status: 'failed',
-      error: '该名人暂时不支持，请更换后重试',
-      code: finalErrorType === 'CONTENT_BLOCKED' ? 'CONTENT_BLOCKED' : 'GENERATION_FAILED',
-      canRetry: false,
-      suggestion: '请尝试选择其他名人或场景',
+      error: errorMsg,
+      code: errorCode,
+      canRetry: true,
+      suggestion,
     });
 
   } catch (error: any) {
