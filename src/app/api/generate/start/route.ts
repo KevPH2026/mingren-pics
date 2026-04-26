@@ -11,8 +11,8 @@ const NOVA_BASE = 'https://www.novartspace.art';
 const getApiKey = () => process.env.NOVA_API_KEY || '';
 const FREE_LIMIT = 6;
 const REG_LIMIT = 3;
-const MAX_RETRIES = 3;
-const MAX_VARIANT_RETRIES = 3; // 最多尝试3套prompt变体
+const MAX_RETRIES = 1; // 最多1次重试（避免触发Nova封号）
+const MAX_VARIANT_RETRIES = 1; // 最多1套prompt变体
 
 function serverError(msg = '服务异常，请稍后重试', status = 500, code = 'SERVER_ERROR') {
   return NextResponse.json({ error: msg, code }, { status, headers: { 'Content-Type': 'application/json' } });
@@ -207,6 +207,18 @@ async function tryGenerateWithEvolution(
         lastError = submitResult.error;
         lastErrorType = analyzeError(lastError);
         console.log(`[EVOLUTION] Submit failed: ${lastError}, type: ${lastErrorType}`);
+        
+        // 如果收到账号限制或内容安全错误，立即停止所有重试
+        if (lastError.includes('ACCOUNT_RESTRICTED') || lastError.includes('内容安全') || lastError.includes('封禁')) {
+          console.log('[EVOLUTION] Account restricted, stopping all retries immediately');
+          return {
+            success: false,
+            error: '系统繁忙，请30分钟后再试',
+            errorType: 'ACCOUNT_RESTRICTED',
+            attemptsMade: variantIdx * MAX_RETRIES + attempt,
+          };
+        }
+        
         continue; // 继续下一次attempt
       }
       
