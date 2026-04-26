@@ -25,6 +25,12 @@ export default function Header() {
         名人合影
       </button>
       <div className="flex items-center gap-3">
+        <a
+          href="/soul"
+          className="text-xs font-bold text-white/60 hover:text-white bg-white/5 px-2 py-1 rounded transition"
+        >
+          🎲 灵魂合影
+        </a>
         <span className="text-sm text-white/60">{titles[step]}</span>
         {isRegistered() ? (
           <span className="text-xs font-bold text-white/50 bg-white/10 px-2 py-1 rounded">
