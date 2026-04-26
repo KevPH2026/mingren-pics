@@ -3,6 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Track visit hook
+function useTrackVisit(path: string) {
+  useEffect(() => {
+    fetch('/api/track-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    }).catch(() => {});
+  }, [path]);
+}
+
 interface DashboardData {
   summary: {
     totalUsers: number;
@@ -16,6 +27,17 @@ interface DashboardData {
     successRate: number;
     activeCelebrities: number;
     disabledCelebrities: number;
+    totalVisits: number;
+    todayVisits: number;
+    onlineUsers: number;
+    uniqueIPs: number;
+  };
+  visitStats: {
+    totalVisits: number;
+    todayVisits: number;
+    onlineUsers: number;
+    uniqueIPs: number;
+    topPaths: Array<{ path: string; count: number }>;
   };
   dailyStats: Array<{
     date: string;
@@ -42,6 +64,8 @@ interface DashboardData {
     user: string;
     celeb: string;
     success: boolean;
+    imageUrl: string | null;
+    hasUserImage: boolean;
   }>;
   evolutionLogs: Array<{
     celebrityId: string;
@@ -95,6 +119,9 @@ export default function AdminPage() {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Track admin page visit
+  useTrackVisit('/admin');
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -239,6 +266,38 @@ export default function AdminPage() {
               />
             </div>
 
+            {/* 访问统计 KPI */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <KpiCard
+                title="总访问量"
+                value={summary.totalVisits}
+                change={summary.todayVisits}
+                changeLabel="今日访问"
+                color="cyan"
+              />
+              <KpiCard
+                title="当前在线"
+                value={summary.onlineUsers}
+                change={0}
+                changeLabel="5分钟内活跃"
+                color="green"
+              />
+              <KpiCard
+                title="今日访问"
+                value={summary.todayVisits}
+                change={0}
+                changeLabel="独立IP"
+                color="yellow"
+              />
+              <KpiCard
+                title="独立IP数"
+                value={summary.uniqueIPs}
+                change={0}
+                changeLabel="总独立访客"
+                color="violet"
+              />
+            </div>
+
             {/* 7-Day Chart */}
             <div className="bg-[#1a1a2e] rounded-xl border border-violet-500/10 p-6">
               <h3 className="text-lg font-semibold mb-4">近7天趋势</h3>
@@ -303,6 +362,31 @@ export default function AdminPage() {
                 )}
               </div>
             </div>
+
+            {/* Top Paths */}
+            <div className="bg-[#1a1a2e] rounded-xl border border-violet-500/10 p-6">
+              <h3 className="text-lg font-semibold mb-4">热门页面 TOP10</h3>
+              <div className="space-y-2">
+                {data.visitStats.topPaths.map((path, i) => (
+                  <div key={path.path} className="flex items-center gap-3 py-2 border-b border-violet-500/5 last:border-0">
+                    <span className={`w-6 text-center font-bold ${i < 3 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 font-mono text-sm">{path.path}</span>
+                    <span className="text-gray-400">{path.count}次</span>
+                    <div className="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-500 to-violet-500"
+                        style={{ width: `${(path.count / (data.visitStats.topPaths[0]?.count || 1)) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {data.visitStats.topPaths.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">暂无访问数据</p>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -348,42 +432,89 @@ export default function AdminPage() {
 
         {/* Generations Tab */}
         {activeTab === 'generations' && (
-          <div className="bg-[#1a1a2e] rounded-xl border border-violet-500/10 p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              生成记录 (最近20条)
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-violet-500/20 text-gray-400">
-                    <th className="text-left py-2 px-3">时间</th>
-                    <th className="text-left py-2 px-3">用户</th>
-                    <th className="text-left py-2 px-3">名人</th>
-                    <th className="text-left py-2 px-3">状态</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.recentGenerations.map((gen, i) => (
-                    <tr key={i} className="border-b border-violet-500/5 hover:bg-violet-500/5">
-                      <td className="py-2 px-3 text-gray-500">{new Date(gen.time).toLocaleString('zh-CN')}</td>
-                      <td className="py-2 px-3">{gen.user}</td>
-                      <td className="py-2 px-3">{gen.celeb}</td>
-                      <td className="py-2 px-3">
-                        {gen.success ? (
-                          <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">成功</span>
-                        ) : (
-                          <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">失败</span>
-                        )}
-                      </td>
-                    </tr>
+          <div className="space-y-4">
+            {/* 图片网格 - 生成结果展示 */}
+            <div className="bg-[#1a1a2e] rounded-xl border border-violet-500/10 p-6">
+              <h3 className="text-lg font-semibold mb-4">最近生成图片</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {data.recentGenerations
+                  .filter(g => g.imageUrl)
+                  .slice(0, 8)
+                  .map((gen, i) => (
+                    <div key={i} className="relative group rounded-lg overflow-hidden border border-violet-500/10 hover:border-violet-500/40 transition-all bg-[#0f0f1a]">
+                      <img
+                        src={`/api/image-proxy?url=${encodeURIComponent(gen.imageUrl!)}`}
+                        alt={`${gen.celeb}`}
+                        className="w-full aspect-square object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      {gen.hasUserImage && (
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-violet-500/80 text-white text-[10px] rounded">
+                          有原图
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute bottom-2 left-2 right-2">
+                          <p className="text-xs text-white font-medium truncate">{gen.celeb}</p>
+                          <p className="text-[10px] text-gray-300">{gen.user}</p>
+                          <p className="text-[10px] text-gray-400">{new Date(gen.time).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                  {data.recentGenerations.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center py-8 text-gray-500">暂无生成记录</td>
+                {data.recentGenerations.filter(g => g.imageUrl).length === 0 && (
+                  <div className="col-span-full text-center py-8 text-gray-500">暂无图片</div>
+                )}
+              </div>
+            </div>
+
+            {/* 生成记录表格 */}
+            <div className="bg-[#1a1a2e] rounded-xl border border-violet-500/10 p-6">
+              <h3 className="text-lg font-semibold mb-4">生成记录 (最近20条)</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-violet-500/20 text-gray-400">
+                      <th className="text-left py-2 px-3">时间</th>
+                      <th className="text-left py-2 px-3">用户</th>
+                      <th className="text-left py-2 px-3">名人</th>
+                      <th className="text-left py-2 px-3">状态</th>
+                      <th className="text-left py-2 px-3">原图</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.recentGenerations.map((gen, i) => (
+                      <tr key={i} className="border-b border-violet-500/5 hover:bg-violet-500/5">
+                        <td className="py-2 px-3 text-gray-500">{new Date(gen.time).toLocaleString('zh-CN')}</td>
+                        <td className="py-2 px-3">{gen.user}</td>
+                        <td className="py-2 px-3">{gen.celeb}</td>
+                        <td className="py-2 px-3">
+                          {gen.success ? (
+                            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">成功</span>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">失败</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {gen.hasUserImage ? (
+                            <span className="px-2 py-0.5 bg-violet-500/20 text-violet-400 rounded text-xs">有</span>
+                          ) : (
+                            <span className="text-gray-600">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {data.recentGenerations.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="text-center py-8 text-gray-500">暂无生成记录</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

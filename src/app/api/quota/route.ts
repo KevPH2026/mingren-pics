@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const count = quota?.d === today ? quota.c : 0;
   const bonus = quota?.b || 0;
 
-  const dailyLimit = auth.ok ? 3 : 1;
+  const dailyLimit = auth.ok ? 3 : 6;
   const remaining = Math.max(0, dailyLimit + bonus - count);
 
   // Get invite count from user record
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
 // POST /api/quota/use — manually consume one quota (kept for compatibility)
 export async function POST(req: NextRequest) {
   const auth = isAuthenticated(req);
-  const dailyLimit = auth.ok ? 3 : 1;
+  const dailyLimit = auth.ok ? 3 : 6;
 
   const usageCookie = req.cookies.get('mingren_usage')?.value;
   const quota = usageCookie ? verifyQuota(usageCookie) : null;

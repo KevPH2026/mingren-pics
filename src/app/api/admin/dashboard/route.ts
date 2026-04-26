@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllUserRecords, getGenerations } from '@/lib/user-store';
+import { getAllUserRecords, getGenerations, getVisitStats } from '@/lib/user-store';
 import { isAdminSession } from '../login/route';
 import { getAllCelebrityStatus, getEvolutionLogs } from '@/lib/self-evolution';
 import { celebrities } from '@/lib/celebrities';
@@ -30,6 +30,9 @@ export async function GET(req: NextRequest) {
     const todayFailed = todayGens.filter(g => !g.success).length;
     const yesterdaySuccess = yesterdayGens.filter(g => g.success).length;
     const yesterdayFailed = yesterdayGens.filter(g => !g.success).length;
+    
+    // 访问统计
+    const visitStats = await getVisitStats();
     
     // 名人热度排行（按生成次数）
     const celebStats: Record<string, { id: string; name: string; category: string; count: number; success: number; failed: number }> = {};
@@ -87,9 +90,21 @@ export async function GET(req: NextRequest) {
         successRate: todayGens.length > 0 ? Math.round((todaySuccess / todayGens.length) * 100) : 0,
         activeCelebrities: celebrities.length - disabledCount,
         disabledCelebrities: disabledCount,
+        // 访问统计
+        totalVisits: visitStats.totalVisits,
+        todayVisits: visitStats.todayVisits,
+        onlineUsers: visitStats.onlineUsers,
+        uniqueIPs: visitStats.uniqueIPs,
       },
       dailyStats,
       hotCelebs,
+      visitStats: {
+        totalVisits: visitStats.totalVisits,
+        todayVisits: visitStats.todayVisits,
+        onlineUsers: visitStats.onlineUsers,
+        uniqueIPs: visitStats.uniqueIPs,
+        topPaths: visitStats.topPaths,
+      },
       recentUsers: todayUsers
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .slice(0, 10)
@@ -107,6 +122,8 @@ export async function GET(req: NextRequest) {
           user: g.email ? g.email.replace(/(.{2})(.*)(@.*)/, '$1***$3') : '匿名用户',
           celeb: g.celebId || '-',
           success: g.success,
+          imageUrl: g.imageUrl || null,
+          hasUserImage: !!g.userImageUrl,
         })),
       evolutionLogs,
       celebrityStatus: celebrities.map(c => ({

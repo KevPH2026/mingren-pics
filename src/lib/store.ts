@@ -27,8 +27,10 @@ interface AppState {
   inviteCount: number;
   retryingVariant: number;  // 当前在尝试第几套prompt变体（-1=未重试）
   isRetryingFlag: boolean;  // 是否正在自动重试中
+  generationError: string | null;  // 生成错误信息（跨步骤显示）
 
   setStep: (step: AppStep) => void;
+  setGenerationError: (error: string | null) => void;
   setUserImage: (dataUrl: string, file: File) => void;
   selectCelebrity: (id: string) => void;
   selectScenario: (id: string) => void;
@@ -113,13 +115,15 @@ const initialState = {
   inviteCount: 0,
   retryingVariant: -1,
   isRetryingFlag: false,
+  generationError: null,
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
   ...initialState,
 
   setStep: (step) => set({ step }),
-  setUserImage: (dataUrl, file) => set({ userImage: dataUrl, userImageFile: file, step: 'select' }),
+  setGenerationError: (error) => set({ generationError: error }),
+  setUserImage: (dataUrl, file) => set({ userImage: dataUrl, userImageFile: file, step: 'select', generationError: null }),
   selectCelebrity: (id) => set({ selectedCelebrityId: id, step: 'scenario' }),
   selectScenario: (id) => set({ selectedScenarioId: id }),
   setGeneratedImages: (images) => set({ generatedImages: images, isGenerating: false, step: 'result' }),

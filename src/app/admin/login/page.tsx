@@ -18,6 +18,15 @@ export default function AdminLoginPage() {
       .finally(() => setChecking(false));
   }, [router]);
 
+  // Track visit
+  useEffect(() => {
+    fetch('/api/track-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: '/admin/login' }),
+    }).catch(() => {});
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

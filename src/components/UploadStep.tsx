@@ -175,7 +175,7 @@ export default function UploadStep() {
         <div className="w-full max-w-[320px] bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] rounded-xl p-4 flex flex-col items-center gap-3 comic-border-thin border-[#8b5cf6]">
           <div className="text-center">
             <p className="text-white font-black text-sm">🎁 注册免费体验</p>
-            <p className="text-white/80 text-[11px] font-bold mt-0.5">每天3次AI合影 · 邀请好友再+3次</p>
+            <p className="text-white/80 text-[11px] font-bold mt-0.5">每天6次AI合影 · 邀请好友再+3次</p>
           </div>
           <button
             onClick={() => setShowPaywall(true)}

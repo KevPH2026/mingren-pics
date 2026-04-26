@@ -7,12 +7,11 @@ import { celebrities, scenarios } from '@/lib/celebrities';
 const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
 export default function SelectScenario() {
-  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, canGenerate, getRemainingToday, isRegistered, fetchServerQuota, setRetryingVariant, setIsRetryingFlag } =
+  const { selectedCelebrityId, selectScenario, setStep, setGeneratedImages, userImage, setShowPaywall, canGenerate, getRemainingToday, isRegistered, fetchServerQuota, setRetryingVariant, setIsRetryingFlag, generationError, setGenerationError } =
     useAppStore();
   const celeb = celebrities.find((c) => c.id === selectedCelebrityId);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isRetrying, setIsRetrying] = useState(false); // 本地：控制按钮文案和重复提交
+  const [isRetrying, setIsRetrying] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
 
@@ -97,13 +96,13 @@ export default function SelectScenario() {
       if (!resp.ok) {
         const errMsg = data.error || '生成失败，请稍后重试';
         if (data.code === 'QUOTA_EXCEEDED') {
-          setError(errMsg);
+          setGenerationError(errMsg);
         } else if (data.code === 'CONCURRENCY_LIMIT') {
-          setError('当前生成请求较多，请稍后再试 🔄');
+          setGenerationError('当前生成请求较多，请稍后再试 🔄');
         } else if (data.code === 'RATE_LIMIT') {
-          setError('请求过于频繁，请1分钟后再试 ⏳');
+          setGenerationError('请求过于频繁，请1分钟后再试 ⏳');
         } else {
-          setError(errMsg);
+          setGenerationError(errMsg);
         }
         setStep('scenario');
         return;
@@ -111,6 +110,7 @@ export default function SelectScenario() {
 
       if (data.imageUrl) {
         setGeneratedImages([`/api/image-proxy?url=${encodeURIComponent(data.imageUrl)}`]);
+        setStep('result');
         return;
       }
 
@@ -149,7 +149,7 @@ export default function SelectScenario() {
         } else if (result.code === 'NETWORK_ERROR') {
           friendlyMsg = '网络波动，生成中断了 😤 重新试一次？';
         }
-        setError(friendlyMsg);
+        setGenerationError(friendlyMsg);
         setStep('scenario');
         setIsRetrying(false);
         setIsRetryingFlag(false);
@@ -157,11 +157,11 @@ export default function SelectScenario() {
         return;
       }
 
-      setError(`${celeb?.name || '该人物'} 暂时不可用`);
+      setGenerationError(`${celeb?.name || '该人物'} 暂时不可用`);
       setStep('scenario');
     } catch (err: any) {
       const msg = err?.name === 'TimeoutError' ? '生成超时，请稍后重试' : '网络异常，请重试';
-      setError(msg);
+      setGenerationError(msg);
       setStep('scenario');
     } finally {
       setLoading(false);
@@ -187,9 +187,12 @@ export default function SelectScenario() {
     if (!selectedCelebrityId) return;
 
     setLoading(true);
-    setError(null);
+    setGenerationError(null);
     setRetryingVariant(-1);
     pendingRetry.current = { scenarioId, customText };
+
+    // 先进入 generating 页面
+    setStep('generating');
 
     await doGenerate(scenarioId, 0, customText);
   };
@@ -198,7 +201,7 @@ export default function SelectScenario() {
   const handleRetry = () => {
     if (!pendingRetry.current) return;
     setLoading(true);
-    setError(null);
+    setGenerationError(null);
     setRetryingVariant(1);
     setIsRetryingFlag(true);
     setIsRetrying(true);
@@ -284,11 +287,11 @@ export default function SelectScenario() {
       </div>
 
       {/* 错误展示 + 重试按钮 */}
-      {error && (
+      {generationError && (
         <div className="flex flex-col gap-2">
           <div className="bg-[#e00] text-white comic-border-thin px-4 py-3 text-sm font-bold flex items-start gap-2 leading-snug">
             <span className="shrink-0 mt-0.5">⚠️</span>
-            <span className="whitespace-pre-line">{error}</span>
+            <span className="whitespace-pre-line">{generationError}</span>
           </div>
           {pendingRetry.current && (
             <button
@@ -317,7 +320,7 @@ export default function SelectScenario() {
       )}
 
       {/* 正在切换prompt变体中的提示 */}
-      {isRetrying && !error && (
+      {isRetrying && !generationError && (
         <div className="bg-[#0cf] text-black comic-border-thin px-4 py-3 text-sm font-bold flex items-center gap-2 animate-pulse">
           <span>🔄</span>
           <span>检测到合成失败，自动切换描述重试中...</span>
@@ -327,8 +330,8 @@ export default function SelectScenario() {
       {/* 剩余次数提示 */}
       <div className={`text-center text-xs font-bold py-1 ${remaining <= 0 ? 'text-[#e00]' : remaining === 1 ? 'text-[#f90]' : 'text-black/40'}`}>
         {remaining > 0
-          ? `今日剩余 ${remaining} 次免费${registered ? '' : ' · 注册后每天3次'}`
-          : `${registered ? '今日次数已用完 · 邀请好友+3次' : '免费次数已用完 · 注册后每天3次'}`
+          ? `今日剩余 ${remaining} 次免费${registered ? '' : ' · 注册后每天仍6次'}`
+          : `${registered ? '今日次数已用完 · 邀请好友+3次' : '免费次数已用完 · 注册后每天仍6次'}`
         }
       </div>
 

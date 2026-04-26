@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 const NOVA_BASE = 'https://www.novartspace.art';
 const getApiKey = () => process.env.NOVA_API_KEY || '';
-const FREE_LIMIT = 1;
+const FREE_LIMIT = 6;
 const REG_LIMIT = 3;
 const MAX_RETRIES = 3;
 const MAX_VARIANT_RETRIES = 3; // 最多尝试3套prompt变体
@@ -66,6 +66,16 @@ function analyzeError(errorMsg: string): string {
   return 'UNKNOWN';
 }
 
+// 带超时的 fetch
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs);
+    fetch(url, options)
+      .then(res => { clearTimeout(timer); resolve(res); })
+      .catch(err => { clearTimeout(timer); reject(err); });
+  });
+}
+
 // 提交生成任务
 async function submitGeneration(prompt: string, userImageBase64?: string): Promise<{taskId?: string, error?: string}> {
   const apiKey = getApiKey();
@@ -78,17 +88,16 @@ async function submitGeneration(prompt: string, userImageBase64?: string): Promi
   if (userImageBase64) reqBody.reference_images = [userImageBase64];
 
   try {
-    const submitResp = await fetch(`${NOVA_BASE}/v1/images/generations?async=1`, {
+    const submitResp = await fetchWithTimeout(`${NOVA_BASE}/v1/images/generations?async=1`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(reqBody),
-      signal: AbortSignal.timeout(15_000),
-    });
+    }, 15000); // 15秒超时
 
     if (!submitResp.ok) {
       const errText = await submitResp.text().catch(() => '');
       console.error('Submit error:', submitResp.status, errText.substring(0, 200));
-      return { error: `Submit failed: ${submitResp.status}` };
+      return { error: `Submit failed: ${submitResp.status} - ${errText.substring(0, 100)}` };
     }
 
     const submitData = await submitResp.json();
@@ -100,7 +109,7 @@ async function submitGeneration(prompt: string, userImageBase64?: string): Promi
     return { taskId: String(taskId) };
   } catch (e: any) {
     console.error('Submit exception:', e.message);
-    return { error: e.message };
+    return { error: e.message === 'TIMEOUT' ? '提交超时，请重试' : e.message };
   }
 }
 
@@ -109,13 +118,12 @@ async function pollTask(taskId: string): Promise<{status: string, imageUrl?: str
   const apiKey = getApiKey();
   
   try {
-    const pollResp = await fetch(`${NOVA_BASE}/v1/images/${taskId}`, {
+    const pollResp = await fetchWithTimeout(`${NOVA_BASE}/v1/images/${taskId}`, {
       headers: { 'Authorization': `Bearer ${apiKey}` },
-      signal: AbortSignal.timeout(10_000),
-    });
+    }, 10000); // 10秒超时
 
     if (!pollResp.ok) {
-      return { status: 'error', error: 'Poll failed' };
+      return { status: 'error', error: `Poll failed: ${pollResp.status}` };
     }
 
     const pollData = await pollResp.json();
@@ -140,12 +148,12 @@ async function pollTask(taskId: string): Promise<{status: string, imageUrl?: str
 
     return { status: 'pending' };
   } catch (e: any) {
-    return { status: 'error', error: e.message };
+    return { status: 'error', error: e.message === 'TIMEOUT' ? '轮询超时' : e.message };
   }
 }
 
 // 等待任务完成（带重试）
-async function waitForTask(taskId: string, maxWaitMs = 120000): Promise<{status: string, imageUrl?: string, error?: string}> {
+async function waitForTask(taskId: string, maxWaitMs = 30000): Promise<{status: string, imageUrl?: string, error?: string}> {
   const startTime = Date.now();
   
   while (Date.now() - startTime < maxWaitMs) {
@@ -202,7 +210,7 @@ async function tryGenerateWithEvolution(
         continue; // 继续下一次attempt
       }
       
-      // 提交成功，等待结果
+      // 提交成功，等待结果（30秒超时）
       const taskResult = await waitForTask(submitResult.taskId!);
       
       if (taskResult.status === 'success') {
@@ -263,7 +271,7 @@ export async function POST(req: NextRequest) {
     
     if (remaining <= 0) {
       return NextResponse.json({
-        error: registered ? '今日生成次数已用完，明天再来或邀请好友获取更多！' : '免费次数已用完，注册后每天3次',
+        error: registered ? '今日生成次数已用完，明天再来或邀请好友获取更多！' : '免费次数已用完，注册后每天仍6次',
         code: 'QUOTA_EXCEEDED',
       }, { status: 429 });
     }
@@ -301,7 +309,10 @@ export async function POST(req: NextRequest) {
       await trackGeneration({
         timestamp: new Date().toISOString(),
         email: auth.ok ? auth.email : undefined,
+        celebId: celebrityId || undefined,
         success: true,
+        imageUrl: result.imageUrl,
+        userImageUrl: userImageBase64 || undefined,
       });
 
       const newQuota = signQuota({ d: today, c: count + 1, b: bonus });

@@ -277,7 +277,7 @@ export default function PaywallModal() {
         <div className="relative w-full max-w-sm bg-white comic-border animate-bounce-in max-h-[90vh] overflow-y-auto">
           <div className="bg-green-500 text-white text-center py-4 border-b-4 border-black">
             <p className="text-2xl font-black">🎉 注册成功！</p>
-            <p className="text-xs font-bold mt-1 opacity-80">每天3次免费生成已解锁</p>
+            <p className="text-xs font-bold mt-1 opacity-80">每天6次免费生成已解锁</p>
           </div>
           <div className="p-5 flex flex-col gap-4">
             {link && (
@@ -601,7 +601,7 @@ export default function PaywallModal() {
           <div className="bg-[#8b5cf6]/10 border-2 border-[#8b5cf6] rounded-lg p-3">
             <p className="text-xs font-black mb-2">🎁 注册即享：</p>
             <div className="flex flex-col gap-1 text-xs font-bold text-black/70">
-              <span>✅ 每天3次免费生成</span>
+              <span>✅ 每天6次免费生成</span>
               <span>✅ AI修改指令（换装/换背景等）</span>
               <span>✅ 自定义场景描述</span>
               <span>✅ 30+ 国际名人库</span>

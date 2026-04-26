@@ -17,14 +17,16 @@ export interface CelebrityStatus {
 
 // 获取名人状态
 export async function getCelebrityStatus(celebrityId: string): Promise<CelebrityStatus | null> {
-  if (!isProd) return null; // 开发环境不启用
-  try {
-    const status = await kv.get<CelebrityStatus>(`${STATUS_PREFIX}${celebrityId}`);
-    return status;
-  } catch (e) {
-    console.error('getCelebrityStatus error:', e);
-    return null;
-  }
+  // KV 暂时不可用，返回 null 让所有名人可用
+  return null;
+  // if (!isProd) return null; // 开发环境不启用
+  // try {
+  //   const status = await kv.get<CelebrityStatus>(`${STATUS_PREFIX}${celebrityId}`);
+  //   return status;
+  // } catch (e) {
+  //   console.error('getCelebrityStatus error:', e);
+  //   return null;
+  // }
 }
 
 // 记录失败
