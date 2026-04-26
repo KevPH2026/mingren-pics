@@ -53,11 +53,7 @@ export async function POST(req: NextRequest) {
 
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      // Dev mode — only return code when NOT in production
-      if (isProd) {
-        console.error('RESEND_API_KEY not set in production!');
-        return NextResponse.json({ error: '邮件服务未配置' }, { status: 500 });
-      }
+      // No email service configured — return code directly for testing
       console.log(`[DEV] 验证码 for ${email}: ${code}`);
       return NextResponse.json({ ok: true, dev: true, code, signature });
     }
