@@ -508,7 +508,7 @@ function ShareCard({
             )}
             <div className="flex-1">
               <div className="text-black font-black text-sm">测测你的灵魂名人是谁</div>
-              <div className="text-black/50 text-xs mt-0.5 font-medium">上传自拍，扔骰子匹配</div>
+              <div className="text-black/50 text-xs mt-0.5 font-bold">上传自拍，扔骰子匹配</div>
             </div>
           </div>
         </div>
@@ -605,13 +605,15 @@ export default function SoulPage() {
       const maxAttempts = 20; // 最多轮询20次（约30秒）
       
       const progressTexts = [
-        "正在匹配灵魂人物...",
-        "AI正在构思画面...",
-        "正在绘制轮廓...",
-        "正在添加光影效果...",
-        "正在进行细节优化...",
-        "正在合成最终图像...",
-        "即将完成...",
+        "正在扫描你的灵魂频率... 🔮",
+        "AI正在翻阅名人录，寻找最配你的那位... 📖",
+        "哇，你的灵魂信号很强！再等等... ⚡",
+        "已经锁定目标，正在化妆准备合影... 💄",
+        "摄影师就位，灯光调好，马上开拍！ 📸",
+        "3... 2... 1... 咔嚓！✨",
+        "照片正在冲印中，马上就好... 🖨️",
+        "修图师正在P图，让你看起来更帅/美... 🎨",
+        "好了！你的灵魂合影即将出炉... 🔥",
       ];
 
       for (let i = 0; i < maxAttempts; i++) {
@@ -916,7 +918,7 @@ export default function SoulPage() {
             </motion.div>
           )}
 
-          {/* ===== 骰子滚动阶段 ===== */}
+          {/* ===== 掷骰子阶段 ===== */}
           {step === "rolling" && (
             <motion.div
               key="rolling"
@@ -931,7 +933,15 @@ export default function SoulPage() {
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                正在转动命运的齿轮...
+                宇宙正在为你挑选灵魂伴侣...
+              </motion.p>
+              <motion.p
+                className="mt-2 text-black/40 text-sm font-bold"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                可能是马斯克，也可能是孙悟空 🎭
               </motion.p>
             </motion.div>
           )}
@@ -958,53 +968,79 @@ export default function SoulPage() {
                 </div>
               </div>
 
-              {/* 渐进提示文案区域 */}
-              <div className="bg-white rounded-xl p-6 border-4 border-black comic-shadow mx-4 max-w-sm overflow-hidden">
+              {/* 趣味等待区域 */}
+              <div className="bg-white rounded-xl p-5 border-4 border-black comic-shadow mx-4 max-w-sm overflow-hidden">
                 <div className="text-center space-y-3">
-                  <div className="text-2xl">✨</div>
+                  {/* 动态emoji */}
+                  <motion.div 
+                    className="text-3xl"
+                    animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    {progress < 30 ? "🔮" : progress < 60 ? "📸" : progress < 90 ? "✨" : "🔥"}
+                  </motion.div>
                   
-                  {/* 滚动文案 - 渐进提示 */}
-                  <div className="h-20 overflow-hidden relative">
-                    <motion.div
-                      className="space-y-2"
-                      animate={{ y: [0, -80, -160, -240, -320, -400, -480, -560, -640, -720, -800, -880] }}
-                      transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
-                    >
-                      {matchedCeleb ? getProgressiveHints(matchedCeleb.id).map((text, i) => (
-                        <p key={i} className="text-black font-bold text-lg leading-relaxed h-20 flex items-center justify-center px-2">
-                          {text}
-                        </p>
-                      )) : (
-                        <p className="text-black font-bold text-lg leading-relaxed h-20 flex items-center justify-center">
-                          AI正在转动命运的齿轮...
-                        </p>
-                      )}
-                    </motion.div>
-                  </div>
+                  {/* 当前进度文案 */}
+                  <motion.p 
+                    key={progressText}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-black font-black text-lg leading-relaxed px-2"
+                  >
+                    {progressText}
+                  </motion.p>
                   
-                  <div className="text-black/40 text-sm font-medium">
-                    正在生成合影，请稍候...
-                  </div>
+                  {/* 趣味小字 */}
+                  <motion.p 
+                    className="text-black/50 text-sm font-bold"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    {progress < 50 
+                      ? "别走开，精彩马上开始..." 
+                      : progress < 80 
+                        ? "快了快了，你的朋友圈素材正在生成..." 
+                        : "3秒后揭晓！准备好截图..."}
+                  </motion.p>
                 </div>
               </div>
 
               {/* 进度条 - 真实进度 */}
               <div className="w-64 space-y-2">
-                <div className="flex justify-between text-sm font-bold text-black">
-                  <span>{progressText}</span>
+                <div className="flex justify-between text-sm font-black text-black">
                   <span>{progress}%</span>
+                  <span className="text-[#e00]">{progress < 100 ? "生成中..." : "完成！"}</span>
                 </div>
-                <div className="w-full h-4 bg-white rounded-full border-4 border-black overflow-hidden">
+                <div className="w-full h-5 bg-white rounded-full border-4 border-black overflow-hidden relative">
                   <motion.div
                     className="h-full bg-[#e00]"
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.3 }}
                   />
+                  {/* 进度条上的条纹动画 */}
+                  <motion.div
+                    className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%)] bg-[length:20px_20px]"
+                    animate={{ backgroundPosition: ["0px 0px", "20px 20px"] }}
+                    transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}
+                  />
                 </div>
-                <p className="text-center text-black/40 text-xs">
-                  预计等待 15-25 秒
-                </p>
+                <div className="flex justify-between text-xs font-bold text-black/40">
+                  <span>⏱️ 约{Math.max(30 - Math.floor(progress / 3), 3)}秒</span>
+                  <span>💾 自动保存中</span>
+                </div>
               </div>
+
+              {/* 底部趣味提示 */}
+              <motion.div 
+                className="text-center px-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2 }}
+              >
+                <p className="text-black/30 text-xs font-bold">
+                  💡 小提示：生成完成后可以长按保存图片，分享到朋友圈炫耀一下~
+                </p>
+              </motion.div>
             </motion.div>
           )}
 
@@ -1018,12 +1054,30 @@ export default function SoulPage() {
             >
               {/* 匹配结果 */}
               <div className="text-center space-y-2">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0cf] border-4 border-black comic-shadow">
-                  <span className="text-black text-sm font-black">⚙️ 命运齿轮停转</span>
-                </div>
-                <h2 className="text-2xl font-black">
-                  命运把你和 <span className="bg-[#ff0] px-2 py-1 comic-border inline-block">{matchedCeleb.name}</span> 连在一起
-                </h2>
+                <motion.div 
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0cf] border-4 border-black comic-shadow"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                >
+                  <span className="text-black text-sm font-black">🎯 灵魂匹配成功</span>
+                </motion.div>
+                <motion.h2 
+                  className="text-2xl font-black"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  你的灵魂人物是 <span className="bg-[#ff0] px-2 py-1 comic-border inline-block">{matchedCeleb.name}</span>
+                </motion.h2>
+                <motion.p 
+                  className="text-black/60 text-sm font-bold"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  {matchedCeleb.name}正在等你发朋友圈 📱
+                </motion.p>
               </div>
 
               {/* 分享卡片（可截图） */}
@@ -1041,19 +1095,29 @@ export default function SoulPage() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleDownload}
-                  className="py-3 rounded-xl bg-white border-4 border-black comic-shadow font-bold text-black flex items-center justify-center gap-2 hover:bg-[#f5e6d3] transition-colors"
+                  className="py-3 rounded-xl bg-[#ff0] border-4 border-black comic-shadow font-black text-black flex items-center justify-center gap-2 hover:bg-[#ff3] transition-colors"
                 >
                   <Download className="w-4 h-4" />
-                  保存图片
+                  保存到相册
                 </button>
                 <button
                   onClick={handleShare}
-                  className="py-3 rounded-xl bg-[#e00] border-4 border-black comic-shadow font-bold text-white flex items-center justify-center gap-2 hover:bg-[#c00] transition-colors"
+                  className="py-3 rounded-xl bg-[#0cf] border-4 border-black comic-shadow font-black text-black flex items-center justify-center gap-2 hover:bg-[#0df] transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
-                  分享
+                  炫耀一下
                 </button>
               </div>
+
+              {/* 分享引导 */}
+              <motion.p 
+                className="text-center text-black/50 text-sm font-bold"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+              >
+                💡 长按图片保存，或截图分享到朋友圈、小红书、抖音
+              </motion.p>
 
               <button
                 onClick={() => {
@@ -1061,10 +1125,10 @@ export default function SoulPage() {
                   setUserPhoto(null);
                   setGeneratedImage(null);
                 }}
-                className="w-full py-3 rounded-xl border-4 border-black/20 text-black/50 font-bold hover:border-black/40 hover:text-black flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-3 rounded-xl border-4 border-black/20 text-black/50 font-black hover:border-black/40 hover:text-black flex items-center justify-center gap-2 transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
-                再玩一次
+                🎲 再测一次（看看下一个灵魂人物是谁）
               </button>
             </motion.div>
           )}
