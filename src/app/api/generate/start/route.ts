@@ -359,7 +359,20 @@ export async function POST(req: NextRequest) {
     const taskResult = await waitForTask(submitResult.taskId!);
     
     if (taskResult.status === 'success') {
-      // 成功！
+      // 成功！下载并存档生成图片（仅后台）
+      let archivedResultImage: string | undefined;
+      try {
+        if (taskResult.imageUrl) {
+          const imgResp = await fetchWithTimeout(taskResult.imageUrl, {}, 10000);
+          if (imgResp.ok) {
+            const imgBuffer = await imgResp.arrayBuffer();
+            archivedResultImage = Buffer.from(imgBuffer).toString('base64');
+          }
+        }
+      } catch (e) {
+        console.error('[ARCHIVE] Failed to archive result image:', e);
+      }
+
       await trackGeneration({
         timestamp: new Date().toISOString(),
         email: auth.ok ? auth.email : undefined,
@@ -367,6 +380,8 @@ export async function POST(req: NextRequest) {
         success: true,
         imageUrl: taskResult.imageUrl,
         userImageUrl: userImageBase64 || undefined,
+        archivedUserImage: userImageBase64 || undefined,  // 存档原始照片
+        archivedResultImage,  // 存档生成结果
       });
 
       const newQuota = signQuota({ d: today, c: count + 1, b: bonus });

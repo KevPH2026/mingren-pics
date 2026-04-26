@@ -39,6 +39,9 @@ interface GenRecord {
   success: boolean;
   imageUrl?: string;
   userImageUrl?: string;
+  // 管理后台存档（不在用户端展示）
+  archivedUserImage?: string;  // 用户上传的原始照片 base64（仅后台）
+  archivedResultImage?: string; // 生成的合影照片 base64（仅后台）
 }
 
 // In-memory cache with hydration
