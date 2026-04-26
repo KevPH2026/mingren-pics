@@ -644,7 +644,8 @@ export default function SoulPage() {
       }
 
       if (imageUrl) {
-        setGeneratedImage(imageUrl);
+        // 通过image-proxy路由访问Nova图片（需要Authorization header）
+        setGeneratedImage(`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`);
       }
     } catch (err) {
       console.error("生成失败:", err);
