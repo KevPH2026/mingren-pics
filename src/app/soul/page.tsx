@@ -572,13 +572,16 @@ export default function SoulPage() {
     // 开始生成图片 - 使用 /api/generate/start 异步流程
     try {
       // 1. 提交生成任务
+      // 构建prompt（与主流程一致）
+      const prompt = `A realistic photo of a person taking a selfie with ${celeb.name}. ${cap}. Both looking at camera, natural lighting, casual setting, high quality portrait.`;
+      
       const startRes = await fetch("/api/generate/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          photoUrl: userPhoto,
+          prompt,
+          userImageBase64: userPhoto,
           celebrityId: celeb.id,
-          scene: cap,
         }),
       });
       const startData = await startRes.json();
@@ -829,9 +832,9 @@ export default function SoulPage() {
               {/* 标题 */}
               <div className="text-center space-y-2">
                 <h1 className="text-3xl font-black tracking-tight">
-                  <span className="bg-[#ff0] px-2 py-1 comic-border inline-block transform -rotate-1">⚙️ 转动命运齿轮</span>
+                  <span className="bg-[#ff0] px-2 py-1 comic-border inline-block transform -rotate-1">🔮 测测你的灵魂人物</span>
                 </h1>
-                <p className="text-black/60 text-sm font-medium">上传自拍，转动齿轮，看看命运把你和谁连在一起</p>
+                <p className="text-black/60 text-sm font-medium">上传自拍，看看你的灵魂人物是谁</p>
               </div>
 
               {/* 上传区域 */}
@@ -878,7 +881,7 @@ export default function SoulPage() {
                     : "bg-black/5 text-black/20 border-black/10 cursor-not-allowed"
                 }`}
               >
-                {userPhoto ? "⚙️ 转动齿轮！" : "先上传照片"}
+                {userPhoto ? "🔮 开始测试！" : "先上传照片"}
               </button>
             </motion.div>
           )}
