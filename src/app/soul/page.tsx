@@ -156,73 +156,179 @@ const defaultCaptions = [
   "非要跟我合影，我说行吧，但别抢我镜头。",
 ];
 
-// ========== 趣味冷知识库 ==========
-const funFacts: Record<string, string[]> = {
+// ========== 趣味通用文案 ==========
+const funMessages = [
+  "AI正在给这位名人补妆，他/她说不能素颜出镜...",
+  "摄影师正在调光，这位名人坚持要拍出最佳状态...",
+  "这位名人正在查你的朋友圈，想找个共同话题...",
+  "AI正在教这位名人摆pose，他/她学得有点慢...",
+  "这位名人正在回忆跟你的前世缘分，需要一点时间...",
+  "AI正在给这位名人P图，他/她说要把皱纹去掉...",
+  "这位名人正在跟AI讨价还价，想让自己看起来更年轻...",
+  "化妆师正在给这位名人做发型，他/她说要显脸小...",
+  "这位名人正在背台词，等下要跟你演对手戏...",
+  "AI正在检查这位名人的牙齿够不够白...",
+];
+
+// ========== 渐进提示文案库 ==========
+// 趣味和渐进提示穿插，形成悬念
+const progressiveHints: Record<string, string[]> = {
   jaychou: [
-    "周杰伦喝奶茶不加糖，他说'我已经够甜了'。",
-    "周杰伦的《晴天》在网易云有200万+评论，但他说自己很少看评论。",
-    "周杰伦曾经连续一周每天喝一杯奶茶，结果胖了5斤。",
+    "AI正在分析你的音乐品味...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人很喜欢喝奶茶...",
+    "AI正在给这位名人补妆...",
+    "他擅长把中文唱得很酷...",
+    "摄影师正在调光...",
+    "他最近好像在开演唱会...",
+    "这位名人正在查你的朋友圈...",
+    "他姓周，名字只有两个字...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——周杰伦",
   ],
   einstein: [
-    "爱因斯坦小时候说话很晚，父母以为他是哑巴。",
-    "爱因斯坦的头发不是故意弄乱的，他其实试过梳整齐，但很快就又乱了。",
-    "爱因斯坦说：'我没有什么特别的才能，我只是热情地好奇。'",
+    "AI正在计算你的智商...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人的头发总是很乱...",
+    "AI正在给这位名人补妆...",
+    "他提出了一个著名的能量公式...",
+    "摄影师正在调光...",
+    "他出生在德国，后来去了美国...",
+    "这位名人正在查你的朋友圈...",
+    "他的名字开头是E...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——爱因斯坦",
   ],
   newton: [
-    "牛顿据说因为苹果砸到头上发现万有引力，但其实他晚年痴迷炼金术。",
-    "牛顿曾经把针插进自己的眼睛来做光学实验。",
-    "牛顿活了84岁，但终身未婚。",
+    "AI正在分析重力对你的影响...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人被一个苹果砸过头...",
+    "AI正在给这位名人补妆...",
+    "他发现了三大运动定律...",
+    "摄影师正在调光...",
+    "他生活在17世纪的英国...",
+    "这位名人正在查你的朋友圈...",
+    "他的姓氏和一种水果有关...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——牛顿",
   ],
   davinci: [
-    "达芬奇是个左撇子，他的笔记都是镜像写的。",
-    "达芬奇画《蒙娜丽莎》用了16年，但他其实是个拖延症患者。",
-    "达芬奇设计过直升机、坦克和机器人的草图，比实际发明早了500年。",
+    "AI正在评估你的艺术天赋...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人画过一幅神秘的微笑...",
+    "AI正在给这位名人补妆...",
+    "他是个全才：画家、科学家、发明家...",
+    "摄影师正在调光...",
+    "他生活在文艺复兴时期的意大利...",
+    "这位名人正在查你的朋友圈...",
+    "他的名字里有'芬奇'...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——达芬奇",
   ],
   confucius: [
-    "孔子身高1.9米，在当时是个巨人。",
-    "孔子周游列国14年，其实是个'失业知识分子'在找工作。",
-    "孔子说'三人行必有我师'，但他的弟子有3000人。",
+    "AI正在分析你的道德水平...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人有很多弟子...",
+    "AI正在给这位名人补妆...",
+    "他说过'己所不欲勿施于人'...",
+    "摄影师正在调光...",
+    "他生活在春秋时期的中国...",
+    "这位名人正在查你的朋友圈...",
+    "他姓孔，被尊称为'子'...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——孔子",
   ],
   libai: [
-    "李白一生娶了4个老婆，但据说他最爱的还是酒。",
-    "李白曾经让高力士给他脱靴，因此得罪了权贵。",
-    "李白的诗现存约1000首，但据说他写了上万首，大部分都喝丢了。",
+    "AI正在检测你的诗性...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人很爱喝酒...",
+    "AI正在给这位名人补妆...",
+    "他被称为'诗仙'...",
+    "摄影师正在调光...",
+    "他生活在唐朝...",
+    "这位名人正在查你的朋友圈...",
+    "他姓李，名字里有个'白'...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——李白",
   ],
   qinshihuang: [
-    "秦始皇每天批阅的竹简重达120斤，是真正的'996鼻祖'。",
-    "秦始皇派徐福找长生不老药，结果徐福一去不复返。",
-    "秦始皇陵的兵马俑每个面孔都不一样，但没有一个戴眼镜的。",
+    "AI正在评估你的帝王之气...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人统一了六国...",
+    "AI正在给这位名人补妆...",
+    "他修了一条很长的城墙...",
+    "摄影师正在调光...",
+    "他派人造了很多兵马俑...",
+    "这位名人正在查你的朋友圈...",
+    "他是中国历史上第一个皇帝...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——秦始皇",
   ],
   wuzetian: [
-    "武则天是中国历史上唯一的女皇帝，但她即位时已经67岁了。",
-    "武则天给自己造了18个新字，但大部分都没流传下来。",
-    "武则天晚年养了很多'面首'，她说'朕的快乐你们不懂'。",
+    "AI正在检测你的女皇气场...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人是中国唯一的女皇帝...",
+    "AI正在给这位名人补妆...",
+    "她给自己造了很多新字...",
+    "摄影师正在调光...",
+    "她生活在唐朝...",
+    "这位名人正在查你的朋友圈...",
+    "她姓武...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——武则天",
   ],
   zhugeliang: [
-    "诸葛亮发明过木牛流马，但其实就是独轮车。",
-    "诸葛亮六出祁山都没成功，但他在五丈原病逝时只有54岁。",
-    "诸葛亮的羽毛扇从不离手，据说是他老婆黄月英送的定情信物。",
+    "AI正在计算你的谋略指数...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人有一把羽毛扇...",
+    "AI正在给这位名人补妆...",
+    "他写过《出师表》...",
+    "摄影师正在调光...",
+    "他是三国时期蜀国的军师...",
+    "这位名人正在查你的朋友圈...",
+    "他复姓诸葛...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——诸葛亮",
   ],
   caocao: [
-    "曹操小时候是个'问题少年'，他叔叔经常向他爸告状。",
-    "曹操写诗一流，打仗一流，但选继承人不怎么样。",
-    "曹操说'宁教我负天下人'，但其实他对部下很好。",
+    "AI正在评估你的枭雄气质...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "这位名人说过'宁教我负天下人'...",
+    "AI正在给这位名人补妆...",
+    "他写诗很厉害，打仗也很厉害...",
+    "摄影师正在调光...",
+    "他是三国时期魏国的人物...",
+    "这位名人正在查你的朋友圈...",
+    "他姓曹...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——曹操",
   ],
   default: [
-    "这位名人正在化妆间补妆，马上就来跟你合影！",
-    "这位名人的经纪人正在确认行程，稍等片刻...",
-    "AI正在教这位名人摆pose，他/她学得有点慢...",
-    "这位名人正在回忆跟你的前世缘分，需要一点时间...",
-    "摄影师正在调光，这位名人坚持要拍出最佳状态...",
-    "这位名人正在查你的朋友圈，想找个共同话题...",
-    "AI正在给这位名人P图，他/她说不能素颜出镜...",
-    "这位名人正在跟AI讨价还价，想让自己看起来更年轻...",
+    "AI正在分析你的气质...",
+    "这位名人正在赶来...",
+    "他/她和你有一些共同点...",
+    "他/她最近很火...",
+    "AI正在给这位名人补妆...",
+    "摄影师正在调光...",
+    "这位名人正在查你的朋友圈...",
+    "他/她的名字你一定能猜到...",
+    "AI正在检查这位名人的牙齿...",
+    "命运齿轮停转——揭晓答案",
   ],
 };
 
-function getFunFact(celebId: string): string {
-  const facts = funFacts[celebId] || funFacts.default;
-  return facts[Math.floor(Math.random() * facts.length)];
+function getProgressiveHints(celebId: string): string[] {
+  return progressiveHints[celebId] || progressiveHints.default;
 }
 
 function getSoulCaption(celebId: string): string {
@@ -446,11 +552,9 @@ export default function SoulPage() {
     // 智能匹配（但不显示）
     const celeb = smartMatchCelebrity();
     const cap = getSoulCaption(celeb.id);
-    const fact = getFunFact(celeb.id);
 
     setMatchedCeleb(celeb);
     setCaption(cap);
-    setFunFact(fact);
     setStep("generating");
 
     // 生成二维码
@@ -465,9 +569,10 @@ export default function SoulPage() {
       console.error("二维码生成失败:", e);
     }
 
-    // 开始生成图片
+    // 开始生成图片 - 使用 /api/generate/start 异步流程
     try {
-      const res = await fetch("/api/generate", {
+      // 1. 提交生成任务
+      const startRes = await fetch("/api/generate/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -476,9 +581,38 @@ export default function SoulPage() {
           scene: cap,
         }),
       });
-      const data = await res.json();
-      if (data.imageUrl) {
-        setGeneratedImage(data.imageUrl);
+      const startData = await startRes.json();
+
+      if (startData.error || !startData.taskId) {
+        console.error("提交任务失败:", startData.error);
+        setStep("result");
+        return;
+      }
+
+      // 2. 轮询任务状态
+      const taskId = startData.taskId;
+      let imageUrl = null;
+      const maxAttempts = 30; // 最多轮询30次（约60秒）
+
+      for (let i = 0; i < maxAttempts; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // 每2秒轮询一次
+
+        const pollRes = await fetch(`/api/generate/poll?taskId=${taskId}`);
+        const pollData = await pollRes.json();
+
+        if (pollData.status === "success" && pollData.imageUrl) {
+          imageUrl = pollData.imageUrl;
+          break;
+        }
+        if (pollData.status === "failed" || pollData.status === "error") {
+          console.error("生成失败:", pollData.error);
+          break;
+        }
+        // 继续轮询...
+      }
+
+      if (imageUrl) {
+        setGeneratedImage(imageUrl);
       }
     } catch (err) {
       console.error("生成失败:", err);
@@ -791,30 +925,27 @@ export default function SoulPage() {
                 </div>
               </div>
 
-              {/* 滚动文案区域 */}
+              {/* 渐进提示文案区域 */}
               <div className="bg-white rounded-xl p-6 border-4 border-black comic-shadow mx-4 max-w-sm overflow-hidden">
                 <div className="text-center space-y-3">
                   <div className="text-2xl">✨</div>
                   
-                  {/* 滚动文案 */}
+                  {/* 滚动文案 - 渐进提示 */}
                   <div className="h-20 overflow-hidden relative">
                     <motion.div
                       className="space-y-2"
-                      animate={{ y: [0, -80, -160, -240, -320, 0] }}
-                      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                      animate={{ y: [0, -80, -160, -240, -320, -400, -480, -560, -640, -720, -800, -880] }}
+                      transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
                     >
-                      {[
-                        funFact,
-                        "AI正在给这位名人补妆，他/她说不能素颜出镜...",
-                        "摄影师正在调光，这位名人坚持要拍出最佳状态...",
-                        "这位名人正在查你的朋友圈，想找个共同话题...",
-                        "AI正在教这位名人摆pose，他/她学得有点慢...",
-                        "这位名人正在回忆跟你的前世缘分，需要一点时间...",
-                      ].map((text, i) => (
-                        <p key={i} className="text-black font-bold text-lg leading-relaxed h-20 flex items-center justify-center">
+                      {matchedCeleb ? getProgressiveHints(matchedCeleb.id).map((text, i) => (
+                        <p key={i} className="text-black font-bold text-lg leading-relaxed h-20 flex items-center justify-center px-2">
                           {text}
                         </p>
-                      ))}
+                      )) : (
+                        <p className="text-black font-bold text-lg leading-relaxed h-20 flex items-center justify-center">
+                          AI正在转动命运的齿轮...
+                        </p>
+                      )}
                     </motion.div>
                   </div>
                   
