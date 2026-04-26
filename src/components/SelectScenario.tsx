@@ -33,10 +33,10 @@ export default function SelectScenario() {
     const refPrompt = variants[variantIndex] || celeb.referencePrompt;
 
     if (customText && customText.trim()) {
-      return `Create a photorealistic photograph: ${customText.trim()}. The photo features two real people standing together. Person A looks exactly like this: ${refPrompt}. Generate their face with highly recognizable distinctive features. Person B is from the reference image — preserve their exact face, identity and appearance. Both people should look equally real and natural. Natural lighting, authentic candid moment, high quality DSLR photo.`;
+      return `A photorealistic photograph: ${customText.trim()}. Two people standing together. On the left is ${refPrompt}. On the right is a person from the reference image with their exact face preserved. Both look natural and real. Natural lighting, candid moment, high quality photo.`;
     }
     const scenario = scenarios.find((s) => s.id === scenarioId) || scenarios[2];
-    return `Create a photorealistic photograph of two real people ${scenario.prompt}. Person A looks exactly like this: ${refPrompt}. Generate their face with highly recognizable distinctive features. Person B is from the reference image — preserve their exact face, identity and appearance. Both people should look equally real and natural. Natural lighting, authentic candid moment, DSLR quality.`;
+    return `A photorealistic photograph of two people ${scenario.prompt}. On the left is ${refPrompt}. On the right is a person from the reference image with their exact face preserved. Both look natural and real. Natural lighting, candid moment, high quality photo.`;
   }, [celeb]);
 
   // 轮询任务结果
