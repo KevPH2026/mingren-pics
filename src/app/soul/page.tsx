@@ -605,15 +605,16 @@ export default function SoulPage() {
       const maxAttempts = 20; // 最多轮询20次（约30秒）
       
       const progressTexts = [
-        "正在扫描你的灵魂频率... 🔮",
-        "AI正在翻阅名人录，寻找最配你的那位... 📖",
-        "哇，你的灵魂信号很强！再等等... ⚡",
-        "已经锁定目标，正在化妆准备合影... 💄",
-        "摄影师就位，灯光调好，马上开拍！ 📸",
-        "3... 2... 1... 咔嚓！✨",
-        "照片正在冲印中，马上就好... 🖨️",
-        "修图师正在P图，让你看起来更帅/美... 🎨",
-        "好了！你的灵魂合影即将出炉... 🔥",
+        "🔮 正在读取你的灵魂DNA...",
+        "✨ 检测到强烈的明星磁场！",
+        "📡 向宇宙发送匹配信号...",
+        "💫 有名人回应了！正在确认身份...",
+        "🎭 对方正在化妆、造型、挑衣服...",
+        "📸 摄影师已就位，灯光OK——",
+        "🎬 3... 2... 1... 咔嚓！",
+        "🖼️ 照片正在暗房显影...",
+        "✨ 最后润色：让你看起来更上镜...",
+        "🔥 好了！你的专属合影即将揭晓——",
       ];
 
       for (let i = 0; i < maxAttempts; i++) {
@@ -864,9 +865,9 @@ export default function SoulPage() {
               {/* 标题 */}
               <div className="text-center space-y-2">
                 <h1 className="text-3xl font-black tracking-tight">
-                  <span className="bg-[#ff0] px-2 py-1 comic-border inline-block transform -rotate-1">🔮 测测你的灵魂人物</span>
+                  <span className="bg-[#ff0] px-2 py-1 comic-border inline-block transform -rotate-1">🔮 测测你的灵魂伴侣</span>
                 </h1>
-                <p className="text-black/60 text-sm font-medium">上传自拍，看看你的灵魂人物是谁</p>
+                <p className="text-black/60 text-sm font-medium">上传自拍，看看你的灵魂伴侣是谁</p>
               </div>
 
               {/* 上传区域 */}
@@ -913,7 +914,7 @@ export default function SoulPage() {
                     : "bg-black/5 text-black/20 border-black/10 cursor-not-allowed"
                 }`}
               >
-                {userPhoto ? "🔮 开始测试！" : "先上传照片"}
+                {userPhoto ? "🔮 开始匹配！" : "先上传照片"}
               </button>
             </motion.div>
           )}
@@ -990,17 +991,23 @@ export default function SoulPage() {
                     {progressText}
                   </motion.p>
                   
-                  {/* 趣味小字 */}
+                  {/* 趣味小字 - 轮播 */}
                   <motion.p 
                     className="text-black/50 text-sm font-bold"
                     animate={{ opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    {progress < 50 
-                      ? "别走开，精彩马上开始..." 
-                      : progress < 80 
-                        ? "快了快了，你的朋友圈素材正在生成..." 
-                        : "3秒后揭晓！准备好截图..."}
+                    {progress < 20 
+                      ? "别走开，你的灵魂伴侣马上现身 ✨"
+                      : progress < 40 
+                        ? "猜猜会是谁？提示：不是隔壁老王 😏"
+                        : progress < 60 
+                          ? "对方已经在路上了，再等等... 🚗"
+                          : progress < 80 
+                            ? "朋友圈素材正在生成中，准备好接收点赞 👍"
+                            : progress < 95 
+                              ? "3秒后揭晓！准备好截图... 📱"
+                              : "来了来了！🎉"}
                   </motion.p>
                 </div>
               </div>
@@ -1032,13 +1039,16 @@ export default function SoulPage() {
 
               {/* 底部趣味提示 */}
               <motion.div 
-                className="text-center px-4"
+                className="text-center px-4 space-y-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 2 }}
               >
                 <p className="text-black/30 text-xs font-bold">
-                  💡 小提示：生成完成后可以长按保存图片，分享到朋友圈炫耀一下~
+                  💡 生成完成后长按保存，发到朋友圈收割点赞~
+                </p>
+                <p className="text-black/20 text-xs font-bold">
+                  已有 12,847 人测出了自己的灵魂人物
                 </p>
               </motion.div>
             </motion.div>
@@ -1068,7 +1078,7 @@ export default function SoulPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  你的灵魂人物是 <span className="bg-[#ff0] px-2 py-1 comic-border inline-block">{matchedCeleb.name}</span>
+                  你的灵魂伴侣是 <span className="bg-[#ff0] px-2 py-1 comic-border inline-block">{matchedCeleb.name}</span>
                 </motion.h2>
                 <motion.p 
                   className="text-black/60 text-sm font-bold"
@@ -1076,7 +1086,7 @@ export default function SoulPage() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 }}
                 >
-                  {matchedCeleb.name}正在等你发朋友圈 📱
+                  {matchedCeleb.name}已经在等你发朋友圈了 📱
                 </motion.p>
               </div>
 

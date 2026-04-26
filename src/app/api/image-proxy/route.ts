@@ -31,6 +31,14 @@ export async function GET(req: NextRequest) {
 
     const contentType = resp.headers.get('content-type') || '';
 
+    // Common CORS headers so the proxied image can be used in <img crossOrigin="anonymous"> and canvas
+    const corsHeaders: Record<string, string> = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Authorization',
+      'Cache-Control': 'public, max-age=86400',
+    };
+
     // If response is JSON (e.g. base64 encoded), extract the image data
     if (contentType.includes('application/json')) {
       const json = await resp.json();
@@ -42,7 +50,7 @@ export async function GET(req: NextRequest) {
         if (match) {
           const buf = Buffer.from(match[2], 'base64');
           return new NextResponse(buf, {
-            headers: { 'Content-Type': match[1], 'Cache-Control': 'public, max-age=86400' },
+            headers: { 'Content-Type': match[1], ...corsHeaders },
           });
         }
       }
@@ -50,7 +58,7 @@ export async function GET(req: NextRequest) {
         // raw base64
         const buf = Buffer.from(b64, 'base64');
         return new NextResponse(buf, {
-          headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' },
+          headers: { 'Content-Type': 'image/png', ...corsHeaders },
         });
       }
       // It's a URL - redirect or fetch again
@@ -59,7 +67,7 @@ export async function GET(req: NextRequest) {
         const imgBuf = await imgResp.arrayBuffer();
         const imgCt = imgResp.headers.get('content-type') || 'image/png';
         return new NextResponse(imgBuf, {
-          headers: { 'Content-Type': imgCt, 'Cache-Control': 'public, max-age=86400' },
+          headers: { 'Content-Type': imgCt, ...corsHeaders },
         });
       }
       console.error('Unexpected JSON response from Nova file URL:', JSON.stringify(json).substring(0, 300));
@@ -71,7 +79,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(body, {
       headers: {
         'Content-Type': contentType || 'image/png',
-        'Cache-Control': 'public, max-age=86400',
+        ...corsHeaders,
       },
     });
   } catch (err: any) {
