@@ -522,6 +522,8 @@ export default function SoulPage() {
   const [step, setStep] = useState<"upload" | "rolling" | "generating" | "result">("upload");
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [matchedCeleb, setMatchedCeleb] = useState<Celebrity | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [progressText, setProgressText] = useState("正在初始化...");
   const [caption, setCaption] = useState<string>("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -555,6 +557,8 @@ export default function SoulPage() {
 
     setMatchedCeleb(celeb);
     setCaption(cap);
+    setProgress(5);
+    setProgressText("正在连接AI服务器...");
     setStep("generating");
 
     // 生成二维码
@@ -572,7 +576,9 @@ export default function SoulPage() {
     // 开始生成图片 - 使用 /api/generate/start 异步流程
     try {
       // 1. 提交生成任务
-      // 构建prompt（与主流程一致）
+      setProgress(10);
+      setProgressText("正在分析你的照片...");
+      
       const prompt = `A realistic photo of a person taking a selfie with ${celeb.name}. ${cap}. Both looking at camera, natural lighting, casual setting, high quality portrait.`;
       
       const startRes = await fetch("/api/generate/start", {
@@ -588,6 +594,7 @@ export default function SoulPage() {
 
       if (startData.error || !startData.taskId) {
         console.error("提交任务失败:", startData.error);
+        setProgress(0);
         setStep("result");
         return;
       }
@@ -595,20 +602,42 @@ export default function SoulPage() {
       // 2. 轮询任务状态
       const taskId = startData.taskId;
       let imageUrl = null;
-      const maxAttempts = 30; // 最多轮询30次（约60秒）
+      const maxAttempts = 20; // 最多轮询20次（约30秒）
+      
+      const progressTexts = [
+        "正在匹配灵魂人物...",
+        "AI正在构思画面...",
+        "正在绘制轮廓...",
+        "正在添加光影效果...",
+        "正在进行细节优化...",
+        "正在合成最终图像...",
+        "即将完成...",
+      ];
 
       for (let i = 0; i < maxAttempts; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // 每2秒轮询一次
+        await new Promise((resolve) => setTimeout(resolve, 1500)); // 每1.5秒轮询一次
+        
+        // 更新进度
+        const newProgress = Math.min(15 + Math.floor((i / maxAttempts) * 75), 95);
+        setProgress(newProgress);
+        if (i < progressTexts.length) {
+          setProgressText(progressTexts[i]);
+        }
 
         const pollRes = await fetch(`/api/generate/poll?taskId=${taskId}`);
         const pollData = await pollRes.json();
+        
+        const status = (pollData.status || "").toLowerCase();
 
-        if (pollData.status === "success" && pollData.imageUrl) {
-          imageUrl = pollData.imageUrl;
+        if ((status === "success" || status === "completed") && (pollData.imageUrl || pollData.images?.[0])) {
+          imageUrl = pollData.imageUrl || pollData.images[0];
+          setProgress(100);
+          setProgressText("生成完成！");
           break;
         }
-        if (pollData.status === "failed" || pollData.status === "error") {
+        if (status === "failed" || status === "error") {
           console.error("生成失败:", pollData.error);
+          setProgressText("生成失败: " + (pollData.error || "未知错误"));
           break;
         }
         // 继续轮询...
@@ -619,8 +648,8 @@ export default function SoulPage() {
       }
     } catch (err) {
       console.error("生成失败:", err);
+      setProgressText("网络异常，请重试");
     } finally {
-      // 图片生成完成后显示结果
       setStep("result");
     }
   }, [userPhoto]);
@@ -958,14 +987,22 @@ export default function SoulPage() {
                 </div>
               </div>
 
-              {/* 进度条 */}
-              <div className="w-64 h-4 bg-white rounded-full border-4 border-black overflow-hidden">
-                <motion.div
-                  className="h-full bg-[#e00]"
-                  initial={{ width: "0%" }}
-                  animate={{ width: ["0%", "30%", "60%", "90%", "100%"] }}
-                  transition={{ duration: 8, ease: "easeInOut" }}
-                />
+              {/* 进度条 - 真实进度 */}
+              <div className="w-64 space-y-2">
+                <div className="flex justify-between text-sm font-bold text-black">
+                  <span>{progressText}</span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="w-full h-4 bg-white rounded-full border-4 border-black overflow-hidden">
+                  <motion.div
+                    className="h-full bg-[#e00]"
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+                <p className="text-center text-black/40 text-xs">
+                  预计等待 15-25 秒
+                </p>
               </div>
             </motion.div>
           )}
