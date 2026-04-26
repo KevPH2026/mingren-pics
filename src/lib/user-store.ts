@@ -1,6 +1,20 @@
-// Pure REST API approach — no SDK needed, works in all environments
-const EDGE_CONFIG_ID = process.env.EDGE_CONFIG_ID || '';
-const VERCEL_TOKEN = process.env.VERCEL_TOKEN || '';
+import { kv } from '@vercel/kv';
+import { createHmac } from 'crypto';
+
+const SECRET = process.env.AUTH_SECRET || 'mingren-pics-dev-secret-2026';
+
+export function hashEmail(email: string): string {
+  return createHmac('sha256', SECRET).update(email.toLowerCase()).digest('hex').slice(0, 12);
+}
+
+export function generateReferralCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
 
 const KEYS = {
   users: 'users_v1',
@@ -35,49 +49,32 @@ let cache: {
   hydrated: false,
 };
 
-async function edgeConfigGet<T>(key: string): Promise<T | undefined> {
-  if (!EDGE_CONFIG_ID || !VERCEL_TOKEN) return undefined;
+async function getKVData<T>(key: string): Promise<T | undefined> {
   try {
-    const resp = await fetch(`https://api.vercel.com/v1/edge-config/${EDGE_CONFIG_ID}/item/${key}`, {
-      headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!resp.ok) return undefined;
-    const data = await resp.json();
-    return data?.value as T;
+    const data = await kv.get<T>(key);
+    return data ?? undefined;
   } catch (e) {
-    console.error('EdgeConfig get error:', e);
+    console.error('KV get error:', e);
     return undefined;
   }
 }
 
-async function edgeConfigSet(key: string, value: unknown): Promise<void> {
-  if (!EDGE_CONFIG_ID || !VERCEL_TOKEN) return;
+async function setKVData<T>(key: string, value: T): Promise<void> {
   try {
-    await fetch(`https://api.vercel.com/v1/edge-config/${EDGE_CONFIG_ID}/items`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${VERCEL_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: [{ operation: 'upsert', key, value }]
-      }),
-      signal: AbortSignal.timeout(5000),
-    });
+    await kv.set(key, value);
   } catch (e) {
-    console.error('EdgeConfig set error:', e);
+    console.error('KV set error:', e);
   }
 }
 
 async function ensureHydrated() {
   if (cache.hydrated) return;
   try {
-    const usersData = await edgeConfigGet<Record<string, UserRecord>>(KEYS.users);
+    const usersData = await getKVData<Record<string, UserRecord>>(KEYS.users);
     if (usersData) {
       cache.users = new Map(Object.entries(usersData));
     }
-    const genData = await edgeConfigGet<GenRecord[]>(KEYS.generations);
+    const genData = await getKVData<GenRecord[]>(KEYS.generations);
     if (genData) {
       cache.generations = genData;
     }
@@ -90,12 +87,12 @@ async function ensureHydrated() {
 
 async function persistUsers() {
   const obj = Object.fromEntries(cache.users.entries());
-  await edgeConfigSet(KEYS.users, obj);
+  await setKVData(KEYS.users, obj);
 }
 
 async function persistGenerations() {
   const trimmed = cache.generations.slice(-500);
-  await edgeConfigSet(KEYS.generations, trimmed);
+  await setKVData(KEYS.generations, trimmed);
 }
 
 // User operations
