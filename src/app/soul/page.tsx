@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, Dice5, Download, Share2, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import QRCode from "qrcode";
-import html2canvas from "html2canvas";
+import type html2canvasType from "html2canvas";
 import { celebrities } from "@/lib/celebrities";
 import type { Celebrity } from "@/lib/celebrities";
 
@@ -436,6 +436,8 @@ export default function SoulPage() {
     if (!card) return;
 
     try {
+      // 动态导入 html2canvas
+      const html2canvas = (await import("html2canvas")).default;
       const canvas = await html2canvas(card, {
         scale: 2,
         backgroundColor: null,
