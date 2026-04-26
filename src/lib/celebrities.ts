@@ -30,7 +30,7 @@ export const celebrities: Celebrity[] = [
     nameEn: 'Jay Chou',
     category: 'cn',
     tags: ['歌手', '华语'],
-    referencePrompt: 'Asian man in his 40s with sharp defined jawline, narrow expressive eyes, short black hair styled with bangs, often wearing a hoodie or casual jacket, cool confident demeanor',
+    referencePrompt: 'Asian man with narrow small eyes, prominent nose bridge, thin lips, angular jawline, short black hair with thick bangs covering forehead, often wearing a hoodie or baseball cap, cool confident demeanor with a slight smirk',
     avatarUrl: '🎹',
     hotness: 96,
   },
