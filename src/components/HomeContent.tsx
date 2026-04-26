@@ -58,7 +58,6 @@ export default function HomeContent() {
       <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-[180px] overflow-hidden pointer-events-none z-0">
         <div className="flex flex-col gap-4 animate-scroll-up" style={{ animationDuration: '40s' }}>
           {[
-            { celeb: 'Taylor Swift', img: '/pixelated/taylor-swift.png', bg: '#ff6b9d' },
             { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4' },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#a29bfe' },
@@ -67,7 +66,6 @@ export default function HomeContent() {
             { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393' },
             { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e' },
           ].concat([
-            { celeb: 'Taylor Swift', img: '/pixelated/taylor-swift.png', bg: '#ff6b9d' },
             { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4' },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#a29bfe' },
@@ -101,16 +99,14 @@ export default function HomeContent() {
             { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9' },
             { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe' },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
-            { celeb: 'Taylor Swift', img: '/pixelated/taylor-swift.png', bg: '#ff6b9d' },
-          ].concat([
+            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
+          ]).concat([
             { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393' },
-            { celeb: 'C罗', img: '/pixelated/ronaldo.png', bg: '#0984e3' },
             { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e' },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7' },
             { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9' },
             { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe' },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
-            { celeb: 'Taylor Swift', img: '/pixelated/taylor-swift.png', bg: '#ff6b9d' },
           ]).map((item, i) => (
             <div key={i} className="flex-shrink-0 w-[150px] rounded-lg comic-border-thin overflow-hidden mx-auto">
               <div className="w-full aspect-[3/4] relative" style={{ backgroundColor: item.bg }}>
@@ -155,7 +151,6 @@ export default function HomeContent() {
       <div className="lg:hidden flex-shrink-0 relative z-10">
         <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {[
-            { celeb: 'Taylor Swift', img: '/pixelated/taylor-swift.png', bg: '#ff6b9d' },
             { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4' },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7' },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },

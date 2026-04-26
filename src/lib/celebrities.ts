@@ -86,16 +86,6 @@ export const celebrities: Celebrity[] = [
 
   // ========== 好莱坞 ==========
   {
-    id: 'taylor-swift',
-    name: 'Taylor Swift (泰勒·斯威夫特)',
-    nameEn: 'Taylor Swift',
-    category: 'hollywood',
-    tags: ['歌手', '欧美'],
-    referencePrompt: 'tall slender woman with signature blonde wavy hair, piercing blue eyes, sharp jawline, bold red lipstick, wearing a sparkly sequin dress or elegant outfit, confident glamorous presence',
-    avatarUrl: '💃',
-    hotness: 99,
-  },
-  {
     id: 'brad-pitt',
     name: 'Brad Pitt (布拉德·皮特)',
     nameEn: 'Brad Pitt',

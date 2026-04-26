@@ -37,7 +37,6 @@ function optimizePrompt(originalPrompt: string, errorType: string, attempt: numb
     // 添加更安全的描述
     optimized = optimized.replace(/Kim Taehyung|V |BTS /gi, 'a young Korean man ');
     optimized = optimized.replace(/Elon Musk|马斯克/gi, 'a tech entrepreneur ');
-    optimized = optimized.replace(/Taylor Swift|泰勒/gi, 'a blonde female singer ');
   }
   
   // 每次重试添加一些变化
