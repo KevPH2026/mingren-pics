@@ -124,6 +124,8 @@ export async function GET(req: NextRequest) {
           success: g.success,
           imageUrl: g.imageUrl || null,
           hasUserImage: !!g.userImageUrl,
+          hasArchivedUserImage: !!g.archivedUserImage,
+          hasArchivedResultImage: !!g.archivedResultImage,
         })),
       evolutionLogs,
       celebrityStatus: celebrities.map(c => ({
