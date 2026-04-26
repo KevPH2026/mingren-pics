@@ -156,6 +156,75 @@ const defaultCaptions = [
   "非要跟我合影，我说行吧，但别抢我镜头。",
 ];
 
+// ========== 趣味冷知识库 ==========
+const funFacts: Record<string, string[]> = {
+  jaychou: [
+    "周杰伦喝奶茶不加糖，他说'我已经够甜了'。",
+    "周杰伦的《晴天》在网易云有200万+评论，但他说自己很少看评论。",
+    "周杰伦曾经连续一周每天喝一杯奶茶，结果胖了5斤。",
+  ],
+  einstein: [
+    "爱因斯坦小时候说话很晚，父母以为他是哑巴。",
+    "爱因斯坦的头发不是故意弄乱的，他其实试过梳整齐，但很快就又乱了。",
+    "爱因斯坦说：'我没有什么特别的才能，我只是热情地好奇。'",
+  ],
+  newton: [
+    "牛顿据说因为苹果砸到头上发现万有引力，但其实他晚年痴迷炼金术。",
+    "牛顿曾经把针插进自己的眼睛来做光学实验。",
+    "牛顿活了84岁，但终身未婚。",
+  ],
+  davinci: [
+    "达芬奇是个左撇子，他的笔记都是镜像写的。",
+    "达芬奇画《蒙娜丽莎》用了16年，但他其实是个拖延症患者。",
+    "达芬奇设计过直升机、坦克和机器人的草图，比实际发明早了500年。",
+  ],
+  confucius: [
+    "孔子身高1.9米，在当时是个巨人。",
+    "孔子周游列国14年，其实是个'失业知识分子'在找工作。",
+    "孔子说'三人行必有我师'，但他的弟子有3000人。",
+  ],
+  libai: [
+    "李白一生娶了4个老婆，但据说他最爱的还是酒。",
+    "李白曾经让高力士给他脱靴，因此得罪了权贵。",
+    "李白的诗现存约1000首，但据说他写了上万首，大部分都喝丢了。",
+  ],
+  qinshihuang: [
+    "秦始皇每天批阅的竹简重达120斤，是真正的'996鼻祖'。",
+    "秦始皇派徐福找长生不老药，结果徐福一去不复返。",
+    "秦始皇陵的兵马俑每个面孔都不一样，但没有一个戴眼镜的。",
+  ],
+  wuzetian: [
+    "武则天是中国历史上唯一的女皇帝，但她即位时已经67岁了。",
+    "武则天给自己造了18个新字，但大部分都没流传下来。",
+    "武则天晚年养了很多'面首'，她说'朕的快乐你们不懂'。",
+  ],
+  zhugeliang: [
+    "诸葛亮发明过木牛流马，但其实就是独轮车。",
+    "诸葛亮六出祁山都没成功，但他在五丈原病逝时只有54岁。",
+    "诸葛亮的羽毛扇从不离手，据说是他老婆黄月英送的定情信物。",
+  ],
+  caocao: [
+    "曹操小时候是个'问题少年'，他叔叔经常向他爸告状。",
+    "曹操写诗一流，打仗一流，但选继承人不怎么样。",
+    "曹操说'宁教我负天下人'，但其实他对部下很好。",
+  ],
+  default: [
+    "这位名人正在化妆间补妆，马上就来跟你合影！",
+    "这位名人的经纪人正在确认行程，稍等片刻...",
+    "AI正在教这位名人摆pose，他/她学得有点慢...",
+    "这位名人正在回忆跟你的前世缘分，需要一点时间...",
+    "摄影师正在调光，这位名人坚持要拍出最佳状态...",
+    "这位名人正在查你的朋友圈，想找个共同话题...",
+    "AI正在给这位名人P图，他/她说不能素颜出镜...",
+    "这位名人正在跟AI讨价还价，想让自己看起来更年轻...",
+  ],
+};
+
+function getFunFact(celebId: string): string {
+  const facts = funFacts[celebId] || funFacts.default;
+  return facts[Math.floor(Math.random() * facts.length)];
+}
+
 function getSoulCaption(celebId: string): string {
   const captions = soulCaptions[celebId];
   if (captions && captions.length > 0) {
@@ -339,13 +408,13 @@ function ShareCard({
 
 // ========== 主页面 ==========
 export default function SoulPage() {
-  const [step, setStep] = useState<"upload" | "rolling" | "result">("upload");
+  const [step, setStep] = useState<"upload" | "rolling" | "generating" | "result">("upload");
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [matchedCeleb, setMatchedCeleb] = useState<Celebrity | null>(null);
   const [caption, setCaption] = useState<string>("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [funFact, setFunFact] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -366,16 +435,18 @@ export default function SoulPage() {
     setGeneratedImage(null);
     setQrDataUrl(null);
 
-    // 骰子动画持续2秒，期间"随机"闪烁名人
+    // 骰子动画持续2秒
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // 智能匹配
+    // 智能匹配（但不显示）
     const celeb = smartMatchCelebrity();
     const cap = getSoulCaption(celeb.id);
+    const fact = getFunFact(celeb.id);
 
     setMatchedCeleb(celeb);
     setCaption(cap);
-    setStep("result");
+    setFunFact(fact);
+    setStep("generating");
 
     // 生成二维码
     try {
@@ -390,7 +461,6 @@ export default function SoulPage() {
     }
 
     // 开始生成图片
-    setIsGenerating(true);
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -408,7 +478,8 @@ export default function SoulPage() {
     } catch (err) {
       console.error("生成失败:", err);
     } finally {
-      setIsGenerating(false);
+      // 图片生成完成后显示结果
+      setStep("result");
     }
   }, [userPhoto]);
 
@@ -693,6 +764,53 @@ export default function SoulPage() {
             </motion.div>
           )}
 
+          {/* ===== 生成中阶段 ===== */}
+          {step === "generating" && (
+            <motion.div
+              key="generating"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center py-10 space-y-8"
+            >
+              {/* 进度动画 */}
+              <div className="relative w-40 h-40">
+                <motion.div
+                  className="absolute inset-0 rounded-full border-4 border-black"
+                  style={{ borderTopColor: "#e00" }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                />
+                <div className="absolute inset-4 rounded-full bg-[#ff0] border-4 border-black flex items-center justify-center comic-shadow">
+                  <span className="text-4xl">📸</span>
+                </div>
+              </div>
+
+              {/* 趣味冷知识 */}
+              <div className="bg-white rounded-xl p-6 border-4 border-black comic-shadow mx-4 max-w-sm">
+                <div className="text-center space-y-3">
+                  <div className="text-2xl">✨</div>
+                  <p className="text-black font-bold text-lg leading-relaxed">
+                    {funFact}
+                  </p>
+                  <div className="text-black/40 text-sm font-medium">
+                    正在生成合影，请稍候...
+                  </div>
+                </div>
+              </div>
+
+              {/* 进度条 */}
+              <div className="w-64 h-4 bg-white rounded-full border-4 border-black overflow-hidden">
+                <motion.div
+                  className="h-full bg-[#e00]"
+                  initial={{ width: "0%" }}
+                  animate={{ width: ["0%", "30%", "60%", "90%", "100%"] }}
+                  transition={{ duration: 8, ease: "easeInOut" }}
+                />
+              </div>
+            </motion.div>
+          )}
+
           {/* ===== 结果展示阶段 ===== */}
           {step === "result" && matchedCeleb && (
             <motion.div
@@ -721,18 +839,6 @@ export default function SoulPage() {
                   qrDataUrl={qrDataUrl}
                 />
               </div>
-
-              {/* 生成状态 */}
-              {isGenerating && (
-                <div className="text-center text-black/50 text-sm font-medium">
-                  <motion.div
-                    className="inline-block w-5 h-5 border-4 border-[#e00] border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
-                  <span className="ml-2">正在生成合影...</span>
-                </div>
-              )}
 
               {/* 操作按钮 */}
               <div className="grid grid-cols-2 gap-3">
