@@ -78,13 +78,26 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
 // 提交生成任务
 async function submitGeneration(prompt: string, userImageBase64?: string): Promise<{taskId?: string, error?: string, code?: string}> {
   const apiKey = getApiKey();
+  
+  // Nova API 的 reference_images 参数有bug，会导致500错误
+  // 改用纯文本prompt，将用户外貌描述融入prompt
+  let finalPrompt = prompt;
+  if (userImageBase64) {
+    // 从prompt中提取用户外貌描述（前端已处理）
+    // 如果prompt中没有包含用户描述，添加默认描述
+    if (!finalPrompt.includes('young') && !finalPrompt.includes('man') && !finalPrompt.includes('woman')) {
+      finalPrompt = finalPrompt.replace('A photorealistic photo of ', 'A photorealistic photo of a young Asian person ');
+    }
+  }
+  
   const reqBody: any = {
     model: 'nova-g-image-2',
-    prompt,
+    prompt: finalPrompt,
     size: '1024x1024',
     response_format: 'url',
   };
-  if (userImageBase64) reqBody.reference_images = [userImageBase64];
+  // 注意：reference_images 参数会导致Nova API返回500错误，已禁用
+  // if (userImageBase64) reqBody.reference_images = [userImageBase64];
 
   try {
     console.log('Nova submit:', { url: `${NOVA_BASE}/v1/images/generations?async=1`, keyPrefix: apiKey.substring(0, 10), bodyLength: JSON.stringify(reqBody).length });
