@@ -87,6 +87,7 @@ async function submitGeneration(prompt: string, userImageBase64?: string): Promi
   if (userImageBase64) reqBody.reference_images = [userImageBase64];
 
   try {
+    console.log('Nova submit:', { url: `${NOVA_BASE}/v1/images/generations?async=1`, keyPrefix: apiKey.substring(0, 10), bodyLength: JSON.stringify(reqBody).length });
     const submitResp = await fetchWithTimeout(`${NOVA_BASE}/v1/images/generations?async=1`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
