@@ -54,29 +54,30 @@ export default function HomeContent() {
 
   return (
     <main className="min-h-dvh flex flex-col halftone relative overflow-hidden">
-      {/* ===== 左侧滚动案例（像素化名人） ===== */}
+      {/* ===== 左侧滚动案例 ===== */}
       <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-[180px] overflow-hidden pointer-events-none z-0">
         <div className="flex flex-col gap-4 animate-scroll-up" style={{ animationDuration: '40s' }}>
           {[
-            { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4' },
-            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
-            { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#a29bfe' },
-            { celeb: '周杰伦', img: '/pixelated/jay-chou.png', bg: '#fd79a8' },
-            { celeb: 'LeBron', img: '/pixelated/lebron.png', bg: '#00b894' },
-            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393' },
-            { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e' },
+            { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4', real: false },
+            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d', real: false },
+            { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#a29bfe', real: false },
+            { celeb: '周杰伦', img: '/pixelated/jay-chou.png', bg: '#fd79a8', real: false },
+            { celeb: 'LeBron', img: '/pixelated/lebron.png', bg: '#00b894', real: false },
+            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393', real: false },
+            { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e', real: false },
           ].concat([
-            { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4' },
-            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
-            { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#a29bfe' },
-            { celeb: '周杰伦', img: '/pixelated/jay-chou.png', bg: '#fd79a8' },
-            { celeb: 'LeBron', img: '/pixelated/lebron.png', bg: '#00b894' },
-            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393' },
-            { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e' },
+            { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4', real: false },
+            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d', real: false },
+            { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#a29bfe', real: false },
+            { celeb: '周杰伦', img: '/pixelated/jay-chou.png', bg: '#fd79a8', real: false },
+            { celeb: 'LeBron', img: '/pixelated/lebron.png', bg: '#00b894', real: false },
+            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393', real: false },
+            { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e', real: false },
           ]).map((item, i) => (
             <div key={i} className="flex-shrink-0 w-[150px] rounded-lg comic-border-thin overflow-hidden mx-auto">
               <div className="w-full aspect-[3/4] relative" style={{ backgroundColor: item.bg }}>
-                <img src={item.img} alt={item.celeb} className="absolute inset-0 w-full h-full object-cover" style={{ imageRendering: 'pixelated', filter: 'brightness(0.8) saturate(1.3)' }} loading="lazy" />
+                <img src={item.img} alt={item.celeb} className="absolute inset-0 w-full h-full object-cover" style={item.real ? {} : { imageRendering: 'pixelated', filter: 'brightness(0.8) saturate(1.3)' }} loading="lazy" />
+                {item.real && <span className="absolute top-2 right-2 text-[8px] font-black text-white px-1.5 py-0.5 bg-[#e00]/80 rounded z-10">真实效果</span>}
                 <span className="absolute top-2 left-2 text-xs font-black text-white px-2 py-0.5 bg-black/40 rounded z-10">跟 {item.celeb} 合影</span>
                 <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent z-10" />
                 <div className="absolute bottom-2 left-0 right-0 text-center z-10">
@@ -88,29 +89,30 @@ export default function HomeContent() {
         </div>
       </div>
 
-      {/* ===== 右侧滚动案例（像素化名人） ===== */}
+      {/* ===== 右侧滚动案例 ===== */}
       <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-[180px] overflow-hidden pointer-events-none z-0">
         <div className="flex flex-col gap-4 animate-scroll-down" style={{ animationDuration: '45s' }}>
           {[
-            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393' },
-            { celeb: 'C罗', img: '/pixelated/ronaldo.png', bg: '#0984e3' },
-            { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e' },
-            { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7' },
-            { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9' },
-            { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe' },
-            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
+            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393', real: false },
+            { celeb: 'C罗', img: '/pixelated/ronaldo.png', bg: '#0984e3', real: false },
+            { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e', real: false },
+            { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7', real: false },
+            { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9', real: false },
+            { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe', real: false },
+            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d', real: false },
           ].concat([
-            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393' },
-            { celeb: 'C罗', img: '/pixelated/ronaldo.png', bg: '#0984e3' },
-            { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e' },
-            { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7' },
-            { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9' },
-            { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe' },
-            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d' },
+            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393', real: false },
+            { celeb: 'C罗', img: '/pixelated/ronaldo.png', bg: '#0984e3', real: false },
+            { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e', real: false },
+            { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7', real: false },
+            { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9', real: false },
+            { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe', real: false },
+            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d', real: false },
           ]).map((item, i) => (
             <div key={i} className="flex-shrink-0 w-[150px] rounded-lg comic-border-thin overflow-hidden mx-auto">
               <div className="w-full aspect-[3/4] relative" style={{ backgroundColor: item.bg }}>
-                <img src={item.img} alt={item.celeb} className="absolute inset-0 w-full h-full object-cover" style={{ imageRendering: 'pixelated', filter: 'brightness(0.8) saturate(1.3)' }} loading="lazy" />
+                <img src={item.img} alt={item.celeb} className="absolute inset-0 w-full h-full object-cover" style={item.real ? {} : { imageRendering: 'pixelated', filter: 'brightness(0.8) saturate(1.3)' }} loading="lazy" />
+                {item.real && <span className="absolute top-2 right-2 text-[8px] font-black text-white px-1.5 py-0.5 bg-[#e00]/80 rounded z-10">真实效果</span>}
                 <span className="absolute top-2 left-2 text-xs font-black text-white px-2 py-0.5 bg-black/40 rounded z-10">跟 {item.celeb} 合影</span>
                 <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent z-10" />
                 <div className="absolute bottom-2 left-0 right-0 text-center z-10">
@@ -147,7 +149,7 @@ export default function HomeContent() {
         </div>
       </header>
 
-      {/* ===== 移动端水平滚动名人条（像素化名人） ===== */}
+      {/* ===== 移动端水平滚动名人条 ===== */}
       <div className="lg:hidden flex-shrink-0 relative z-10">
         <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {[

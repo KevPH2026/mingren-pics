@@ -5,11 +5,11 @@ import { useAppStore } from '@/lib/store';
 import { celebrities, scenarios } from '@/lib/celebrities';
 
 const phases = [
-  { text: '🔍 识别人脸特征...', duration: 8 },
-  { text: '🎭 匹配名人面部...', duration: 10 },
-  { text: '📐 合成光影角度...', duration: 12 },
-  { text: '🎨 渲染高清合影...', duration: 15 },
-  { text: '✨ AI 最后润色...', duration: 18 },
+  { text: '🔍 识别人脸特征...', duration: 10 },
+  { text: '🎭 匹配名人面部...', duration: 22 },
+  { text: '📐 合成光影角度...', duration: 40 },
+  { text: '🎨 渲染高清合影...', duration: 75 },
+  { text: '✨ AI 最后润色...', duration: 120 },
 ];
 
 // 重试时显示的专属phase
@@ -85,8 +85,9 @@ export default function GeneratingStep() {
         }
       }
 
-      // Progress: ease-out curve, maxes around 90% then waits for real result
-      const p = Math.min(90, 90 * (1 - Math.exp(-sec / 25)));
+      // Progress: slow ease-out curve, maxes at 88% then waits for real result
+      // Designed for ~90s actual generation time
+      const p = Math.min(88, 88 * (1 - Math.exp(-sec / 45)));
       setProgress(Math.round(p));
     }, 500);
     return () => clearInterval(timer);
@@ -182,7 +183,7 @@ export default function GeneratingStep() {
       <div className="flex flex-col items-center gap-1">
         <span className="text-2xl font-black font-mono">{formatTime(elapsed)}</span>
         <span className="text-[10px] font-bold text-black/30">
-          预计需要约1分钟 · 请勿离开页面
+          预计需要约1-2分钟 · 请稍等，效果值得等待
         </span>
       </div>
 
