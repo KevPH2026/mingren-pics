@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const resend = new Resend(apiKey);
 
     const { error } = await resend.emails.send({
-      from: 'mingren.pics <onboarding@resend.dev>',
+      from: 'mingren.pics <noreply@mingren.pics>',
       to: email,
       subject: `你的验证码: ${code}`,
       html: `
