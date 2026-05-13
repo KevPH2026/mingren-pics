@@ -117,8 +117,12 @@ export default function GeneratingStep() {
     <div className="w-full max-w-md mx-auto flex flex-col items-center gap-5 mt-8 px-4 pb-8">
       {/* Face merge preview */}
       <div className="relative flex items-center justify-center gap-0">
+        {/* Outer glow ring */}
+        <div className="absolute inset-[-12px] rounded-full border-4 border-[#ff0]/30 animate-ping" style={{ animationDuration: '2s' }} />
+        <div className="absolute inset-[-6px] rounded-full border-2 border-[#e00]/20 animate-ping" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
+
         {/* User face */}
-        <div className="w-24 h-24 rounded-full overflow-hidden comic-border bg-white z-10">
+        <div className="w-24 h-24 rounded-full overflow-hidden comic-border bg-white z-10 transition-transform" style={{ transform: progress > 40 ? 'translateX(4px)' : 'translateX(0)' }}>
           {userImage ? (
             <img src={userImage} alt="你" className="w-full h-full object-cover" />
           ) : (
@@ -128,18 +132,25 @@ export default function GeneratingStep() {
 
         {/* Merge animation */}
         <div className="absolute left-1/2 -translate-x-1/2 z-20">
-          <div className="w-10 h-10 rounded-full bg-[#ff0] comic-border-thin flex items-center justify-center animate-pulse text-lg">
-            ⚡
+          <div className={`w-10 h-10 rounded-full comic-border-thin flex items-center justify-center text-lg transition-all duration-1000 ${progress > 50 ? 'bg-[#e00] scale-125' : 'bg-[#ff0] animate-pulse'}`}>
+            {progress > 70 ? '🔥' : progress > 40 ? '⚡' : '✨'}
           </div>
         </div>
 
         {/* Celebrity face */}
-        <div className="w-24 h-24 rounded-full overflow-hidden comic-border bg-white z-10">
+        <div className="w-24 h-24 rounded-full overflow-hidden comic-border bg-white z-10 transition-transform" style={{ transform: progress > 40 ? 'translateX(-4px)' : 'translateX(0)' }}>
           <div className="w-full h-full flex items-center justify-center text-4xl">
             {celeb?.avatarUrl || '⭐'}
           </div>
         </div>
       </div>
+
+      {/* Merge progress hint */}
+      {progress > 30 && progress < 85 && (
+        <div className="text-[10px] font-black text-[#e00] animate-bounce" style={{ marginTop: '-8px' }}>
+          {progress > 60 ? '🎨 正在渲染细节...' : '⚡ 人脸融合中...'}
+        </div>
+      )}
 
       {/* Title */}
       <div className="text-center">

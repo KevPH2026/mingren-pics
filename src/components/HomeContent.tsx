@@ -58,18 +58,18 @@ export default function HomeContent() {
       <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-[180px] overflow-hidden pointer-events-none z-0">
         <div className="flex flex-col gap-4 animate-scroll-up" style={{ animationDuration: '40s' }}>
           {[
-            { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4', real: false },
-            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d', real: false },
+            { celeb: '爱因斯坦', img: '/real-samples/einstein.jpg', bg: '#4ecdc4', real: true },
+            { celeb: '孔子', img: '/real-samples/confucius.jpg', bg: '#f5c897', real: true },
+            { celeb: '孙悟空', img: '/real-samples/goku.png', bg: '#ff6b35', real: true },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#a29bfe', real: false },
-            { celeb: '周杰伦', img: '/pixelated/jay-chou.png', bg: '#fd79a8', real: false },
             { celeb: 'LeBron', img: '/pixelated/lebron.png', bg: '#00b894', real: false },
             { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393', real: false },
             { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e', real: false },
           ].concat([
-            { celeb: 'Elon Musk', img: '/pixelated/elon-musk.png', bg: '#4ecdc4', real: false },
-            { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d', real: false },
+            { celeb: '爱因斯坦', img: '/real-samples/einstein.jpg', bg: '#4ecdc4', real: true },
+            { celeb: '孔子', img: '/real-samples/confucius.jpg', bg: '#f5c897', real: true },
+            { celeb: '孙悟空', img: '/real-samples/goku.png', bg: '#ff6b35', real: true },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#a29bfe', real: false },
-            { celeb: '周杰伦', img: '/pixelated/jay-chou.png', bg: '#fd79a8', real: false },
             { celeb: 'LeBron', img: '/pixelated/lebron.png', bg: '#00b894', real: false },
             { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393', real: false },
             { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e', real: false },
@@ -93,20 +93,20 @@ export default function HomeContent() {
       <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-[180px] overflow-hidden pointer-events-none z-0">
         <div className="flex flex-col gap-4 animate-scroll-down" style={{ animationDuration: '45s' }}>
           {[
-            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393', real: false },
-            { celeb: 'C罗', img: '/pixelated/ronaldo.png', bg: '#0984e3', real: false },
+            { celeb: '孔子', img: '/real-samples/confucius.jpg', bg: '#f5c897', real: true },
+            { celeb: '孙悟空', img: '/real-samples/goku.png', bg: '#ff6b35', real: true },
             { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e', real: false },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7', real: false },
             { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9', real: false },
-            { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe', real: false },
+            { celeb: '爱因斯坦', img: '/real-samples/einstein.jpg', bg: '#4ecdc4', real: true },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d', real: false },
           ].concat([
-            { celeb: 'Lady Gaga', img: '/pixelated/lady-gaga.png', bg: '#e84393', real: false },
-            { celeb: 'C罗', img: '/pixelated/ronaldo.png', bg: '#0984e3', real: false },
+            { celeb: '孔子', img: '/real-samples/confucius.jpg', bg: '#f5c897', real: true },
+            { celeb: '孙悟空', img: '/real-samples/goku.png', bg: '#ff6b35', real: true },
             { celeb: 'BTS', img: '/pixelated/bts.png', bg: '#fdcb6e', real: false },
             { celeb: 'Lisa', img: '/pixelated/lisa.png', bg: '#6c5ce7', real: false },
             { celeb: 'Zendaya', img: '/pixelated/zendaya.png', bg: '#00cec9', real: false },
-            { celeb: 'IU', img: '/pixelated/iu.png', bg: '#a29bfe', real: false },
+            { celeb: '爱因斯坦', img: '/real-samples/einstein.jpg', bg: '#4ecdc4', real: true },
             { celeb: 'Messi', img: '/pixelated/messi.png', bg: '#ffe66d', real: false },
           ]).map((item, i) => (
             <div key={i} className="flex-shrink-0 w-[150px] rounded-lg comic-border-thin overflow-hidden mx-auto">
